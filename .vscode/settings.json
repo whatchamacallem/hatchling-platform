@@ -11,6 +11,7 @@
         "argtypes",
         "asan",
         "ascontiguousarray",
+        "ASICs",
         "bitfield",
         "bugprone",
         "ccache",

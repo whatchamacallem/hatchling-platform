@@ -32,7 +32,7 @@ ERRORS="-Wall -Wextra -pedantic-errors -Werror -Wfatal-errors -Wcast-qual \
 
 FLAGS="-ffast-math -ggdb3"
 
-SANITIZE_UNDEF="-fsanitize=undefined,address -fsanitize-recover=undefined,address"
+SANITIZE_UNDEF="-fsanitize=undefined,address"
 SANITIZE_THREAD="-fsanitize=thread"
 SANITIZE_MEMORY="-fsanitize=memory -fsanitize-memory-track-origins"
 

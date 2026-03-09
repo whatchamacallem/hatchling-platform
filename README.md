@@ -9,12 +9,13 @@ Please use the most recent tagged release.
 > People say that you should not micro-optimize. But if what you love is
 > micro-optimization... that's what you should do. — Linus Torvalds
 
-Hatchling Platform is a lightweight C17/C++20 runtime library designed for
-cross-compilation to resource-constrained targets. It maintains compatibility
-with C99 libraries, falls back to requiring only a C++11 compiler, and
-deliberately avoids dependencies on the C++ standard library. The developer
-experience is also better than with the C++ standard library. For example, the
-template compile errors are easier to read, and `hxassertmsg` will format your
+Hatchling Platform is a lightweight, bespoke C17/C++20 alternative to the C++
+standard library designed for cross-compilation to resource-constrained targets
+like DSPs, FPGAs, ASICs or WebAssembly. It also falls back to requiring only C99
+libraries and a C++11 compiler, and deliberately avoids dependencies on the C++
+standard library. For those with a low-level mindset, the developer experience
+is better than with the C++ standard library. For example, the template
+instantiation errors are easier to read, and `hxassertmsg` will format your
 assert messages before setting a breakpoint for you. There is nothing
 unnecessary to step through in the debugger. The compiler's budget for
 optimization isn't blown out by layers you don't normally need.

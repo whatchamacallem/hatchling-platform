@@ -72,4 +72,4 @@ time doxygen
 
 { set +o xtrace; } 2> /dev/null
 ./clean.sh
-echo All test scripts done.
+echo "testall.sh: All test scripts passed."

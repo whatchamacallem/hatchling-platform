@@ -2,5 +2,8 @@
   "autoMemoryEnabled": false,
   "permissions": {
     "allow": ["Bash(*)"]
+  },
+  "env": {
+    "CLAUDE_CODE": "1"
   }
 }

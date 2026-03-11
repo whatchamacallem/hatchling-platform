@@ -2,7 +2,7 @@
 
 ## Testing
 
-Use debugbuild.sh to test changes and not cmake.
+Use debugbuild.sh to test changes and not cmake. 🐉🐉🐉 indicates success.
 
 ## Style Guide
 

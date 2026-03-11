@@ -16,22 +16,41 @@ namespace hxdetail_ {
 template<typename arg_t_>
 arg_t_ hxconsole_parse_arg_(const char* str_, char** next_) = delete;
 
+// Floating-point types share strtod.
 template<> inline float hxconsole_parse_arg_<float>(const char* str_, char** next_) {
 	return (float)::strtod(str_, next_);
 }
-
 template<> inline double hxconsole_parse_arg_<double>(const char* str_, char** next_) {
 	return ::strtod(str_, next_);
 }
 
+// Signed integer types share strtol (base 0 accepts decimal, hex, octal).
+template<> inline int8_t hxconsole_parse_arg_<int8_t>(const char* str_, char** next_) {
+	return (int8_t)::strtol(str_, next_, 0);
+}
+template<> inline int16_t hxconsole_parse_arg_<int16_t>(const char* str_, char** next_) {
+	return (int16_t)::strtol(str_, next_, 0);
+}
 template<> inline int32_t hxconsole_parse_arg_<int32_t>(const char* str_, char** next_) {
 	return (int32_t)::strtol(str_, next_, 0);
 }
+template<> inline int64_t hxconsole_parse_arg_<int64_t>(const char* str_, char** next_) {
+	return (int64_t)::strtol(str_, next_, 0);
+}
 
+// Unsigned integer types share strtoul (base 0).
+template<> inline bool hxconsole_parse_arg_<bool>(const char* str_, char** next_) {
+	return ::strtol(str_, next_, 0) != 0;
+}
+template<> inline uint8_t hxconsole_parse_arg_<uint8_t>(const char* str_, char** next_) {
+	return (uint8_t)::strtoul(str_, next_, 0);
+}
+template<> inline uint16_t hxconsole_parse_arg_<uint16_t>(const char* str_, char** next_) {
+	return (uint16_t)::strtoul(str_, next_, 0);
+}
 template<> inline uint32_t hxconsole_parse_arg_<uint32_t>(const char* str_, char** next_) {
 	return (uint32_t)::strtoul(str_, next_, 0);
 }
-
 template<> inline uint64_t hxconsole_parse_arg_<uint64_t>(const char* str_, char** next_) {
 	return ::strtoull(str_, next_, 16);
 }
@@ -54,8 +73,14 @@ template<> inline const char* hxconsole_parse_arg_<const char*>(const char* str_
 template<typename arg_t_> const char* hxconsole_arg_label_() = delete;
 template<> inline const char* hxconsole_arg_label_<float>() { return "f32"; }
 template<> inline const char* hxconsole_arg_label_<double>() { return "f64"; }
+template<> inline const char* hxconsole_arg_label_<bool>() { return "bool"; }
+template<> inline const char* hxconsole_arg_label_<int8_t>() { return "i8"; }
+template<> inline const char* hxconsole_arg_label_<uint8_t>() { return "u8"; }
+template<> inline const char* hxconsole_arg_label_<int16_t>() { return "i16"; }
+template<> inline const char* hxconsole_arg_label_<uint16_t>() { return "u16"; }
 template<> inline const char* hxconsole_arg_label_<int32_t>() { return "i32"; }
 template<> inline const char* hxconsole_arg_label_<uint32_t>() { return "u32"; }
+template<> inline const char* hxconsole_arg_label_<int64_t>() { return "i64"; }
 template<> inline const char* hxconsole_arg_label_<uint64_t>() { return "hex"; }
 template<> inline const char* hxconsole_arg_label_<const char*>() { return "char*"; }
 

@@ -14,7 +14,7 @@ set -o errexit
 export POSIXLY_CORRECT=1
 
 # Clear the output window when used interactively.
-if [ "$1" != "--headless" ]; then
+if [ "$1" != "--headless" ] && [ -z "$CLAUDE_CODE" ]; then
 	export TERM=xterm-256color
 	clear
 fi
@@ -51,7 +51,7 @@ done
 
 ccache clang++ $BUILD $FLAGS *.o -lpthread -lstdc++ -lm -o hxtest
 
-if [ "$1" != "--headless" ]; then
+if [ "$1" != "--headless" ] && [ -z "$CLAUDE_CODE" ]; then
 	ccache --show-stats
 fi
 

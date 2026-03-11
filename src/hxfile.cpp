@@ -10,7 +10,6 @@
 // These are only dependencies of the Hatchling Platform here. This is to allow
 // easy reimplementation.
 #include <stdio.h>
-#include <errno.h>
 
 #if defined _MSC_VER
 // Allow use of fopen as fopen_s is not portable.

@@ -5,7 +5,7 @@
 // hxconsole inline header and internals. See hxconsole.hpp.
 
 #include "../hxutility.h"
-#include <errno.h>
+
 #include <limits.h>
 
 // NOLINTBEGIN
@@ -30,32 +30,32 @@ template<> inline double hxconsole_parse_arg_<double>(const char* str_, char** n
 // char: range CHAR_MIN..CHAR_MAX (platform-defined signedness).
 template<> inline char hxconsole_parse_arg_<char>(const char* str_, char** next_) {
 	char* end_ = const_cast<char*>(str_);
-	long long v_ = ::strtoll(str_, &end_, 0);
+	long v_ = ::strtol(str_, &end_, 0);
 	if(end_ == str_ || v_ < CHAR_MIN || v_ > CHAR_MAX) { *next_ = const_cast<char*>(str_); return 0; }
 	*next_ = end_; return (char)v_;
 }
 
 // bool: non-zero is true, overflow is irrelevant.
 template<> inline bool hxconsole_parse_arg_<bool>(const char* str_, char** next_) {
-	return ::strtoll(str_, next_, 0) != 0;
+	return ::strtol(str_, next_, 0) != 0;
 }
 
-// Signed integers: parse as long long, then range-check into target width.
+// Signed integers: parse as long, then range-check into target width.
 template<> inline int8_t hxconsole_parse_arg_<int8_t>(const char* str_, char** next_) {
 	char* end_ = const_cast<char*>(str_);
-	long long v_ = ::strtoll(str_, &end_, 0);
+	long v_ = ::strtol(str_, &end_, 0);
 	if(end_ == str_ || v_ < SCHAR_MIN || v_ > SCHAR_MAX) { *next_ = const_cast<char*>(str_); return 0; }
 	*next_ = end_; return (int8_t)v_;
 }
 template<> inline int16_t hxconsole_parse_arg_<int16_t>(const char* str_, char** next_) {
 	char* end_ = const_cast<char*>(str_);
-	long long v_ = ::strtoll(str_, &end_, 0);
+	long v_ = ::strtol(str_, &end_, 0);
 	if(end_ == str_ || v_ < SHRT_MIN || v_ > SHRT_MAX) { *next_ = const_cast<char*>(str_); return 0; }
 	*next_ = end_; return (int16_t)v_;
 }
 template<> inline int32_t hxconsole_parse_arg_<int32_t>(const char* str_, char** next_) {
 	char* end_ = const_cast<char*>(str_);
-	long long v_ = ::strtoll(str_, &end_, 0);
+	long v_ = ::strtol(str_, &end_, 0);
 	if(end_ == str_ || v_ < INT_MIN || v_ > INT_MAX) { *next_ = const_cast<char*>(str_); return 0; }
 	*next_ = end_; return (int32_t)v_;
 }
@@ -67,22 +67,22 @@ template<> inline int64_t hxconsole_parse_arg_<int64_t>(const char* str_, char**
 	*next_ = end_; return (int64_t)v_;
 }
 
-// Unsigned integers: parse as unsigned long long, then range-check.
+// Unsigned integers: parse as unsigned long, then range-check.
 template<> inline uint8_t hxconsole_parse_arg_<uint8_t>(const char* str_, char** next_) {
 	char* end_ = const_cast<char*>(str_);
-	unsigned long long v_ = ::strtoull(str_, &end_, 0);
+	unsigned long v_ = ::strtoul(str_, &end_, 0);
 	if(end_ == str_ || v_ > UCHAR_MAX) { *next_ = const_cast<char*>(str_); return 0; }
 	*next_ = end_; return (uint8_t)v_;
 }
 template<> inline uint16_t hxconsole_parse_arg_<uint16_t>(const char* str_, char** next_) {
 	char* end_ = const_cast<char*>(str_);
-	unsigned long long v_ = ::strtoull(str_, &end_, 0);
+	unsigned long v_ = ::strtoul(str_, &end_, 0);
 	if(end_ == str_ || v_ > USHRT_MAX) { *next_ = const_cast<char*>(str_); return 0; }
 	*next_ = end_; return (uint16_t)v_;
 }
 template<> inline uint32_t hxconsole_parse_arg_<uint32_t>(const char* str_, char** next_) {
 	char* end_ = const_cast<char*>(str_);
-	unsigned long long v_ = ::strtoull(str_, &end_, 0);
+	unsigned long v_ = ::strtoul(str_, &end_, 0);
 	if(end_ == str_ || v_ > UINT_MAX) { *next_ = const_cast<char*>(str_); return 0; }
 	*next_ = end_; return (uint32_t)v_;
 }

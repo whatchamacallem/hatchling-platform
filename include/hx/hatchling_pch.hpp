@@ -23,4 +23,4 @@
 #include "hxprofiler.hpp" // Uses platform-specific includes.
 #include "hxalgorithm.hpp"
 #include "hxtest.hpp"     // Optional: Google Test <gtest/gtest.h>
-#include "hxthread.hpp"   // Optional: { errno.h, pthread.h }
+#include "hxthread.hpp"   // Optional: pthread.h/threads.h

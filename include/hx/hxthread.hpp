@@ -41,10 +41,8 @@ static_assert((HX_USE_THREADS) == 0 || (HX_USE_THREADS) == 1 || (HX_USE_THREADS)
 	"HX_USE_THREADS must be 0, 1 or 11. 11 is for using <threads.h>");
 
 #if (HX_USE_THREADS) == 11
-#include <errno.h>
 #include <threads.h>
 #elif HX_USE_THREADS
-#include <errno.h>
 #include <pthread.h>
 #endif
 

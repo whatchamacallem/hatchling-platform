@@ -8,6 +8,8 @@
 
 HX_REGISTER_FILENAME_HASH
 
+// TEST_F fixtures would not work as the console registers static variables.
+
 namespace {
 float s_hxconsole_test_result_hook = 0.0f;
 
@@ -44,51 +46,51 @@ size_t   s_hxconsole_test_size  = 0u;
 char     s_hxconsole_test_char  = 0;
 
 // --- per-type function fixtures ---
-int8_t   s_fn_i8   = 0;
-int16_t  s_fn_i16  = 0;
-int32_t  s_fn_i32  = 0;
-int64_t  s_fn_i64  = 0;
-uint8_t  s_fn_u8   = 0;
-uint16_t s_fn_u16  = 0;
-uint32_t s_fn_u32  = 0;
-uint64_t s_fn_u64  = 0;
-char     s_fn_char = 0;
-float    s_fn_f32  = 0.0f;
-double   s_fn_f64  = 0.0;
-bool     s_fn_bool = false;
-const char* s_fn_str = hxnull;
+int8_t   s_hxconsole_test_fn_i8   = 0;
+int16_t  s_hxconsole_test_fn_i16  = 0;
+int32_t  s_hxconsole_test_fn_i32  = 0;
+int64_t  s_hxconsole_test_fn_i64  = 0;
+uint8_t  s_hxconsole_test_fn_u8   = 0;
+uint16_t s_hxconsole_test_fn_u16  = 0;
+uint32_t s_hxconsole_test_fn_u32  = 0;
+uint64_t s_hxconsole_test_fn_u64  = 0;
+char     s_hxconsole_test_fn_char = 0;
+float    s_hxconsole_test_fn_f32  = 0.0f;
+double   s_hxconsole_test_fn_f64  = 0.0;
+bool     s_hxconsole_test_fn_bool = false;
+const char* s_hxconsole_test_fn_str = hxnull;
 
-bool test_fn_i8(int8_t v_)       { s_fn_i8   = v_; return true; }
-bool test_fn_i16(int16_t v_)     { s_fn_i16  = v_; return true; }
-bool test_fn_i32(int32_t v_)     { s_fn_i32  = v_; return true; }
-bool test_fn_i64(int64_t v_)     { s_fn_i64  = v_; return true; }
-bool test_fn_u8(uint8_t v_)      { s_fn_u8   = v_; return true; }
-bool test_fn_u16(uint16_t v_)    { s_fn_u16  = v_; return true; }
-bool test_fn_u32(uint32_t v_)    { s_fn_u32  = v_; return true; }
-bool test_fn_u64(uint64_t v_)    { s_fn_u64  = v_; return true; }
-bool test_fn_char(char v_)       { s_fn_char = v_; return true; }
-bool test_fn_f32(float v_)       { s_fn_f32  = v_; return true; }
-bool test_fn_f64(double v_)      { s_fn_f64  = v_; return true; }
-bool test_fn_bool(bool v_)       { s_fn_bool = v_; return true; }
-bool test_fn_str(const char* v_) { s_fn_str  = v_; return true; }
+bool hxconsole_test_fn_i8(int8_t v_)       { s_hxconsole_test_fn_i8   = v_; return true; }
+bool hxconsole_test_fn_i16(int16_t v_)     { s_hxconsole_test_fn_i16  = v_; return true; }
+bool hxconsole_test_fn_i32(int32_t v_)     { s_hxconsole_test_fn_i32  = v_; return true; }
+bool hxconsole_test_fn_i64(int64_t v_)     { s_hxconsole_test_fn_i64  = v_; return true; }
+bool hxconsole_test_fn_u8(uint8_t v_)      { s_hxconsole_test_fn_u8   = v_; return true; }
+bool hxconsole_test_fn_u16(uint16_t v_)    { s_hxconsole_test_fn_u16  = v_; return true; }
+bool hxconsole_test_fn_u32(uint32_t v_)    { s_hxconsole_test_fn_u32  = v_; return true; }
+bool hxconsole_test_fn_u64(uint64_t v_)    { s_hxconsole_test_fn_u64  = v_; return true; }
+bool hxconsole_test_fn_char(char v_)       { s_hxconsole_test_fn_char = v_; return true; }
+bool hxconsole_test_fn_f32(float v_)       { s_hxconsole_test_fn_f32  = v_; return true; }
+bool hxconsole_test_fn_f64(double v_)      { s_hxconsole_test_fn_f64  = v_; return true; }
+bool hxconsole_test_fn_bool(bool v_)       { s_hxconsole_test_fn_bool = v_; return true; }
+bool hxconsole_test_fn_str(const char* v_) { s_hxconsole_test_fn_str  = v_; return true; }
 
 // --- multi-arg function fixtures ---
-int32_t     s_fn_mixed_i32 = 0;
-float       s_fn_mixed_f32 = 0.0f;
-const char* s_fn_mixed_str = hxnull;
-int32_t     s_fn_ints_i32  = 0;
-uint32_t    s_fn_ints_u32  = 0;
-bool        s_fn_void_called = false;
+int32_t     s_hxconsole_test_fn_mixed_i32 = 0;
+float       s_hxconsole_test_fn_mixed_f32 = 0.0f;
+const char* s_hxconsole_test_fn_mixed_str = hxnull;
+int32_t     s_hxconsole_test_fn_ints_i32  = 0;
+uint32_t    s_hxconsole_test_fn_ints_u32  = 0;
+bool        s_hxconsole_test_fn_void_called = false;
 
-bool test_fn_mixed(int32_t a_, float b_, const char* c_) {
-	s_fn_mixed_i32 = a_; s_fn_mixed_f32 = b_; s_fn_mixed_str = c_;
+bool hxconsole_test_fn_mixed(int32_t a_, float b_, const char* c_) {
+	s_hxconsole_test_fn_mixed_i32 = a_; s_hxconsole_test_fn_mixed_f32 = b_; s_hxconsole_test_fn_mixed_str = c_;
 	return true;
 }
-bool test_fn_ints(int32_t a_, uint32_t b_) {
-	s_fn_ints_i32 = a_; s_fn_ints_u32 = b_;
+bool hxconsole_test_fn_ints(int32_t a_, uint32_t b_) {
+	s_hxconsole_test_fn_ints_i32 = a_; s_hxconsole_test_fn_ints_u32 = b_;
 	return true;
 }
-bool test_fn_void(void) { s_fn_void_called = true; return true; }
+bool hxconsole_test_fn_void(void) { s_hxconsole_test_fn_void_called = true; return true; }
 
 // --- file test fixtures ---
 volatile float s_hxconsole_test_file_var1 = 0.0f;
@@ -123,22 +125,22 @@ hxconsole_variable(s_hxconsole_test_bool);
 hxconsole_variable(s_hxconsole_test_size);
 hxconsole_variable(s_hxconsole_test_char);
 
-hxconsole_command(test_fn_i8);
-hxconsole_command(test_fn_i16);
-hxconsole_command(test_fn_i32);
-hxconsole_command(test_fn_i64);
-hxconsole_command(test_fn_u8);
-hxconsole_command(test_fn_u16);
-hxconsole_command(test_fn_u32);
-hxconsole_command(test_fn_u64);
-hxconsole_command(test_fn_char);
-hxconsole_command(test_fn_f32);
-hxconsole_command(test_fn_f64);
-hxconsole_command(test_fn_bool);
-hxconsole_command(test_fn_str);
-hxconsole_command(test_fn_mixed);
-hxconsole_command(test_fn_ints);
-hxconsole_command(test_fn_void);
+hxconsole_command(hxconsole_test_fn_i8);
+hxconsole_command(hxconsole_test_fn_i16);
+hxconsole_command(hxconsole_test_fn_i32);
+hxconsole_command(hxconsole_test_fn_i64);
+hxconsole_command(hxconsole_test_fn_u8);
+hxconsole_command(hxconsole_test_fn_u16);
+hxconsole_command(hxconsole_test_fn_u32);
+hxconsole_command(hxconsole_test_fn_u64);
+hxconsole_command(hxconsole_test_fn_char);
+hxconsole_command(hxconsole_test_fn_f32);
+hxconsole_command(hxconsole_test_fn_f64);
+hxconsole_command(hxconsole_test_fn_bool);
+hxconsole_command(hxconsole_test_fn_str);
+hxconsole_command(hxconsole_test_fn_mixed);
+hxconsole_command(hxconsole_test_fn_ints);
+hxconsole_command(hxconsole_test_fn_void);
 
 hxconsole_variable_named(s_hxconsole_test_file_var1, hxconsole_test_file_var);
 hxconsole_command_named(hxconsole_test_file_fn, hxconsole_test_file_fn_name);
@@ -398,87 +400,87 @@ TEST(hxconsole_test, variable_parse_error) {
 
 TEST(hxconsole_test, function_types) {
 	// int8_t
-	s_fn_i8 = 0;
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_i8 42"));
-	EXPECT_EQ(s_fn_i8, (int8_t)42);
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_i8 -1"));
-	EXPECT_EQ(s_fn_i8, (int8_t)-1);
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_i8 0x1F"));
-	EXPECT_EQ(s_fn_i8, (int8_t)0x1F);
+	s_hxconsole_test_fn_i8 = 0;
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_i8 42"));
+	EXPECT_EQ(s_hxconsole_test_fn_i8, (int8_t)42);
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_i8 -1"));
+	EXPECT_EQ(s_hxconsole_test_fn_i8, (int8_t)-1);
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_i8 0x1F"));
+	EXPECT_EQ(s_hxconsole_test_fn_i8, (int8_t)0x1F);
 
 	// int16_t
-	s_fn_i16 = 0;
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_i16 1000"));
-	EXPECT_EQ(s_fn_i16, (int16_t)1000);
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_i16 -1000"));
-	EXPECT_EQ(s_fn_i16, (int16_t)-1000);
+	s_hxconsole_test_fn_i16 = 0;
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_i16 1000"));
+	EXPECT_EQ(s_hxconsole_test_fn_i16, (int16_t)1000);
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_i16 -1000"));
+	EXPECT_EQ(s_hxconsole_test_fn_i16, (int16_t)-1000);
 
 	// int32_t
-	s_fn_i32 = 0;
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_i32 100000"));
-	EXPECT_EQ(s_fn_i32, (int32_t)100000);
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_i32 -100000"));
-	EXPECT_EQ(s_fn_i32, (int32_t)-100000);
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_i32 0xFF"));
-	EXPECT_EQ(s_fn_i32, (int32_t)0xFF);
+	s_hxconsole_test_fn_i32 = 0;
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_i32 100000"));
+	EXPECT_EQ(s_hxconsole_test_fn_i32, (int32_t)100000);
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_i32 -100000"));
+	EXPECT_EQ(s_hxconsole_test_fn_i32, (int32_t)-100000);
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_i32 0xFF"));
+	EXPECT_EQ(s_hxconsole_test_fn_i32, (int32_t)0xFF);
 
 	// int64_t
-	s_fn_i64 = 0;
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_i64 100000"));
-	EXPECT_EQ(s_fn_i64, (int64_t)100000);
+	s_hxconsole_test_fn_i64 = 0;
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_i64 100000"));
+	EXPECT_EQ(s_hxconsole_test_fn_i64, (int64_t)100000);
 
 	// uint8_t
-	s_fn_u8 = 0;
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_u8 200"));
-	EXPECT_EQ(s_fn_u8, (uint8_t)200);
+	s_hxconsole_test_fn_u8 = 0;
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_u8 200"));
+	EXPECT_EQ(s_hxconsole_test_fn_u8, (uint8_t)200);
 
 	// uint16_t
-	s_fn_u16 = 0;
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_u16 50000"));
-	EXPECT_EQ(s_fn_u16, (uint16_t)50000);
+	s_hxconsole_test_fn_u16 = 0;
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_u16 50000"));
+	EXPECT_EQ(s_hxconsole_test_fn_u16, (uint16_t)50000);
 
 	// uint32_t
-	s_fn_u32 = 0;
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_u32 3000000000"));
-	EXPECT_EQ(s_fn_u32, (uint32_t)3000000000u);
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_u32 0xDEAD"));
-	EXPECT_EQ(s_fn_u32, (uint32_t)0xDEAD);
+	s_hxconsole_test_fn_u32 = 0;
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_u32 3000000000"));
+	EXPECT_EQ(s_hxconsole_test_fn_u32, (uint32_t)3000000000u);
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_u32 0xDEAD"));
+	EXPECT_EQ(s_hxconsole_test_fn_u32, (uint32_t)0xDEAD);
 
 	// uint64_t (UINT64_MAX)
-	s_fn_u64 = 0;
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_u64 18446744073709551615"));
-	EXPECT_EQ(s_fn_u64, (uint64_t)18446744073709551615ull);
+	s_hxconsole_test_fn_u64 = 0;
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_u64 18446744073709551615"));
+	EXPECT_EQ(s_hxconsole_test_fn_u64, (uint64_t)18446744073709551615ull);
 
 	// char
-	s_fn_char = 0;
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_char 65"));
-	EXPECT_EQ(s_fn_char, (char)65);
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_char 127"));
-	EXPECT_EQ(s_fn_char, (char)127);
+	s_hxconsole_test_fn_char = 0;
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_char 65"));
+	EXPECT_EQ(s_hxconsole_test_fn_char, (char)65);
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_char 127"));
+	EXPECT_EQ(s_hxconsole_test_fn_char, (char)127);
 
 	// float
-	s_fn_f32 = 0.0f;
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_f32 3.14"));
-	EXPECT_TRUE(s_fn_f32 > 3.13f && s_fn_f32 < 3.15f);
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_f32 -1.5"));
-	EXPECT_EQ(s_fn_f32, -1.5f);
+	s_hxconsole_test_fn_f32 = 0.0f;
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_f32 3.14"));
+	EXPECT_TRUE(s_hxconsole_test_fn_f32 > 3.13f && s_hxconsole_test_fn_f32 < 3.15f);
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_f32 -1.5"));
+	EXPECT_EQ(s_hxconsole_test_fn_f32, -1.5f);
 
 	// double
-	s_fn_f64 = 0.0;
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_f64 3.14159265358979"));
-	EXPECT_TRUE(s_fn_f64 > 3.14159 && s_fn_f64 < 3.14160);
+	s_hxconsole_test_fn_f64 = 0.0;
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_f64 3.14159265358979"));
+	EXPECT_TRUE(s_hxconsole_test_fn_f64 > 3.14159 && s_hxconsole_test_fn_f64 < 3.14160);
 
 	// bool
-	s_fn_bool = false;
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_bool 1"));
-	EXPECT_EQ(s_fn_bool, true);
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_bool 0"));
-	EXPECT_EQ(s_fn_bool, false);
+	s_hxconsole_test_fn_bool = false;
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_bool 1"));
+	EXPECT_EQ(s_hxconsole_test_fn_bool, true);
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_bool 0"));
+	EXPECT_EQ(s_hxconsole_test_fn_bool, false);
 
 	// const char*
-	s_fn_str = hxnull;
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_str hello world"));
-	EXPECT_TRUE(s_fn_str != hxnull && ::strncmp(s_fn_str, "hello", 5) == 0);
+	s_hxconsole_test_fn_str = hxnull;
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_str hello world"));
+	EXPECT_TRUE(s_hxconsole_test_fn_str != hxnull && ::strncmp(s_hxconsole_test_fn_str, "hello", 5) == 0);
 }
 
 // ============================================================================
@@ -488,80 +490,80 @@ TEST(hxconsole_test, function_overflow) {
 	hxlogconsole("EXPECTING_TEST_WARNINGS\n");
 
 	// int8_t
-	s_fn_i8 = 0;
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_i8 127"));
-	EXPECT_EQ(s_fn_i8, (int8_t)127);
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_i8 -128"));
-	EXPECT_EQ(s_fn_i8, (int8_t)-128);
-	s_fn_i8 = 0;
-	EXPECT_FALSE(hxconsole_exec_line("test_fn_i8 128"));
-	EXPECT_EQ(s_fn_i8, (int8_t)0);
-	EXPECT_FALSE(hxconsole_exec_line("test_fn_i8 -129"));
-	EXPECT_EQ(s_fn_i8, (int8_t)0);
+	s_hxconsole_test_fn_i8 = 0;
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_i8 127"));
+	EXPECT_EQ(s_hxconsole_test_fn_i8, (int8_t)127);
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_i8 -128"));
+	EXPECT_EQ(s_hxconsole_test_fn_i8, (int8_t)-128);
+	s_hxconsole_test_fn_i8 = 0;
+	EXPECT_FALSE(hxconsole_exec_line("hxconsole_test_fn_i8 128"));
+	EXPECT_EQ(s_hxconsole_test_fn_i8, (int8_t)0);
+	EXPECT_FALSE(hxconsole_exec_line("hxconsole_test_fn_i8 -129"));
+	EXPECT_EQ(s_hxconsole_test_fn_i8, (int8_t)0);
 
 	// int16_t
-	s_fn_i16 = 0;
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_i16 32767"));
-	EXPECT_EQ(s_fn_i16, (int16_t)32767);
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_i16 -32768"));
-	EXPECT_EQ(s_fn_i16, (int16_t)-32768);
-	s_fn_i16 = 0;
-	EXPECT_FALSE(hxconsole_exec_line("test_fn_i16 32768"));
-	EXPECT_EQ(s_fn_i16, (int16_t)0);
+	s_hxconsole_test_fn_i16 = 0;
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_i16 32767"));
+	EXPECT_EQ(s_hxconsole_test_fn_i16, (int16_t)32767);
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_i16 -32768"));
+	EXPECT_EQ(s_hxconsole_test_fn_i16, (int16_t)-32768);
+	s_hxconsole_test_fn_i16 = 0;
+	EXPECT_FALSE(hxconsole_exec_line("hxconsole_test_fn_i16 32768"));
+	EXPECT_EQ(s_hxconsole_test_fn_i16, (int16_t)0);
 
 	// uint8_t
-	s_fn_u8 = 0;
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_u8 255"));
-	EXPECT_EQ(s_fn_u8, (uint8_t)255);
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_u8 0"));
-	EXPECT_EQ(s_fn_u8, (uint8_t)0);
-	s_fn_u8 = 0;
-	EXPECT_FALSE(hxconsole_exec_line("test_fn_u8 256"));
-	EXPECT_EQ(s_fn_u8, (uint8_t)0);
+	s_hxconsole_test_fn_u8 = 0;
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_u8 255"));
+	EXPECT_EQ(s_hxconsole_test_fn_u8, (uint8_t)255);
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_u8 0"));
+	EXPECT_EQ(s_hxconsole_test_fn_u8, (uint8_t)0);
+	s_hxconsole_test_fn_u8 = 0;
+	EXPECT_FALSE(hxconsole_exec_line("hxconsole_test_fn_u8 256"));
+	EXPECT_EQ(s_hxconsole_test_fn_u8, (uint8_t)0);
 
 	// uint16_t
-	s_fn_u16 = 0;
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_u16 65535"));
-	EXPECT_EQ(s_fn_u16, (uint16_t)65535);
-	s_fn_u16 = 0;
-	EXPECT_FALSE(hxconsole_exec_line("test_fn_u16 65536"));
-	EXPECT_EQ(s_fn_u16, (uint16_t)0);
+	s_hxconsole_test_fn_u16 = 0;
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_u16 65535"));
+	EXPECT_EQ(s_hxconsole_test_fn_u16, (uint16_t)65535);
+	s_hxconsole_test_fn_u16 = 0;
+	EXPECT_FALSE(hxconsole_exec_line("hxconsole_test_fn_u16 65536"));
+	EXPECT_EQ(s_hxconsole_test_fn_u16, (uint16_t)0);
 
 	// int32_t (errno=ERANGE path)
-	s_fn_i32 = 0;
-	EXPECT_FALSE(hxconsole_exec_line("test_fn_i32 2147483648"));
-	EXPECT_EQ(s_fn_i32, (int32_t)0);
-	EXPECT_FALSE(hxconsole_exec_line("test_fn_i32 -2147483649"));
-	EXPECT_EQ(s_fn_i32, (int32_t)0);
+	s_hxconsole_test_fn_i32 = 0;
+	EXPECT_FALSE(hxconsole_exec_line("hxconsole_test_fn_i32 2147483648"));
+	EXPECT_EQ(s_hxconsole_test_fn_i32, (int32_t)0);
+	EXPECT_FALSE(hxconsole_exec_line("hxconsole_test_fn_i32 -2147483649"));
+	EXPECT_EQ(s_hxconsole_test_fn_i32, (int32_t)0);
 
 	// uint32_t (errno=ERANGE path)
-	s_fn_u32 = 0;
-	EXPECT_FALSE(hxconsole_exec_line("test_fn_u32 4294967296"));
-	EXPECT_EQ(s_fn_u32, (uint32_t)0);
+	s_hxconsole_test_fn_u32 = 0;
+	EXPECT_FALSE(hxconsole_exec_line("hxconsole_test_fn_u32 4294967296"));
+	EXPECT_EQ(s_hxconsole_test_fn_u32, (uint32_t)0);
 
 	// int64_t
-	s_fn_i64 = 0;
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_i64 9223372036854775807"));
-	EXPECT_EQ(s_fn_i64, (int64_t)9223372036854775807ll);
-	s_fn_i64 = 0;
-	EXPECT_FALSE(hxconsole_exec_line("test_fn_i64 9223372036854775808"));
-	EXPECT_EQ(s_fn_i64, (int64_t)0);
+	s_hxconsole_test_fn_i64 = 0;
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_i64 9223372036854775807"));
+	EXPECT_EQ(s_hxconsole_test_fn_i64, (int64_t)9223372036854775807ll);
+	s_hxconsole_test_fn_i64 = 0;
+	EXPECT_FALSE(hxconsole_exec_line("hxconsole_test_fn_i64 9223372036854775808"));
+	EXPECT_EQ(s_hxconsole_test_fn_i64, (int64_t)0);
 
 	// uint64_t
-	s_fn_u64 = 0;
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_u64 18446744073709551615"));
-	EXPECT_EQ(s_fn_u64, (uint64_t)18446744073709551615ull);
-	s_fn_u64 = 0;
-	EXPECT_FALSE(hxconsole_exec_line("test_fn_u64 18446744073709551616"));
-	EXPECT_EQ(s_fn_u64, (uint64_t)0);
+	s_hxconsole_test_fn_u64 = 0;
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_u64 18446744073709551615"));
+	EXPECT_EQ(s_hxconsole_test_fn_u64, (uint64_t)18446744073709551615ull);
+	s_hxconsole_test_fn_u64 = 0;
+	EXPECT_FALSE(hxconsole_exec_line("hxconsole_test_fn_u64 18446744073709551616"));
+	EXPECT_EQ(s_hxconsole_test_fn_u64, (uint64_t)0);
 
 	// char
-	s_fn_char = 0;
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_char 127"));
-	EXPECT_EQ(s_fn_char, (char)127);
-	s_fn_char = 0;
-	EXPECT_FALSE(hxconsole_exec_line("test_fn_char 128"));
-	EXPECT_EQ(s_fn_char, (char)0);
+	s_hxconsole_test_fn_char = 0;
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_char 127"));
+	EXPECT_EQ(s_hxconsole_test_fn_char, (char)127);
+	s_hxconsole_test_fn_char = 0;
+	EXPECT_FALSE(hxconsole_exec_line("hxconsole_test_fn_char 128"));
+	EXPECT_EQ(s_hxconsole_test_fn_char, (char)0);
 }
 
 // ============================================================================
@@ -571,14 +573,14 @@ TEST(hxconsole_test, function_overflow) {
 TEST(hxconsole_test, function_bool_quirk) {
 	// bool: strtol failure returns 0 (false), next_ advances or not but no
 	// parse failure is signaled; execute_ returns true.
-	s_fn_bool = true;
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_bool notanumber"));
-	EXPECT_EQ(s_fn_bool, false);
+	s_hxconsole_test_fn_bool = true;
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_bool notanumber"));
+	EXPECT_EQ(s_hxconsole_test_fn_bool, false);
 
 	// int8_t: strtol failure leaves next_ == str_; execute_ returns false.
-	s_fn_i8 = 99;
-	EXPECT_FALSE(hxconsole_exec_line("test_fn_i8 notanumber"));
-	EXPECT_EQ(s_fn_i8, (int8_t)99);
+	s_hxconsole_test_fn_i8 = 99;
+	EXPECT_FALSE(hxconsole_exec_line("hxconsole_test_fn_i8 notanumber"));
+	EXPECT_EQ(s_hxconsole_test_fn_i8, (int8_t)99);
 }
 
 // ============================================================================
@@ -586,22 +588,22 @@ TEST(hxconsole_test, function_bool_quirk) {
 
 TEST(hxconsole_test, function_multi_arg) {
 	// mixed types
-	s_fn_mixed_i32 = 0; s_fn_mixed_f32 = 0.0f; s_fn_mixed_str = hxnull;
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_mixed 7 2.5 hello"));
-	EXPECT_EQ(s_fn_mixed_i32, (int32_t)7);
-	EXPECT_EQ(s_fn_mixed_f32, 2.5f);
-	EXPECT_TRUE(s_fn_mixed_str != hxnull && ::strncmp(s_fn_mixed_str, "hello", 5) == 0);
+	s_hxconsole_test_fn_mixed_i32 = 0; s_hxconsole_test_fn_mixed_f32 = 0.0f; s_hxconsole_test_fn_mixed_str = hxnull;
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_mixed 7 2.5 hello"));
+	EXPECT_EQ(s_hxconsole_test_fn_mixed_i32, (int32_t)7);
+	EXPECT_EQ(s_hxconsole_test_fn_mixed_f32, 2.5f);
+	EXPECT_TRUE(s_hxconsole_test_fn_mixed_str != hxnull && ::strncmp(s_hxconsole_test_fn_mixed_str, "hello", 5) == 0);
 
 	// all-integer
-	s_fn_ints_i32 = 0; s_fn_ints_u32 = 0;
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_ints -5 100"));
-	EXPECT_EQ(s_fn_ints_i32, (int32_t)-5);
-	EXPECT_EQ(s_fn_ints_u32, (uint32_t)100);
+	s_hxconsole_test_fn_ints_i32 = 0; s_hxconsole_test_fn_ints_u32 = 0;
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_ints -5 100"));
+	EXPECT_EQ(s_hxconsole_test_fn_ints_i32, (int32_t)-5);
+	EXPECT_EQ(s_hxconsole_test_fn_ints_u32, (uint32_t)100);
 
 	// zero-arg
-	s_fn_void_called = false;
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_void"));
-	EXPECT_TRUE(s_fn_void_called);
+	s_hxconsole_test_fn_void_called = false;
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_void"));
+	EXPECT_TRUE(s_hxconsole_test_fn_void_called);
 }
 
 // ============================================================================
@@ -611,32 +613,32 @@ TEST(hxconsole_test, function_arity) {
 	hxlogconsole("EXPECTING_TEST_WARNINGS\n");
 
 	// Too few args.
-	s_fn_mixed_i32 = -1; s_fn_mixed_f32 = -1.0f;
-	EXPECT_FALSE(hxconsole_exec_line("test_fn_mixed 1"));
-	EXPECT_EQ(s_fn_mixed_i32, (int32_t)-1);
+	s_hxconsole_test_fn_mixed_i32 = -1; s_hxconsole_test_fn_mixed_f32 = -1.0f;
+	EXPECT_FALSE(hxconsole_exec_line("hxconsole_test_fn_mixed 1"));
+	EXPECT_EQ(s_hxconsole_test_fn_mixed_i32, (int32_t)-1);
 
 	// Too many args (trailing data after last parsed arg).
-	s_fn_f32 = -1.0f;
-	EXPECT_FALSE(hxconsole_exec_line("test_fn_f32 1.0 2.0"));
-	EXPECT_EQ(s_fn_f32, -1.0f);
+	s_hxconsole_test_fn_f32 = -1.0f;
+	EXPECT_FALSE(hxconsole_exec_line("hxconsole_test_fn_f32 1.0 2.0"));
+	EXPECT_EQ(s_hxconsole_test_fn_f32, -1.0f);
 
 	// Too many args for two-arg function.
-	s_fn_i32 = -1;
-	EXPECT_FALSE(hxconsole_exec_line("test_fn_i32 1 2"));
-	EXPECT_EQ(s_fn_i32, (int32_t)-1);
+	s_hxconsole_test_fn_i32 = -1;
+	EXPECT_FALSE(hxconsole_exec_line("hxconsole_test_fn_i32 1 2"));
+	EXPECT_EQ(s_hxconsole_test_fn_i32, (int32_t)-1);
 
 	// Wrong type / unparseable.
-	s_fn_i32 = -1;
-	EXPECT_FALSE(hxconsole_exec_line("test_fn_i32 notanumber"));
-	EXPECT_EQ(s_fn_i32, (int32_t)-1);
+	s_hxconsole_test_fn_i32 = -1;
+	EXPECT_FALSE(hxconsole_exec_line("hxconsole_test_fn_i32 notanumber"));
+	EXPECT_EQ(s_hxconsole_test_fn_i32, (int32_t)-1);
 
 	// Unknown command.
 	EXPECT_FALSE(hxconsole_exec_line("nonexistent_fn"));
 
 	// Zero-arg with extra data.
-	s_fn_void_called = false;
-	EXPECT_FALSE(hxconsole_exec_line("test_fn_void 1"));
-	EXPECT_FALSE(s_fn_void_called);
+	s_hxconsole_test_fn_void_called = false;
+	EXPECT_FALSE(hxconsole_exec_line("hxconsole_test_fn_void 1"));
+	EXPECT_FALSE(s_hxconsole_test_fn_void_called);
 }
 
 // ============================================================================
@@ -649,9 +651,9 @@ TEST(hxconsole_test, comment_lines) {
 	EXPECT_EQ(s_hxconsole_test_i32, (int32_t)42);
 
 	// Zero-arg command followed by a comment.
-	s_fn_void_called = false;
-	EXPECT_TRUE(hxconsole_exec_line("test_fn_void # this is a comment"));
-	EXPECT_TRUE(s_fn_void_called);
+	s_hxconsole_test_fn_void_called = false;
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_void # this is a comment"));
+	EXPECT_TRUE(s_hxconsole_test_fn_void_called);
 }
 
 // ============================================================================

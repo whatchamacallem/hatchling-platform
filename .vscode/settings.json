@@ -157,6 +157,7 @@
         "Wextra",
         "Wfatal",
         "Wmissing",
+        "worktrees",
         "Wredundant",
         "Wshadow",
         "Wstrict",

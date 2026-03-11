@@ -54,9 +54,10 @@ template<> inline int16_t hxconsole_parse_arg_<int16_t>(const char* str_, char**
 	*next_ = end_; return (int16_t)v_;
 }
 template<> inline int32_t hxconsole_parse_arg_<int32_t>(const char* str_, char** next_) {
+	errno = 0;
 	char* end_ = const_cast<char*>(str_);
 	long v_ = ::strtol(str_, &end_, 0);
-	if(end_ == str_ || v_ < INT_MIN || v_ > INT_MAX) { *next_ = const_cast<char*>(str_); return 0; }
+	if(end_ == str_ || errno == ERANGE) { *next_ = const_cast<char*>(str_); return 0; }
 	*next_ = end_; return (int32_t)v_;
 }
 template<> inline int64_t hxconsole_parse_arg_<int64_t>(const char* str_, char** next_) {
@@ -81,9 +82,10 @@ template<> inline uint16_t hxconsole_parse_arg_<uint16_t>(const char* str_, char
 	*next_ = end_; return (uint16_t)v_;
 }
 template<> inline uint32_t hxconsole_parse_arg_<uint32_t>(const char* str_, char** next_) {
+	errno = 0;
 	char* end_ = const_cast<char*>(str_);
 	unsigned long v_ = ::strtoul(str_, &end_, 0);
-	if(end_ == str_ || v_ > UINT_MAX) { *next_ = const_cast<char*>(str_); return 0; }
+	if(end_ == str_ || errno == ERANGE) { *next_ = const_cast<char*>(str_); return 0; }
 	*next_ = end_; return (uint32_t)v_;
 }
 template<> inline uint64_t hxconsole_parse_arg_<uint64_t>(const char* str_, char** next_) {

@@ -3,6 +3,7 @@
 ## Testing
 
 Use debugbuild.sh to test changes and not cmake. 🐉🐉🐉 indicates success.
+Execute bin/hxtest when asked to run tests.
 
 ## Style Guide
 
@@ -36,7 +37,9 @@ elaborating it unnecessarily.
 
 Symbols that are included belong in the `include/hx` directory. Symbols that are
 internal generally belong in the `include/hx/detail` directory and end with an
-additional `_` if not already present. Symbols in the `test` directory never end
+additional `_` if not already present.
+
+All tests go in the `test` directory. Symbols in the `test` directory never end
 with an `_` and this rule overrides the rules above in order to show that
 internal symbols are not used when testing the APIs.
 

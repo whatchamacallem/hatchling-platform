@@ -256,10 +256,10 @@ TEST(hxconsole_test, variable_set) {
 	EXPECT_TRUE(hxconsole_exec_line("s_hxconsole_test_char 65"));
 	EXPECT_EQ(s_hxconsole_test_char, (char)65);
 
-	// float truncation: 3.5 -> 3
+	// Trailing fractional part is a parse error for integer types.
 	s_hxconsole_test_i32 = -1;
-	hxconsole_exec_line("s_hxconsole_test_i32 3.5");
-	EXPECT_EQ(s_hxconsole_test_i32, (int32_t)3);
+	EXPECT_FALSE(hxconsole_exec_line("s_hxconsole_test_i32 3.5"));
+	EXPECT_EQ(s_hxconsole_test_i32, (int32_t)-1);
 
 	// hex input
 	s_hxconsole_test_i32 = 0;
@@ -393,6 +393,13 @@ TEST(hxconsole_test, variable_parse_error) {
 	s_hxconsole_test_i32 = 10;
 	EXPECT_FALSE(hxconsole_exec_line("s_hxconsole_test_i32 abc"));
 	EXPECT_EQ(s_hxconsole_test_i32, (int32_t)10);
+
+	// bool: only 0 and 1 are valid; 2 and non-numeric strings are parse errors.
+	s_hxconsole_test_bool = true;
+	EXPECT_FALSE(hxconsole_exec_line("s_hxconsole_test_bool 2"));
+	EXPECT_EQ(s_hxconsole_test_bool, true);
+	EXPECT_FALSE(hxconsole_exec_line("s_hxconsole_test_bool notanumber"));
+	EXPECT_EQ(s_hxconsole_test_bool, true);
 }
 
 // ============================================================================
@@ -564,23 +571,6 @@ TEST(hxconsole_test, function_overflow) {
 	s_hxconsole_test_fn_char = 0;
 	EXPECT_FALSE(hxconsole_exec_line("hxconsole_test_fn_char 128"));
 	EXPECT_EQ(s_hxconsole_test_fn_char, (char)0);
-}
-
-// ============================================================================
-// function_bool_quirk: "notanumber" parses as false (not an error) for bool,
-// whereas int8_t "notanumber" is a parse error returning false from execute_.
-
-TEST(hxconsole_test, function_bool_quirk) {
-	// bool: strtol failure returns 0 (false), next_ advances or not but no
-	// parse failure is signaled; execute_ returns true.
-	s_hxconsole_test_fn_bool = true;
-	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_bool notanumber"));
-	EXPECT_EQ(s_hxconsole_test_fn_bool, false);
-
-	// int8_t: strtol failure leaves next_ == str_; execute_ returns false.
-	s_hxconsole_test_fn_i8 = 99;
-	EXPECT_FALSE(hxconsole_exec_line("hxconsole_test_fn_i8 notanumber"));
-	EXPECT_EQ(s_hxconsole_test_fn_i8, (int8_t)99);
 }
 
 // ============================================================================

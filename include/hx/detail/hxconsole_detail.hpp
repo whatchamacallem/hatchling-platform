@@ -35,9 +35,12 @@ template<> inline char hxconsole_parse_arg_<char>(const char* str_, char** next_
 	*next_ = end_; return (char)v_;
 }
 
-// bool: non-zero is true, overflow is irrelevant.
+// bool: only 0 or 1 are valid; anything else is a parse error.
 template<> inline bool hxconsole_parse_arg_<bool>(const char* str_, char** next_) {
-	return ::strtol(str_, next_, 0) != 0;
+	char* end_ = const_cast<char*>(str_);
+	long v_ = ::strtol(str_, &end_, 0);
+	if(end_ == str_ || (v_ != 0 && v_ != 1)) { *next_ = const_cast<char*>(str_); return false; }
+	*next_ = end_; return v_ != 0;
 }
 
 // Signed integers: parse as long, then range-check into target width.

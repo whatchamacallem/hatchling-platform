@@ -35,7 +35,7 @@ CMD=$(echo "sudo apt install -y                                       \
 	ccache        clang         clang-tidy    cmake       doxygen     \
 	g++           g++-multilib  gcc-multilib  gcovr       gdb         \
 	gdb-multiarch libc++-dev    llvm          llvm-dev    musl        \
-	musl-dev      musl-tools    ninja-build                           \
+	musl-dev      musl-tools    ninja-build   universal-ctags         \
 " | tr -s '[:space:]' ' ')
 echo "\$ $CMD"
 eval "$CMD"

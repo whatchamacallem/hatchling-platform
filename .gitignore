@@ -2,5 +2,6 @@ bin/
 build/
 cache/
 docs/
+tags
 .claude/worktrees/
 .claude/agent-memory-local/

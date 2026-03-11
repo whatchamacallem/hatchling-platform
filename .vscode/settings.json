@@ -24,6 +24,7 @@
         "constexpr",
         "constness",
         "cppcoreguidelines",
+        "cstido",
         "cstyle",
         "ctypes",
         "ctypeslib",

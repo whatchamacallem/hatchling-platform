@@ -12,6 +12,9 @@ symbols in the standard library are generally functionally equivalent. E.g. use
 `hxforward` instead of `std::forward`. Standard functionality is often
 available.
 
+Do not use C++ exceptions, RTTI or assume asserts are enabled. Check when adding
+includes whether they are redundant and write them as `<stdio.h>` not `<cstido>`.
+
 All symbols are snake_case. Except feature test macros are SCREAMING_SNAKE_CASE.
 
 Classes, structs and functions begin with `hx`. Functions end with `_t`.
@@ -19,16 +22,25 @@ Template parameters snake_case and end with `_t_`. Use structs only for C code.
 Function parameters and private fields do not begin with `hx` and end with an
 underscore. Private fields begin with `m_`.
 
+Remove trailing `_` from doxygen comments and leave them otherwise. Update docs
+and follow existing style.
+
+Prefer code that avoids stepping through unnecessary function calls in the
+debugger or requires unnecessary traversal of data structures in the debugger
+watch window. Prefer C-style implementation details that are cache coherent. Use
+template wrappers for type safety while avoiding the associated code bloat.
+Entirely re-write the structure of the existing code if needed instead of
+elaborating it unnecessarily.
+
+## Project Structure
+
 Symbols that are included belong in the `include/hx` directory. Symbols that are
 internal generally belong in the `include/hx/detail` directory and end with an
 additional `_` if not already present. Symbols in the `test` directory never end
 with an `_` and this rule overrides the rules above in order to show that
 internal symbols are not used when testing the APIs.
 
-Prefer code that avoids stepping through unnecessary function calls in the
-debugger or requires unnecessary traversal of data structures in the debugger
-watch window. Prefer C-style implementation details that are cache coherent. Use
-template wrappers for type safety while avoiding the associated code bloat.
+Place temporary planning documents at the top level prefixed with `plan`.
 
 ## ctags
 

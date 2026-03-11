@@ -5,6 +5,8 @@
 // hxconsole inline header and internals. See hxconsole.hpp.
 
 #include "../hxutility.h"
+#include <errno.h>
+#include <limits.h>
 
 // NOLINTBEGIN
 
@@ -12,47 +14,84 @@ namespace hxdetail_ {
 
 // ----------------------------------------------------------------------------
 // Argument parsing. Explicit specializations parse each supported type.
+// On overflow next_ is reset to str_ to signal a parse failure.
 
 template<typename arg_t_>
 arg_t_ hxconsole_parse_arg_(const char* str_, char** next_) = delete;
 
-// Floating-point types share strtod.
+// Floating-point types.
 template<> inline float hxconsole_parse_arg_<float>(const char* str_, char** next_) {
-	return (float)::strtod(str_, next_);
+	return ::strtof(str_, next_);
 }
 template<> inline double hxconsole_parse_arg_<double>(const char* str_, char** next_) {
 	return ::strtod(str_, next_);
 }
 
-// Signed integer types share strtol (base 0 accepts decimal, hex, octal).
-template<> inline int8_t hxconsole_parse_arg_<int8_t>(const char* str_, char** next_) {
-	return (int8_t)::strtol(str_, next_, 0);
-}
-template<> inline int16_t hxconsole_parse_arg_<int16_t>(const char* str_, char** next_) {
-	return (int16_t)::strtol(str_, next_, 0);
-}
-template<> inline int32_t hxconsole_parse_arg_<int32_t>(const char* str_, char** next_) {
-	return (int32_t)::strtol(str_, next_, 0);
-}
-template<> inline int64_t hxconsole_parse_arg_<int64_t>(const char* str_, char** next_) {
-	return (int64_t)::strtol(str_, next_, 0);
+// char: range CHAR_MIN..CHAR_MAX (platform-defined signedness).
+template<> inline char hxconsole_parse_arg_<char>(const char* str_, char** next_) {
+	char* end_ = const_cast<char*>(str_);
+	long long v_ = ::strtoll(str_, &end_, 0);
+	if(end_ == str_ || v_ < CHAR_MIN || v_ > CHAR_MAX) { *next_ = const_cast<char*>(str_); return 0; }
+	*next_ = end_; return (char)v_;
 }
 
-// Unsigned integer types share strtoul (base 0).
+// bool: non-zero is true, overflow is irrelevant.
 template<> inline bool hxconsole_parse_arg_<bool>(const char* str_, char** next_) {
-	return ::strtol(str_, next_, 0) != 0;
+	return ::strtoll(str_, next_, 0) != 0;
 }
+
+// Signed integers: parse as long long, then range-check into target width.
+template<> inline int8_t hxconsole_parse_arg_<int8_t>(const char* str_, char** next_) {
+	char* end_ = const_cast<char*>(str_);
+	long long v_ = ::strtoll(str_, &end_, 0);
+	if(end_ == str_ || v_ < SCHAR_MIN || v_ > SCHAR_MAX) { *next_ = const_cast<char*>(str_); return 0; }
+	*next_ = end_; return (int8_t)v_;
+}
+template<> inline int16_t hxconsole_parse_arg_<int16_t>(const char* str_, char** next_) {
+	char* end_ = const_cast<char*>(str_);
+	long long v_ = ::strtoll(str_, &end_, 0);
+	if(end_ == str_ || v_ < SHRT_MIN || v_ > SHRT_MAX) { *next_ = const_cast<char*>(str_); return 0; }
+	*next_ = end_; return (int16_t)v_;
+}
+template<> inline int32_t hxconsole_parse_arg_<int32_t>(const char* str_, char** next_) {
+	char* end_ = const_cast<char*>(str_);
+	long long v_ = ::strtoll(str_, &end_, 0);
+	if(end_ == str_ || v_ < INT_MIN || v_ > INT_MAX) { *next_ = const_cast<char*>(str_); return 0; }
+	*next_ = end_; return (int32_t)v_;
+}
+template<> inline int64_t hxconsole_parse_arg_<int64_t>(const char* str_, char** next_) {
+	errno = 0;
+	char* end_ = const_cast<char*>(str_);
+	long long v_ = ::strtoll(str_, &end_, 0);
+	if(end_ == str_ || errno == ERANGE) { *next_ = const_cast<char*>(str_); return 0; }
+	*next_ = end_; return (int64_t)v_;
+}
+
+// Unsigned integers: parse as unsigned long long, then range-check.
 template<> inline uint8_t hxconsole_parse_arg_<uint8_t>(const char* str_, char** next_) {
-	return (uint8_t)::strtoul(str_, next_, 0);
+	char* end_ = const_cast<char*>(str_);
+	unsigned long long v_ = ::strtoull(str_, &end_, 0);
+	if(end_ == str_ || v_ > UCHAR_MAX) { *next_ = const_cast<char*>(str_); return 0; }
+	*next_ = end_; return (uint8_t)v_;
 }
 template<> inline uint16_t hxconsole_parse_arg_<uint16_t>(const char* str_, char** next_) {
-	return (uint16_t)::strtoul(str_, next_, 0);
+	char* end_ = const_cast<char*>(str_);
+	unsigned long long v_ = ::strtoull(str_, &end_, 0);
+	if(end_ == str_ || v_ > USHRT_MAX) { *next_ = const_cast<char*>(str_); return 0; }
+	*next_ = end_; return (uint16_t)v_;
 }
 template<> inline uint32_t hxconsole_parse_arg_<uint32_t>(const char* str_, char** next_) {
-	return (uint32_t)::strtoul(str_, next_, 0);
+	char* end_ = const_cast<char*>(str_);
+	unsigned long long v_ = ::strtoull(str_, &end_, 0);
+	if(end_ == str_ || v_ > UINT_MAX) { *next_ = const_cast<char*>(str_); return 0; }
+	*next_ = end_; return (uint32_t)v_;
 }
 template<> inline uint64_t hxconsole_parse_arg_<uint64_t>(const char* str_, char** next_) {
-	return ::strtoull(str_, next_, 16);
+	errno = 0;
+	char* end_ = const_cast<char*>(str_);
+	unsigned long long v_ = ::strtoull(str_, &end_, 0);
+	if(end_ == str_ || errno == ERANGE) { *next_ = const_cast<char*>(str_); return 0; }
+	*next_ = end_; return (uint64_t)v_;
 }
 
 // const char* captures remainder of line including comments starting with #'s.
@@ -73,6 +112,7 @@ template<> inline const char* hxconsole_parse_arg_<const char*>(const char* str_
 template<typename arg_t_> const char* hxconsole_arg_label_() = delete;
 template<> inline const char* hxconsole_arg_label_<float>() { return "f32"; }
 template<> inline const char* hxconsole_arg_label_<double>() { return "f64"; }
+template<> inline const char* hxconsole_arg_label_<char>() { return "char"; }
 template<> inline const char* hxconsole_arg_label_<bool>() { return "bool"; }
 template<> inline const char* hxconsole_arg_label_<int8_t>() { return "i8"; }
 template<> inline const char* hxconsole_arg_label_<uint8_t>() { return "u8"; }
@@ -81,7 +121,7 @@ template<> inline const char* hxconsole_arg_label_<uint16_t>() { return "u16"; }
 template<> inline const char* hxconsole_arg_label_<int32_t>() { return "i32"; }
 template<> inline const char* hxconsole_arg_label_<uint32_t>() { return "u32"; }
 template<> inline const char* hxconsole_arg_label_<int64_t>() { return "i64"; }
-template<> inline const char* hxconsole_arg_label_<uint64_t>() { return "hex"; }
+template<> inline const char* hxconsole_arg_label_<uint64_t>() { return "u64"; }
 template<> inline const char* hxconsole_arg_label_<const char*>() { return "char*"; }
 
 // ----------------------------------------------------------------------------
@@ -107,58 +147,12 @@ inline bool hxconsole_is_end_of_line_(const char* str_) {
 }
 
 // ----------------------------------------------------------------------------
-// Cast double to variable type. Integer types clamp. Floating-point types
-// assign directly.
-
-template<typename var_t_>
-inline var_t_ hxconsole_cast_number_(double number_) {
-	// Integer path: clamp to representable range.
-	const bool is_signed_ = static_cast<var_t_>(-1) < var_t_(0u);
-	const var_t_ min_value_ = is_signed_ ? var_t_(var_t_(1u) << (sizeof(var_t_) * 8 - 1)) : var_t_(0u);
-	const var_t_ max_value_ = (var_t_)~min_value_;
-
-	double clamped_ = hxclamp(number_, (double)min_value_, (double)max_value_);
-	hxassertmsg(number_ == clamped_, "parameter_overflow %lf -> %lf", number_, clamped_);
-	return (var_t_)clamped_;
-}
-
-template<> inline float hxconsole_cast_number_<float>(double number_) {
-	return static_cast<float>(number_);
-}
-
-template<> inline double hxconsole_cast_number_<double>(double number_) {
-	return number_;
-}
-
-template<> inline bool hxconsole_cast_number_<bool>(double number_) {
-	return number_ != 0.0;
-}
-
-// ----------------------------------------------------------------------------
 // hxconsole_command_ base class.
 
 class hxconsole_command_ {
 public:
 	virtual bool execute_(const char* str_) = 0; // Return false for parse errors.
 	virtual void usage_(const char* id_=hxnull) = 0; // Expects command name.
-
-	// Returns 0 if no parameter. Returns 1 if a single number was found. Returns
-	// 2 to indicate a parse error. This avoids template bloat by being in a
-	// base class.
-	static int execute_number_(const char* str_, double* number_) {
-		if(hxconsole_is_end_of_line_(str_)) {
-			return 0; // success, do not modify
-		}
-
-		char* ptr_ = const_cast<char*>(str_);
-		*number_ = ::strtod(str_, &ptr_);
-		if(str_ < ptr_ && hxconsole_is_end_of_line_(ptr_)) {
-			return 1; // success, do modify
-		}
-
-		hxlogconsole("parse error: %s", str_);
-		return 2; // failure, do not modify
-	}
 };
 
 // ----------------------------------------------------------------------------
@@ -219,8 +213,7 @@ private:
 };
 
 // ----------------------------------------------------------------------------
-// Variable template. Uses execute_number_ from the base class to avoid
-// template bloat. Assignment casts through double with clamping.
+// Variable template.
 
 template<typename var_t_>
 class hxconsole_variable_ : public hxconsole_command_ {
@@ -228,19 +221,19 @@ public:
 	hxconsole_variable_(volatile var_t_* var_) : m_var_(var_) { }
 
 	bool execute_(const char* str_) override {
-		double number_ = 0.0;
-		int code_ = execute_number_(str_, &number_);
-		if(code_ == 0) {
-			// 0 parameters is a query
+		if(hxconsole_is_end_of_line_(str_)) {
+			// 0 parameters is a query.
 			hxloghandler(hxloglevel_console, "%.15g\n", (double)*m_var_);
 			return true;
 		}
-		if(code_ == 1) {
-			// 1 parameter is assignment.
-			*m_var_ = hxconsole_cast_number_<var_t_>(number_);
+		char* next_ = const_cast<char*>(str_);
+		var_t_ val_ = hxconsole_parse_arg_<var_t_>(str_, &next_);
+		if(str_ < next_ && hxconsole_is_end_of_line_(next_)) {
+			*m_var_ = val_;
 			return true;
 		}
-		return false; // 2 is unexpected args.
+		hxlogconsole("parse error: %s", str_);
+		return false;
 	}
 
 	void usage_(const char* id_=hxnull) override {

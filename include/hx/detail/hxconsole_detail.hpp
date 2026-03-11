@@ -16,6 +16,10 @@ namespace hxdetail_ {
 template<typename arg_t_>
 arg_t_ hxconsole_parse_arg_(const char* str_, char** next_) = delete;
 
+template<> inline float hxconsole_parse_arg_<float>(const char* str_, char** next_) {
+	return (float)::strtod(str_, next_);
+}
+
 template<> inline double hxconsole_parse_arg_<double>(const char* str_, char** next_) {
 	return ::strtod(str_, next_);
 }
@@ -48,6 +52,7 @@ template<> inline const char* hxconsole_parse_arg_<const char*>(const char* str_
 // Argument labels for usage strings.
 
 template<typename arg_t_> const char* hxconsole_arg_label_() = delete;
+template<> inline const char* hxconsole_arg_label_<float>() { return "f32"; }
 template<> inline const char* hxconsole_arg_label_<double>() { return "f64"; }
 template<> inline const char* hxconsole_arg_label_<int32_t>() { return "i32"; }
 template<> inline const char* hxconsole_arg_label_<uint32_t>() { return "u32"; }

@@ -146,31 +146,29 @@ bool hxconsole_help(void) {
 
 #if (HX_RELEASE) < 2 && !defined __wasm__
 
-static bool hxconsole_peek(hxconsolehex_t address, hxconsolenumber_t bytes) {
-	hxhex_dump(static_cast<const void*>(address), bytes, false);
+static bool hxconsole_peek(uint64_t address_, uint32_t bytes_) {
+	hxhex_dump(reinterpret_cast<const void*>(static_cast<uintptr_t>(address_)), bytes_, false);
 	return true;
 }
 
 // Writes bytes from a hex value in little-endian format (LSB first). The value
 // repeats every 8 bytes (64 bits) in memory. The hex input is also 64-bit.
-static bool hxconsole_poke(hxconsolehex_t address_, hxconsolenumber_t bytes_, hxconsolehex_t hex_) {
-	volatile uint8_t* address = address_;
-	uint32_t bytes = bytes_;
-	uint64_t hex = hex_;
-	while(bytes-- != 0u) {
-		*address++ = static_cast<uint8_t>(hex);
-		hex = (hex >> 8) | (hex << 56);
+static bool hxconsole_poke(uint64_t address_, uint32_t bytes_, uint64_t hex_) {
+	volatile uint8_t* address = reinterpret_cast<volatile uint8_t*>(static_cast<uintptr_t>(address_));
+	while(bytes_-- != 0u) {
+		*address++ = static_cast<uint8_t>(hex_);
+		hex_ = (hex_ >> 8) | (hex_ << 56);
 	}
 	return true;
 }
 
-static bool hxconsole_hex_dump(hxconsolehex_t address, hxconsolenumber_t bytes) {
-	hxhex_dump(static_cast<const void*>(address), bytes, true);
+static bool hxconsole_hex_dump(uint64_t address_, uint32_t bytes_) {
+	hxhex_dump(reinterpret_cast<const void*>(static_cast<uintptr_t>(address_)), bytes_, true);
 	return true;
 }
 
-static bool hxconsole_float_dump(hxconsolehex_t address, hxconsolenumber_t bytes) {
-	hxfloat_dump(static_cast<const float*>(address), bytes);
+static bool hxconsole_float_dump(uint64_t address_, uint32_t bytes_) {
+	hxfloat_dump(reinterpret_cast<const float*>(static_cast<uintptr_t>(address_)), bytes_);
 	return true;
 }
 

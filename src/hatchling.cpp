@@ -172,7 +172,7 @@ static bool hxprint_hashes(void) {
 	return true;
 }
 
-static bool hxcheck_hash(hxconsolehex_t hash_) {
+static bool hxcheck_hash(uint32_t hash_) {
 	hxregister_string_literal_hash* node = hxstring_literal_hashes_().find(hash_);
 	if(node != hxnull) {
 		while(node != hxnull) {

@@ -11,23 +11,23 @@ HX_REGISTER_FILENAME_HASH
 namespace {
 float s_hxconsole_test_result_hook = 0.0f;
 
-bool hxconsole_test_register0(hxconsolenumber_t a0, const char* a1) {
-	s_hxconsole_test_result_hook = static_cast<float>(a0) + static_cast<float>(::strlen(a1));
+bool hxconsole_test_register0(float a0_, const char* a1_) {
+	s_hxconsole_test_result_hook = a0_ + static_cast<float>(::strlen(a1_));
 	return true;
 }
 
-bool hxconsole_test_register1(hxconsolenumber_t a0) {
-	s_hxconsole_test_result_hook = a0;
+bool hxconsole_test_register1(float a0_) {
+	s_hxconsole_test_result_hook = a0_;
 	return true;
 }
 
-bool hxconsole_test_register2(hxconsolenumber_t a0) {
-	s_hxconsole_test_result_hook = a0;
+bool hxconsole_test_register2(float a0_) {
+	s_hxconsole_test_result_hook = a0_;
 	return true;
 }
 
-bool hxconsole_test_register3(hxconsolenumber_t, hxconsolenumber_t a1) {
-	s_hxconsole_test_result_hook = a1;
+bool hxconsole_test_register3(float, float a1_) {
+	s_hxconsole_test_result_hook = a1_;
 	return true;
 }
 } // namespace
@@ -174,7 +174,7 @@ namespace {
 	volatile float s_hxconsole_test_file_var1 = 0.0f;
 	volatile float s_hxconsole_test_file_var2 = 0.0f;
 
-	bool hxconsole_test_file_fn(hxconsolenumber_t f) {
+	bool hxconsole_test_file_fn(float f) {
 		s_hxconsole_test_file_var2 = f;
 		return true;
 	}

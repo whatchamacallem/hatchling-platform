@@ -1,0 +1,193 @@
+hxconsole C++17 Rewrite Design
+===============================
+
+Overview
+--------
+Replace the arity-specialized template classes (hxconsole_command0_ through
+hxconsole_command4_) and their factory overloads with a single variadic
+template using C++17 fold expressions. Drop hxconsolenumber_t and
+hxconsolehex_t. Parse directly to concrete types.
+
+Goals: no std namespace, minimal generated assembly, minimal debug noise.
+
+
+Supported Parameter Types
+-------------------------
+Commands are C-style functions returning bool. Parameters are parsed from the
+command string in order. Supported types:
+
+  double       parsed with strtod
+  int32_t      parsed with strtol (base 0, accepts 0x prefix)
+  uint32_t     parsed with strtoul (base 0)
+  uint64_t     parsed with strtoull (base 16, replaces hxconsolehex_t)
+  const char*  captures remainder of line (must be last parameter)
+
+Variables are any arithmetic type. Get/set via strtod with clamping.
+
+
+Argument Parsing
+----------------
+A function template with explicit specializations replaces the
+hxconsole_arg_<T> class hierarchy:
+
+  template<typename arg_t_>
+  arg_t_ hxconsole_parse_arg_(const char* str, char** next) = delete;
+
+Specializations for double, int32_t, uint32_t, uint64_t, and const char*
+each call the appropriate strto* function and advance *next.
+
+When C++20 is available, a concept constrains the command template
+so that invalid parameter types produce a clear diagnostic instead
+of a deleted-function error:
+
+  #if HX_CPLUSPLUS >= 202002L
+  template<typename t_>
+  concept hxconsole_parseable_ = requires(const char* s, char** n) {
+      requires hxis_same<decltype(hxconsole_parse_arg_<t_>(s, n)), t_>::value;
+  };
+  #else
+  #define hxconsole_parseable_ typename
+  #endif
+
+The variadic command template uses the concept directly:
+
+  template<hxconsole_parseable_... args_t_>
+  class hxconsole_command_impl_ : public hxconsole_command_ { ... };
+
+A label trait provides usage strings:
+
+  template<typename arg_t_> const char* hxconsole_arg_label_() = delete;
+  // double -> "f64", int32_t -> "i32", uint32_t -> "u32",
+  // uint64_t -> "hex", const char* -> "char*"
+
+
+Single Variadic Command Template
+---------------------------------
+One class replaces five:
+
+  template<typename... args_t_>
+  class hxconsole_command_impl_ : public hxconsole_command_ {
+      bool(*m_fn_)(args_t_...);
+
+      bool execute_(const char* str) override;
+      void usage_(const char* id) override;
+  };
+
+execute_ for zero args (if constexpr) checks the line is empty and
+calls m_fn_().
+
+execute_ for N args uses a recursive helper. No tuple, no
+index_sequence, no std:: types. Each arg is parsed one at a time
+and passed directly to the next level of recursion. The final level
+calls the function:
+
+  // Terminal: all args parsed, check end of line and call.
+  template<typename fn_t_, typename... parsed_t_>
+  static bool call_(fn_t_ fn_, const char* pos_, char*, parsed_t_... parsed_) {
+      if (hxconsole_is_end_of_line_(pos_)) {
+          return fn_(parsed_...);
+      }
+      return false;
+  }
+
+  // Recursive: parse one arg, recurse with remaining types.
+  template<typename first_t_, typename... rest_t_, typename fn_t_, typename... parsed_t_>
+  static bool call_(fn_t_ fn_, const char* pos_, char* next_, parsed_t_... parsed_) {
+      first_t_ val_ = hxconsole_parse_arg_<first_t_>(pos_, &next_);
+      if (pos_ < next_) {
+          return call_<rest_t_...>(fn_, next_, next_, parsed_..., val_);
+      }
+      return false;
+  }
+
+  bool execute_(const char* str_) override {
+      if constexpr (sizeof...(args_t_) == 0) {
+          if (hxconsole_is_end_of_line_(str_)) { return m_fn_(); }
+          usage_(); return false;
+      } else {
+          char* next_ = const_cast<char*>(str_);
+          bool ok_ = call_<args_t_...>(m_fn_, str_, next_);
+          if (!ok_) { usage_(); }
+          return ok_;
+      }
+  }
+
+This generates one call_ instantiation per argument, each a small
+non-virtual function that the compiler can inline. No heap, no
+tuple, no virtual dispatch during parsing. The parsed arguments
+travel through the call stack as plain values.
+
+usage_ uses a fold expression to print each type label:
+
+  void usage_(const char* id_) override {
+      hxlogconsole("%s", id_ ? id_ : "usage:");
+      (hxlogconsole(" %s", hxconsole_arg_label_<args_t_>()), ...);
+      hxlogconsole("\n");
+  }
+
+
+Single Factory Function
+-----------------------
+One template replaces four overloads:
+
+  template<typename... args_t_>
+  hxconsole_command_impl_<args_t_...>
+  hxconsole_command_factory_(bool(*fn_)(args_t_...)) {
+      return hxconsole_command_impl_<args_t_...>(fn_);
+  }
+
+The compiler deduces args_t_... from the function pointer.
+
+
+Variable Template
+-----------------
+hxconsole_variable_<var_t_> stays structurally the same. It uses
+execute_number_ (strtod) from the base class. Assignment casts
+through double with the same clamping logic as the current code,
+inlined directly. No hxconsolenumber_t wrapper needed.
+
+
+Registration and Storage
+------------------------
+Unchanged. hxconsole_constructor_ uses placement new into static
+storage. The storage size is sizeof(vtable_ptr + function_ptr),
+which is the same for all hxconsole_command_impl_<args_t_...>
+instantiations (type parameters are compile-time only).
+A static_assert in the constructor verifies the size.
+
+
+Public API
+----------
+Unchanged. The four macros and four free functions keep the same
+signatures:
+
+  hxconsole_command(fn)
+  hxconsole_command_named(fn, name)
+  hxconsole_variable(var)
+  hxconsole_variable_named(var, name)
+  hxconsole_exec_line(command)
+  hxconsole_exec_file(file)
+  hxconsole_exec_filename(filename)
+  hxconsole_help()
+
+
+What Gets Removed
+-----------------
+  hxconsolenumber_t class
+  hxconsolehex_t class
+  hxconsole_command0_ through hxconsole_command4_ classes
+  hxconsole_arg_<arg_t_> class hierarchy
+  Four factory function overloads
+
+
+Caller Migration
+----------------
+Built-in commands change from wrapper types to concrete types:
+
+  peek(uint64_t address, uint32_t bytes)
+  poke(uint64_t address, uint32_t bytes, uint64_t hex)
+  hexdump(uint64_t address, uint32_t bytes)
+  floatdump(uint64_t address, uint32_t bytes)
+  checkhash(uint32_t hash)      [in hatchling.cpp]
+
+Test functions change from hxconsolenumber_t to double.

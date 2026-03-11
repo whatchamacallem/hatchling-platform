@@ -1,5 +1,9 @@
 # Hatchling Platform
 
+## Testing
+
+Use debugbuild.sh to test changes and not cmake.
+
 ## Style Guide
 
 This is a bespoke C17/C++20 alternative to the C++ standard library. Never use
@@ -10,11 +14,21 @@ available.
 
 All symbols are snake_case. Except feature test macros are SCREAMING_SNAKE_CASE.
 
+Classes, structs and functions begin with `hx`. Functions end with `_t`.
+Template parameters snake_case and end with `_t_`. Use structs only for C code.
+Function parameters and private fields do not begin with `hx` and end with an
+underscore. Private fields begin with `m_`.
+
 Symbols that are included belong in the `include/hx` directory. Symbols that are
 internal generally belong in the `include/hx/detail` directory and end with an
-underscore. Classes, structs and functions begin with `hx`. Use structs only for
-C code. Function parameters and private fields do not begin with `hx` and end
-with an underscore. Private fields begin with `m_`.
+additional `_` if not already present. Symbols in the `test` directory never end
+with an `_` and this rule overrides the rules above in order to show that
+internal symbols are not used when testing the APIs.
+
+Prefer code that avoids stepping through unnecessary function calls in the
+debugger or requires unnecessary traversal of data structures in the debugger
+watch window. Prefer C-style implementation details that are cache coherent. Use
+template wrappers for type safety while avoiding the associated code bloat.
 
 ## ctags
 

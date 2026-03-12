@@ -3,7 +3,9 @@
 // This file is licensed under the MIT license found in the LICENSE.md file.
 
 // This is the C <stdio.h> version using FILE*. Use an alternate .cpp file for
-// alternate implementations.
+// alternate implementations. Annex K of the C11 standard was never widely
+// implemented. Therefore no *_s functions are used here.  See the NOLINT
+// markers.
 
 #include "../include/hx/hxfile.hpp"
 
@@ -15,8 +17,6 @@
 // Allow use of fopen as fopen_s is not portable.
 #pragma warning(disable: 4996)
 #endif
-
-// NOLINTBEGIN(clang-analyzer-core.NonNullParamChecker)
 
 // hxfile - Targets require an implementation of fopen(), fclose(), fread(),
 // fwrite(), fgets(), and feof().
@@ -131,10 +131,17 @@ bool hxfile::set_pos(size_t position_) {
 	return !m_fail_;
 }
 
-size_t hxfile::read(void* bytes, size_t byte_count) {
+size_t hxfile::read(void* bytes, size_t buffer_size, size_t byte_count) {
 	hxassertmsg(((m_open_mode_ & hxfile::in) != 0u) && (m_file_pimpl_ != hxnull), "invalid_file");
+	hxassertrelease(byte_count <= buffer_size || ((m_open_mode_ & hxfile::skip_asserts) != 0u),
+		"read %zu overflows %zu", byte_count, buffer_size);
 
-	const size_t bytes_read = ::fread(bytes, 1, byte_count, static_cast<FILE*>(m_file_pimpl_));
+	if(byte_count > buffer_size) {
+		m_fail_ = true;
+		return 0u;
+	}
+
+	const size_t bytes_read = ::fread(bytes, 1, byte_count, static_cast<FILE*>(m_file_pimpl_)); // NOLINT
 
 	hxassertmsg((byte_count == bytes_read) || ((m_open_mode_ & hxfile::skip_asserts) != 0u),
 		"fread expected %zu != actual %zu: %s", byte_count, bytes_read, ::strerror(errno));
@@ -178,7 +185,7 @@ bool hxfile::flush(void) {
 bool hxfile::getline(char* buffer, int buffer_size) {
 	hxassertmsg(((m_open_mode_ & hxfile::in) != 0u) && (m_file_pimpl_ != hxnull), "invalid_file");
 
-	char* result = ::fgets(buffer, buffer_size, static_cast<FILE*>(m_file_pimpl_));
+	char* result = ::fgets(buffer, buffer_size, static_cast<FILE*>(m_file_pimpl_)); // NOLINT
 
 	hxassertmsg(!::ferror(static_cast<FILE*>(m_file_pimpl_)), "fgets %s", ::strerror(errno));
 
@@ -213,7 +220,7 @@ int hxfile::scan(const char* format, ...) {
 	hxassertmsg(((m_open_mode_ & hxfile::in) != 0u) && (m_file_pimpl_ != hxnull), "invalid_file");
 	va_list args;
 	va_start(args, format);
-	const int items_scanned = ::vfscanf(static_cast<FILE*>(m_file_pimpl_), format, args);
+	const int items_scanned = ::vfscanf(static_cast<FILE*>(m_file_pimpl_), format, args); // NOLINT
 	va_end(args);
 
 	hxassertrelease(items_scanned != EOF || ((m_open_mode_ & hxfile::skip_asserts) != 0u), "vfscanf %s", ::strerror(errno));
@@ -224,5 +231,3 @@ int hxfile::scan(const char* format, ...) {
 	}
 	return items_scanned;
 }
-
-// NOLINTEND(clang-analyzer-core.NonNullParamChecker)

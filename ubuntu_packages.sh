@@ -44,7 +44,7 @@ separator ---------------------------------------------------------------------
 
 set +o errexit
 
-for CMD in clang cmake doxygen emcc gcc gcovr musl-gcc python3 ninja
+for CMD in clang cmake doxygen emcc gcc gcovr musl-gcc python3 ninja universal-ctags
 do
 	echo "\$ $CMD --version"
     eval "$CMD --version"

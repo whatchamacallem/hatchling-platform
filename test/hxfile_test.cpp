@@ -149,7 +149,7 @@ TEST(hxfile_test, move_copy_and_stream_operators) {
 	EXPECT_TRUE(!f.fail());
 	EXPECT_FALSE(f.eof());
 	char t = '\0';
-	const size_t extra_byte = f.read(&t, 1); // This call fails.
+	const size_t extra_byte = f.read(&t, sizeof t, sizeof t); // This call fails.
 	EXPECT_TRUE(f.eof());
 	EXPECT_EQ(extra_byte, 0u);
 	EXPECT_TRUE(f.fail());
@@ -177,9 +177,20 @@ TEST(hxfile_test, eof_variants) {
 		uint8_t buffer[4];
 		EXPECT_TRUE(reader.is_open());
 		EXPECT_FALSE(reader.fail());
-		EXPECT_EQ(reader.read(buffer, sizeof buffer), 0u);
+		EXPECT_EQ(reader.read(buffer, sizeof buffer, sizeof buffer), 0u);
 		EXPECT_TRUE(reader.fail());
 		EXPECT_TRUE(reader.eof());
+	}
+
+	{
+		// "Asserts that count does not exceed buffer_size." Overflow read should fail and return 0.
+		hxfile reader(hxfile::in | hxfile::skip_asserts, filename);
+		uint8_t buffer[4];
+		EXPECT_TRUE(reader.is_open());
+		EXPECT_FALSE(reader.fail());
+		EXPECT_EQ(reader.read(buffer, sizeof buffer, sizeof buffer + 1u), 0u);
+		EXPECT_TRUE(reader.fail());
+		EXPECT_FALSE(reader.eof());
 	}
 
 	{

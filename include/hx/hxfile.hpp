@@ -142,11 +142,12 @@ public:
 	bool set_pos(size_t position_);
 
 	/// Reads a specified number of bytes from the file into the provided
-	/// buffer. Does not reset the failure flag to false on success.
-	/// - `bytes` : Non-null pointer to a buffer large enough to store `count`
-	///   bytes.
-	/// - `count` : Number of bytes to read from the file.
-	size_t read(void* bytes_, size_t count_) hxattr_nonnull(2) hxattr_hot;
+	/// buffer. Asserts that `count` does not exceed `buffer_size`. Does not
+	/// reset the failure flag to false on success.
+	/// - `bytes` : Non-null pointer to a buffer of at least `buffer_size` bytes.
+	/// - `buffer_size` : Capacity of the buffer in bytes.
+	/// - `count` : Number of bytes to read from the file. Must not exceed `buffer_size`.
+	size_t read(void* bytes_, size_t buffer_size_, size_t count_) hxattr_nonnull(2) hxattr_hot;
 
 	/// Writes a specified number of bytes from the provided buffer to the file.
 	/// Writing will be skipped when using `hxdev_null`. Resets the failure flag
@@ -196,7 +197,7 @@ public:
 	/// Reads a single unformatted native-endian object from the file.
 	/// - `t` : Reference to the object where the data will be stored.
 	template<typename T_>
-	bool read1(T_& t_) { return this->read(&t_, sizeof t_) == sizeof t_; }
+	bool read1(T_& t_) { return this->read(&t_, sizeof t_, sizeof t_) == sizeof t_; }
 
 	/// Writes a single unformatted native-endian object to the file.
 	/// - `t` : Reference to the object containing the data to write.
@@ -207,7 +208,7 @@ public:
 	/// - `t` : Reference to the object where the data will be stored.
 	template<typename T_>
 	hxfile& operator>>(T_& t_) {
-		this->read(&t_, sizeof t_);
+		this->read(&t_, sizeof t_, sizeof t_);
 		return *this;
 	}
 

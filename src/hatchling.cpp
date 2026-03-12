@@ -52,7 +52,7 @@ static_assert(0, "Warning: C++ exceptions are not supported for embedded use.");
 
 extern "C" {
 
-void __sanitizer_report_error_summary(const char *error_summary);
+void __sanitizer_report_error_summary(const char *error_summary); // NOLINT
 
 #if HX_NO_LIBCXX
 

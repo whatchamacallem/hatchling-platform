@@ -48,10 +48,8 @@ purposes:
 - **Portability**: Hatchling can easily be made to run on top of any old
   embedded C99 library. musl libc is recommended for embedded Linux and is
   widely packaged: <https://musl.libc.org/>. No other C++ runtime or C++ code is
-  required. pthreads or C's thrd may be used for threading, which are widely
-  implemented standards. The asserts can operate with only string hashes in
-  release builds to provide basic debug facilities in environments too limited
-  for normal debugging. (This could be modernized).
+  required. pthreads or C99's `<thread.h>` may be used for threading, which are
+  widely implemented standards.
 
 - **Profiling System**: Uses processor cycle sampling to create a hierarchical
   timeline capture compatible with Chrome's `about://tracing` viewer (navigation
@@ -64,11 +62,10 @@ purposes:
   allocations, this system reasonably offers 30% memory and 30% performance
   improvements with minor modifications to your code.
 
-- **Debug Console**: Provides a tiny rudimentary command-line interface with
-  automatic C++ function binding using templates. Useful for interactive target
-  debugging without recompilation and also provides support for config files or
-  configuration via the command-line. It is a little clunky, and an opcode
-  interpreter would use even less space. (This currently needs a re-write).
+- **Console**: Provides an embedded command processor with automatic C++
+  function binding using templates. Useful for interactive target debugging
+  without recompilation and also provides support for config files or
+  configuration via the command-line. Syntax is just `verb [arg ...]`.
 
 - **Testing Framework**: Safer, lighter, debuggable reimplementation of core
   Google Test functionality.

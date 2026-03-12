@@ -31,13 +31,6 @@
 #include <stdbool.h>
 #endif
 
-#include "hxsettings.h"
-#include "hxmemory_manager.h"
-
-#if HX_CPLUSPLUS
-extern "C" {
-#endif
-
 /// `int HATCHLING_VER` - One digit major, and two digit minor and patch
 /// versions. Odd numbered minor versions are development branches.
 #define HATCHLING_VER 33300
@@ -45,6 +38,13 @@ extern "C" {
 /// `HATCHLING_TAG` - Major, minor and patch version tag name. Odd numbered
 /// minor versions are development branches and their tags end in `-dev`.
 #define HATCHLING_TAG "v3.33.0-dev"
+
+#include "hxsettings.h"
+#include "hxmemory_manager.h"
+
+#if HX_CPLUSPLUS
+extern "C" {
+#endif
 
 /// Compile-time assertion for `HX_RELEASE` [0..3] range.
 #if (HX_RELEASE) < 0 || (HX_RELEASE) >= 4

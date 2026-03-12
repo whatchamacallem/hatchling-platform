@@ -13,20 +13,20 @@
 namespace {
 float s_hxconsole_test_result_hook = 0.0f;
 
-bool hxconsole_test_register0(float a0_, const char* a1_) {
-	s_hxconsole_test_result_hook = a0_ + static_cast<float>(::strlen(a1_));
+bool hxconsole_test_register0(float a0, const char* a1) {
+	s_hxconsole_test_result_hook = a0 + static_cast<float>(::strlen(a1));
 	return true;
 }
-bool hxconsole_test_register1(float a0_) {
-	s_hxconsole_test_result_hook = a0_;
+bool hxconsole_test_register1(float a0) {
+	s_hxconsole_test_result_hook = a0;
 	return true;
 }
-bool hxconsole_test_register2(float a0_) {
-	s_hxconsole_test_result_hook = a0_;
+bool hxconsole_test_register2(float a0) {
+	s_hxconsole_test_result_hook = a0;
 	return true;
 }
-bool hxconsole_test_register3(float, float a1_) {
-	s_hxconsole_test_result_hook = a1_;
+bool hxconsole_test_register3(float, float a1) {
+	s_hxconsole_test_result_hook = a1;
 	return true;
 }
 

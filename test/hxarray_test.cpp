@@ -927,16 +927,16 @@ TEST_F(hxarray_test_f, plus_equals) {
 
 		objs += hxarray<hxtest_object>{ 1, 7, 11 };
 
-		hxarray<hxtest_object> objs2 { 10, 70, 110 };
+		const hxarray<hxtest_object> objs2 { 10, 70, 110 };
 		objs += objs2;
 
-		hxarray<hxtest_object> objs3 { 1, 7, 11, 10, 70, 110 };
+		const hxarray<hxtest_object> objs3 { 1, 7, 11, 10, 70, 110 };
 
 		EXPECT_TRUE(hxkey_equal(objs, objs3));
 		EXPECT_FALSE(hxkey_less(objs, objs3));
 
 		// Compare unequal lengths with a temporary.
-		hxtest_object t(440);
+		const hxtest_object t(440);
 		objs += t;
 		EXPECT_FALSE(hxkey_equal(objs, objs3));
 		EXPECT_TRUE(hxkey_less(objs3, objs));
@@ -959,7 +959,7 @@ TEST_F(hxarray_test_f, erase) {
 		objs.erase(objs.begin() + 2);
 
 		static const int expected_values[] = { 1, 3, 5 };
-		hxarray<hxtest_object> expected(expected_values);
+		const hxarray<hxtest_object> expected(expected_values);
 		EXPECT_TRUE(hxkey_equal(objs, expected));
 
 		objs.erase(objs.begin());
@@ -982,7 +982,7 @@ TEST_F(hxarray_test_f, insert) {
 		objs.insert(objs.begin(), hxtest_object(1)); // Inserting at the beginning.
 		objs.insert(2, hxtest_object(5)); // Inserting past the end.
 
-		hxarray<hxtest_object> expected { 1, 3, 5 };
+		const hxarray<hxtest_object> expected { 1, 3, 5 };
 		EXPECT_TRUE(hxkey_equal(objs, expected));
 		for(size_t i = 0u; i < objs.size(); ++i) {
 			EXPECT_FALSE(objs[i].moved_from);
@@ -991,7 +991,7 @@ TEST_F(hxarray_test_f, insert) {
 		objs.insert(1, hxtest_object(2));
 		objs.insert(3, hxtest_object(4));
 
-		hxarray<hxtest_object> final_expected { 1, 2, 3, 4, 5 };
+		const hxarray<hxtest_object> final_expected { 1, 2, 3, 4, 5 };
 		EXPECT_TRUE(hxkey_equal(objs, final_expected));
 		for(size_t i = 0u; i < objs.size(); ++i) {
 			EXPECT_FALSE(objs[i].moved_from);

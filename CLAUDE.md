@@ -17,6 +17,7 @@ available.
 
 Do not use C++ exceptions, RTTI or assume asserts are enabled. Check when adding
 includes whether they are redundant and write them as `<stdio.h>` not `<cstido>`.
+clang-tidy is in use and C-style casts are not allowed.
 
 All symbols are snake_case. Except feature test macros are SCREAMING_SNAKE_CASE.
 

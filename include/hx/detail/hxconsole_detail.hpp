@@ -10,8 +10,6 @@
 
 #if HX_CPLUSPLUS >= 202002L
 
-// NOLINTBEGIN
-
 namespace hxdetail_ {
 
 // ----------------------------------------------------------------------------
@@ -37,58 +35,58 @@ template<> inline double hxconsole_parse_arg_<double>(const char* str_, char** n
 
 // char: range CHAR_MIN..CHAR_MAX (platform-defined signedness).
 template<> inline char hxconsole_parse_arg_<char>(const char* str_, char** next_) {
-	long v_ = hxconsole_strtol_(str_, next_);
+	const long v_ = hxconsole_strtol_(str_, next_);
 	if(v_ < CHAR_MIN || v_ > CHAR_MAX) { *next_ = const_cast<char*>(str_); }
-	return (char)v_;
+	return static_cast<char>(v_);
 }
 
 // bool: only 0 or 1 are valid; anything else is a parse error.
 template<> inline bool hxconsole_parse_arg_<bool>(const char* str_, char** next_) {
-	long v_ = hxconsole_strtol_(str_, next_);
+	const long v_ = hxconsole_strtol_(str_, next_);
 	if(v_ != 0 && v_ != 1) { *next_ = const_cast<char*>(str_); }
 	return v_ != 0;
 }
 
 // Signed integers: parse as long, then range-check into target width.
 template<> inline int8_t hxconsole_parse_arg_<int8_t>(const char* str_, char** next_) {
-	long v_ = hxconsole_strtol_(str_, next_);
+	const long v_ = hxconsole_strtol_(str_, next_);
 	if(v_ < SCHAR_MIN || v_ > SCHAR_MAX) { *next_ = const_cast<char*>(str_); }
-	return (int8_t)v_;
+	return static_cast<int8_t>(v_);
 }
 template<> inline int16_t hxconsole_parse_arg_<int16_t>(const char* str_, char** next_) {
-	long v_ = hxconsole_strtol_(str_, next_);
+	const long v_ = hxconsole_strtol_(str_, next_);
 	if(v_ < SHRT_MIN || v_ > SHRT_MAX) { *next_ = const_cast<char*>(str_); }
-	return (int16_t)v_;
+	return static_cast<int16_t>(v_);
 }
 template<> inline int32_t hxconsole_parse_arg_<int32_t>(const char* str_, char** next_) {
-	long v_ = hxconsole_strtol_(str_, next_);
-	if(v_ < (long)INT32_MIN || v_ > (long)INT32_MAX) { *next_ = const_cast<char*>(str_); }
-	return (int32_t)v_;
+	const long v_ = hxconsole_strtol_(str_, next_);
+	if(v_ < static_cast<long>(INT32_MIN) || v_ > static_cast<long>(INT32_MAX)) { *next_ = const_cast<char*>(str_); }
+	return static_cast<int32_t>(v_);
 }
 template<> inline int64_t hxconsole_parse_arg_<int64_t>(const char* str_, char** next_) {
-	long long v_ = hxconsole_strtoll_(str_, next_);
-	return (int64_t)v_;
+	const long long v_ = hxconsole_strtoll_(str_, next_);
+	return static_cast<int64_t>(v_);
 }
 
 // Unsigned integers: parse as unsigned long, then range-check. Negative inputs are rejected.
 template<> inline uint8_t hxconsole_parse_arg_<uint8_t>(const char* str_, char** next_) {
-	unsigned long v_ = hxconsole_strtoul_(str_, next_);
+	const unsigned long v_ = hxconsole_strtoul_(str_, next_);
 	if(v_ > UCHAR_MAX) { *next_ = const_cast<char*>(str_); }
-	return (uint8_t)v_;
+	return static_cast<uint8_t>(v_);
 }
 template<> inline uint16_t hxconsole_parse_arg_<uint16_t>(const char* str_, char** next_) {
-	unsigned long v_ = hxconsole_strtoul_(str_, next_);
+	const unsigned long v_ = hxconsole_strtoul_(str_, next_);
 	if(v_ > USHRT_MAX) { *next_ = const_cast<char*>(str_); }
-	return (uint16_t)v_;
+	return static_cast<uint16_t>(v_);
 }
 template<> inline uint32_t hxconsole_parse_arg_<uint32_t>(const char* str_, char** next_) {
-	unsigned long v_ = hxconsole_strtoul_(str_, next_);
-	if(v_ > (unsigned long)UINT32_MAX) { *next_ = const_cast<char*>(str_); }
-	return (uint32_t)v_;
+	const unsigned long v_ = hxconsole_strtoul_(str_, next_);
+	if(v_ > static_cast<unsigned long>(UINT32_MAX)) { *next_ = const_cast<char*>(str_); }
+	return static_cast<uint32_t>(v_);
 }
 template<> inline uint64_t hxconsole_parse_arg_<uint64_t>(const char* str_, char** next_) {
-	unsigned long long v_ = hxconsole_strtoull_(str_, next_);
-	return (uint64_t)v_;
+	const unsigned long long v_ = hxconsole_strtoull_(str_, next_);
+	return static_cast<uint64_t>(v_);
 }
 
 // const char* captures remainder of line including comments starting with #'s.
@@ -144,6 +142,7 @@ inline bool hxconsole_is_end_of_line_(const char* str_) {
 
 class hxconsole_command_ {
 public:
+	virtual ~hxconsole_command_() = default;
 	virtual bool execute_(const char* str_) = 0; // Return false for parse errors.
 	virtual void usage_(const char* id_=hxnull) = 0; // Expects command name.
 };
@@ -166,14 +165,14 @@ public:
 			return false;
 		} else {
 			char* next_ = const_cast<char*>(str_);
-			bool ok_ = call_<args_t_...>(m_fn_, str_, next_);
+			const bool ok_ = call_<args_t_...>(m_fn_, str_, next_);
 			if(!ok_) { usage_(); }
 			return ok_;
 		}
 	}
 
 	void usage_(const char* id_=hxnull) override {
-		hxloghandler(hxloglevel_console, "%s", id_ ? id_ : "usage:");
+		hxloghandler(hxloglevel_console, "%s", (id_ != hxnull) ? id_ : "usage:");
 		if constexpr (sizeof...(args_t_) == 0) {
 			hxloghandler(hxloglevel_console, "\n");
 		} else {
@@ -216,7 +215,7 @@ public:
 	bool execute_(const char* str_) override {
 		if(hxconsole_is_end_of_line_(str_)) {
 			// 0 parameters is a query.
-			hxloghandler(hxloglevel_console, "%.15g\n", (double)*m_var_);
+			hxloghandler(hxloglevel_console, "%.15g\n", static_cast<double>(*m_var_));
 			return true;
 		}
 		char* next_ = const_cast<char*>(str_);
@@ -230,8 +229,7 @@ public:
 	}
 
 	void usage_(const char* id_=hxnull) override {
-		(void)id_;
-		hxlogconsole("%s <optional-value>\n", id_ ? id_ : "usage:");
+		hxlogconsole("%s <optional-value>\n", (id_ != hxnull) ? id_ : "usage:");
 	}
 private:
 	volatile var_t_* m_var_;
@@ -269,10 +267,10 @@ public:
 
 // Uses FNV-1a string hashing. Stops at whitespace.
 inline hxhash_t hxkey_hash(hxconsole_hash_table_key_ k_) {
-	hxhash_t x_ = (hxhash_t)0x811c9dc5;
+	hxhash_t x_ = static_cast<hxhash_t>(0x811c9dc5);
 	while(hxisgraph(*k_.str_)) {
-		x_ ^= (hxhash_t)*k_.str_++;
-		x_ *= (hxhash_t)0x01000193;
+		x_ ^= static_cast<hxhash_t>(*k_.str_++);
+		x_ *= static_cast<hxhash_t>(0x01000193);
 	}
 	return x_;
 }
@@ -326,7 +324,7 @@ public:
 			: m_node_(hxconsole_hash_table_key_(id_)) {
 		static_assert(sizeof(command_t_) <= sizeof(m_storage_), "command_storage_overflow");
 		::new(m_storage_ + 0) command_t_(fn_);
-		m_node_.set_command_((command_t_*)(m_storage_ + 0));
+		m_node_.set_command_(reinterpret_cast<command_t_*>(m_storage_ + 0));
 		hxconsole_register_(&m_node_);
 	}
 
@@ -341,7 +339,5 @@ private:
 
 } // hxdetail_
 using namespace hxdetail_;
-
-// NOLINTEND
 
 #endif // HX_CPLUSPLUS >= 202002L

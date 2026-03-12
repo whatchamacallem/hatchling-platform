@@ -188,8 +188,10 @@ static bool hxcheck_hash(uint32_t hash_) {
 }
 
 // Use the debug console to emit and check file hashes.
+#if HX_CPLUSPLUS >= 202002L
 hxconsole_command_named(hxprint_hashes, printhashes);
 hxconsole_command_named(hxcheck_hash, checkhash);
+#endif // HX_CPLUSPLUS >= 202002L
 
 #endif
 

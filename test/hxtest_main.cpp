@@ -39,6 +39,7 @@ static bool hxrun_all_tests(void) {
 #endif
 }
 
+#if HX_CPLUSPLUS >= 202002L
 static bool hxexecute_stdin(void) {
 	return hxconsole_exec_file(hxin);
 }
@@ -48,6 +49,7 @@ hxconsole_command_named(hxrun_all_tests, runtests);
 
 // Command line parameter to execute stdin.
 hxconsole_command_named(hxexecute_stdin, execstdin);
+#endif // HX_CPLUSPLUS >= 202002L
 
 // hxtest_main - Command line console command dispatcher. Each parameter is treated
 // as a separate command.
@@ -55,12 +57,16 @@ int hxtest_main(int argc, char**argv) {
 	hxinit();
 
 	bool is_ok = true;
+#if HX_CPLUSPLUS >= 202002L
 	if(argc > 1) {
 		for(int i=1; i<argc; ++i) {
 			is_ok = is_ok && hxconsole_exec_line(argv[i]);
 		}
 	}
 	else {
+#endif
+	{
+		(void)argc; (void)argv;
 		hxrun_all_tests();
 	}
 

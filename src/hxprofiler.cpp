@@ -15,6 +15,7 @@ namespace {
 // ----------------------------------------------------------------------------
 // Console commands
 
+#if HX_CPLUSPLUS >= 202002L
 bool hxprofile_start_command_(void) { hxprofiler_start(); return true; }
 
 bool hxprofile_stop_command_(void) { hxprofiler_stop(); return true; }
@@ -30,6 +31,7 @@ hxconsole_command_named(hxprofile_start_command_, profilestart);
 hxconsole_command_named(hxprofile_stop_command_, profilestop);
 hxconsole_command_named(hxprofiler_log_command_, profilelog);
 hxconsole_command_named(hxprofiler_write_to_chrome_tracing_command_, profilewrite);
+#endif // HX_CPLUSPLUS >= 202002L
 
 } // namespace {
 
@@ -65,7 +67,7 @@ void hxprofiler_internal_::log_(void) {
 		if(i != 0) { hxlogconsole(",\n"); }
 
 		const hxcycles_t delta = rec.m_end_ - rec.m_begin_;
-	hxlogconsole("{ \"name\":\"%s\", \"ms\":%.15g, \"thread\":\"%x\" }",
+		hxlogconsole("{ \"name\":\"%s\", \"ms\":%.15g, \"thread\":\"%x\" }",
 		rec.m_label_, static_cast<double>(delta) * hxmilliseconds_per_cycle,
 		static_cast<unsigned int>(rec.m_thread_id_));
 	}

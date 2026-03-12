@@ -10,6 +10,8 @@
 
 HX_REGISTER_FILENAME_HASH
 
+#if HX_CPLUSPLUS >= 202002L
+
 // ----------------------------------------------------------------------------
 // hxconsole_command_table_
 //
@@ -190,3 +192,5 @@ hxconsole_command_named(hxconsole_float_dump, floatdump);
 
 // Executes commands and settings in a file. Usage: "exec <filename>".
 hxconsole_command_named(hxconsole_exec_filename, exec);
+
+#endif // HX_CPLUSPLUS >= 202002L

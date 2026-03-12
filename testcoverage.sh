@@ -22,7 +22,7 @@ g++ -I$HX_DIR/include --coverage -O0 -g -DHX_RELEASE=0 -DHX_TEST_ERROR_HANDLING=
 	-std=c++20 -Wall -Werror -Wfatal-errors -fno-exceptions -pthread -lpthread \
 	-lstdc++ $HX_DIR/src/*.cpp $HX_DIR/test/*.cpp *.o -o hxtest
 
-echo runtests | ./hxtest help printhashes execstdin
+echo runtests | ./hxtest help execstdin
 
 gcovr --exclude-lines-by-pattern '.*hxassert.*' --html-details coverage.html --root .. .
 

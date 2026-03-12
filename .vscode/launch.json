@@ -9,7 +9,7 @@
 			"type": "cppdbg",
 			"request": "launch",
 			"program": "${workspaceFolder}/bin/hxtest",
-			"args": ["help", "printhashes", "runtests"],
+			"args": ["help", "runtests"],
 			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}/bin",
 			"environment": [],

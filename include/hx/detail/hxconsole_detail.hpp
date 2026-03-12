@@ -94,9 +94,7 @@ template<> inline uint64_t hxconsole_parse_arg_<uint64_t>(const char* str_, char
 // const char* captures remainder of line including comments starting with #'s.
 // Leading whitespace is discarded and string may be empty.
 template<> inline const char* hxconsole_parse_arg_<const char*>(const char* str_, char** next_) {
-	while(*str_ != '\0' && !hxisgraph(*str_)) {
-		++str_;
-	}
+	while(hxisspace(*str_)) { ++str_; }
 	const char* result_ = str_;
 	while(*str_ != '\0') { ++str_; }
 	*next_ = const_cast<char*>(str_);
@@ -137,9 +135,7 @@ concept hxconsole_parseable_ = requires(const char* s_, char** n_) {
 // Checks for printing characters.
 
 inline bool hxconsole_is_end_of_line_(const char* str_) {
-	while(*str_ != '\0' && !hxisgraph(*str_)) {
-		++str_;
-	}
+	while(hxisspace(*str_)) { ++str_; }
 	return *str_ == '\0' || *str_ == '#'; // Skip comments
 }
 

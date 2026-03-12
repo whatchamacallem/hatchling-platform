@@ -95,6 +95,7 @@ TEST(hxprofiler_test, single_scope_runs_for_1ms) {
 	EXPECT_TRUE(is_ok);
 #else
 	hxprofiler_log();
+	SUCCEED();
 #endif
 }
 
@@ -125,6 +126,7 @@ TEST(hxprofiler_test, write_to_chrome_tracing_command) {
 	EXPECT_TRUE(is_ok);
 #else
 	hxprofiler_write_to_chrome_tracing("profile.json");
+	SUCCEED();
 #endif
 	// "Stops sampling and writes samples to the system log."
 	hxprofiler_log();

@@ -10,44 +10,48 @@
 
 #if HX_CPLUSPLUS >= 202002L
 
+// These C library wrappers reduce code bloat and enforce additional
+// constraints. The next_ pointer is reset when parse errors or negative numbers
+// are encountered.
+
 namespace hxdetail_ {
 
 long hxconsole_strtol_(const char* str_, char** next_) {
 	errno = 0;
-	char* end_ = const_cast<char*>(str_);
-	long v_ = ::strtol(str_, &end_, 0);
-	if(errno == ERANGE) { end_ = const_cast<char*>(str_); }
-	*next_ = end_; return v_;
+	long v_ = ::strtol(str_, next_, 0);
+	if(errno == ERANGE) { *next_ = const_cast<char*>(str_); }
+	return v_;
 }
 
 long long hxconsole_strtoll_(const char* str_, char** next_) {
 	errno = 0;
-	char* end_ = const_cast<char*>(str_);
-	long long v_ = ::strtoll(str_, &end_, 0);
-	if(errno == ERANGE) { end_ = const_cast<char*>(str_); }
-	*next_ = end_; return v_;
+	long long v_ = ::strtoll(str_, next_, 0);
+	if(errno == ERANGE) { *next_ = const_cast<char*>(str_); }
+	return v_;
 }
 
 unsigned long hxconsole_strtoul_(const char* str_, char** next_) {
+	// The standard treats negative numbers as large positive values.
 	const char* p_ = str_;
 	while(hxisspace(*p_)) { ++p_; }
-	if(*p_ == '-') { *next_ = const_cast<char*>(str_); return 0; }
+	if(*p_ == '-') { hxassert(*next_ == const_cast<char*>(str_)); return 0; }
+
 	errno = 0;
-	char* end_ = const_cast<char*>(str_);
-	unsigned long v_ = ::strtoul(str_, &end_, 0);
-	if(errno == ERANGE) { end_ = const_cast<char*>(str_); }
-	*next_ = end_; return v_;
+	unsigned long v_ = ::strtoul(str_, next_, 0);
+	if(errno == ERANGE) { *next_ = const_cast<char*>(str_); }
+	return v_;
 }
 
 unsigned long long hxconsole_strtoull_(const char* str_, char** next_) {
+	// The standard treats negative numbers as large positive values.
 	const char* p_ = str_;
 	while(hxisspace(*p_)) { ++p_; }
-	if(*p_ == '-') { *next_ = const_cast<char*>(str_); return 0; }
+	if(*p_ == '-') { hxassert(*next_ == const_cast<char*>(str_)); return 0; }
+
 	errno = 0;
-	char* end_ = const_cast<char*>(str_);
-	unsigned long long v_ = ::strtoull(str_, &end_, 0);
-	if(errno == ERANGE) { end_ = const_cast<char*>(str_); }
-	*next_ = end_; return v_;
+	unsigned long long v_ = ::strtoull(str_, next_, 0);
+	if(errno == ERANGE) { *next_ = const_cast<char*>(str_); }
+	return v_;
 }
 
 } // hxdetail_
@@ -100,7 +104,7 @@ void hxconsole_deregister(const char* id) {
 bool hxconsole_exec_line(const char* command) {
 	// Skip leading whitespace.
 	const char* pos = command;
-	while(*pos != '\0' && !hxisgraph(*pos)) {
+	while(hxisspace(*pos)) {
 		++pos;
 	}
 

@@ -62,11 +62,11 @@ int hxtest_main(int argc, char**argv) {
 		}
 	}
 	else {
-		hxrun_all_tests();
+		is_ok = is_ok && hxrun_all_tests();
 	}
 #else
 	(void)argc; (void)argv;
-	hxrun_all_tests();
+	is_ok = is_ok && hxrun_all_tests();
 #endif
 
 	// Logging and asserts are actually unaffected by a shutdown.

@@ -68,9 +68,14 @@ set(
   FORCE
 )
 include(FetchContent)
+if(WIN32)
+  set(HX_GOOGLETEST_ARCHIVE "https://github.com/google/googletest/releases/download/v1.15.2/googletest-1.15.2.tar.gz")
+else()
+  set(HX_GOOGLETEST_ARCHIVE "${CMAKE_SOURCE_DIR}/googletest-1.15.2.txz")
+endif()
 FetchContent_Declare(
   googletest
-  URL https://github.com/google/googletest/releases/download/v1.15.2/googletest-1.15.2.tar.gz
+  URL "${HX_GOOGLETEST_ARCHIVE}"
   DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 set(gtest_force_shared_crt OFF CACHE BOOL "Link GoogleTest with static CRT on MSVC" FORCE)

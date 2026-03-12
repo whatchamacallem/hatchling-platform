@@ -187,12 +187,12 @@ public:
 	}
 
 	void usage_(const char* id_=hxnull) override {
-		hxlogconsole("%s", id_ ? id_ : "usage:");
+		hxloghandler(hxloglevel_console, "%s", id_ ? id_ : "usage:");
 		if constexpr (sizeof...(args_t_) == 0) {
-			hxlogconsole("\n");
+			hxloghandler(hxloglevel_console, "\n");
 		} else {
-			(hxlogconsole(" %s", hxconsole_arg_label_<args_t_>()), ...);
-			hxlogconsole("\n");
+			(hxloghandler(hxloglevel_console, " %s", hxconsole_arg_label_<args_t_>()), ...);
+			hxloghandler(hxloglevel_console, "\n");
 		}
 	}
 

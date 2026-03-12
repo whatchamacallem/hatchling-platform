@@ -5,7 +5,7 @@
 
 /// \file hx/hxconsole.hpp Implements a simple console for debugging, remote use
 /// or for parsing configuration files. Output is directed to the system log
-/// with `hxloglevel_console`.
+/// with `hxloglevel_console`. Requires C++20 or later.
 ///
 /// A remote console requires forwarding commands to the target and reporting
 /// the system log back. Configuration files only need file I/O. C-style calls
@@ -22,6 +22,8 @@
 /// | `const char*` | Captures remainder of line (must be last parameter). |
 
 #include "hatchling.h"
+
+#if HX_CPLUSPLUS >= 202002L
 
 class hxfile;
 
@@ -89,3 +91,5 @@ bool hxconsole_help(void);
 
 // Include internals
 #include "detail/hxconsole_detail.hpp"
+
+#endif // HX_CPLUSPLUS >= 202002L

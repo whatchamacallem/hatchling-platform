@@ -8,6 +8,8 @@
 
 #include <limits.h>
 
+#if HX_CPLUSPLUS >= 202002L
+
 // NOLINTBEGIN
 
 namespace hxdetail_ {
@@ -60,7 +62,7 @@ template<> inline int32_t hxconsole_parse_arg_<int32_t>(const char* str_, char**
 	errno = 0;
 	char* end_ = const_cast<char*>(str_);
 	long v_ = ::strtol(str_, &end_, 0);
-	if(end_ == str_ || errno == ERANGE) { *next_ = const_cast<char*>(str_); return 0; }
+	if(end_ == str_ || errno == ERANGE || v_ < (long)INT32_MIN || v_ > (long)INT32_MAX) { *next_ = const_cast<char*>(str_); return 0; }
 	*next_ = end_; return (int32_t)v_;
 }
 template<> inline int64_t hxconsole_parse_arg_<int64_t>(const char* str_, char** next_) {
@@ -88,7 +90,7 @@ template<> inline uint32_t hxconsole_parse_arg_<uint32_t>(const char* str_, char
 	errno = 0;
 	char* end_ = const_cast<char*>(str_);
 	unsigned long v_ = ::strtoul(str_, &end_, 0);
-	if(end_ == str_ || errno == ERANGE) { *next_ = const_cast<char*>(str_); return 0; }
+	if(end_ == str_ || errno == ERANGE || v_ > (unsigned long)UINT32_MAX) { *next_ = const_cast<char*>(str_); return 0; }
 	*next_ = end_; return (uint32_t)v_;
 }
 template<> inline uint64_t hxconsole_parse_arg_<uint64_t>(const char* str_, char** next_) {
@@ -344,7 +346,9 @@ public:
 
 private:
 	// Provide static storage instead of using allocator before main.
-	// Size: vtable pointer + function pointer.
+	// Two pointers: vtable ptr + one fn or data ptr (sizeof(void*) each).
+	// Sufficient for hxconsole_command_impl_ and hxconsole_variable_ on
+	// ILP32, LLP64, and LP64. Enforced by static_assert in the constructor.
 	hxconsole_hash_table_node_ m_node_;
 	char m_storage_[sizeof(void*) + sizeof(void*)];
 };
@@ -353,3 +357,5 @@ private:
 using namespace hxdetail_;
 
 // NOLINTEND
+
+#endif // HX_CPLUSPLUS >= 202002L

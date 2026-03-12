@@ -3,7 +3,8 @@
 ## Testing
 
 Use debugbuild.sh to test changes and not cmake. 🐉🐉🐉 indicates success.
-Execute bin/hxtest when asked to run tests.
+Execute bin/hxtest when asked to run tests. ILP32, LLP64, LP64 are all
+required to pass tests.
 
 ## Style Guide
 
@@ -18,16 +19,18 @@ includes whether they are redundant and write them as `<stdio.h>` not `<cstido>`
 
 All symbols are snake_case. Except feature test macros are SCREAMING_SNAKE_CASE.
 
-Classes, structs and functions begin with `hx`. Functions end with `_t`.
-Template parameters snake_case and end with `_t_`. Use structs only for C code.
-Function parameters and private fields do not begin with `hx` and end with an
-underscore. Private fields begin with `m_`. Global variables start with `g_hx`
-and static or anonymous namespace variables start with `s_hx`. Prefix calls to
-the C standard library with `::` to indicate they are in the global namespace.
-All test symbols that show up in the linker map must contain `hx` and `test`.
+Classes, structs and functions begin with `hx` and not `hx_`. Functions end with
+`_t`. Template parameters snake_case and end with `_t_`. Use structs only for C
+code. Function parameters and private fields do not begin with `hx` and end with
+an underscore. Private fields begin with `m_`. Global variables start with
+`g_hx` and static or anonymous namespace variables start with `s_hx`. Prefix
+calls to the C standard library with `::` to indicate they are in the global
+namespace. All test symbols that show up in the linker map must contain `hx` and
+`test`.
 
 Remove trailing `_` from doxygen comments and leave them otherwise. Update docs
-and follow existing style.
+and follow existing style. Do not document rationale for making changes, e.g.
+instructions given, issues or bugs fixed.
 
 Prefer code that avoids stepping through unnecessary function calls in the
 debugger or requires unnecessary traversal of data structures in the debugger

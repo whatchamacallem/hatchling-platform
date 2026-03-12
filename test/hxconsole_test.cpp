@@ -6,6 +6,8 @@
 #include <hx/hxfile.hpp>
 #include <hx/hxtest.hpp>
 
+#if HX_CPLUSPLUS >= 202002L
+
 HX_REGISTER_FILENAME_HASH
 
 // TEST_F fixtures would not work as the console registers static variables.
@@ -571,6 +573,16 @@ TEST(hxconsole_test, function_overflow) {
 	s_hxconsole_test_fn_char = 0;
 	EXPECT_FALSE(hxconsole_exec_line("hxconsole_test_fn_char 128"));
 	EXPECT_EQ(s_hxconsole_test_fn_char, (char)0);
+
+	// char: signed-char platforms only
+#if CHAR_MIN < 0
+	s_hxconsole_test_fn_char = 0;
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_char -128"));
+	EXPECT_EQ(s_hxconsole_test_fn_char, (char)-128);
+	s_hxconsole_test_fn_char = 0;
+	EXPECT_FALSE(hxconsole_exec_line("hxconsole_test_fn_char -129"));
+	EXPECT_EQ(s_hxconsole_test_fn_char, (char)0);
+#endif
 }
 
 // ============================================================================
@@ -647,6 +659,45 @@ TEST(hxconsole_test, comment_lines) {
 }
 
 // ============================================================================
+// unsigned_negative: strtoul wraps negative inputs; document the behaviour.
+
+TEST(hxconsole_test, unsigned_negative) {
+	// strtoul accepts '-' and wraps. This is standard C behaviour.
+	s_hxconsole_test_u8 = 0;
+	EXPECT_TRUE(hxconsole_exec_line("s_hxconsole_test_u8 -1"));
+	EXPECT_EQ(s_hxconsole_test_u8, (uint8_t)255);
+
+	s_hxconsole_test_u16 = 0;
+	EXPECT_TRUE(hxconsole_exec_line("s_hxconsole_test_u16 -1"));
+	EXPECT_EQ(s_hxconsole_test_u16, (uint16_t)65535);
+
+	s_hxconsole_test_u32 = 0;
+	EXPECT_TRUE(hxconsole_exec_line("s_hxconsole_test_u32 -1"));
+	EXPECT_EQ(s_hxconsole_test_u32, (uint32_t)4294967295u);
+
+	s_hxconsole_test_u64 = 0;
+	EXPECT_TRUE(hxconsole_exec_line("s_hxconsole_test_u64 -1"));
+	EXPECT_EQ(s_hxconsole_test_u64, (uint64_t)18446744073709551615ull);
+}
+
+// ============================================================================
+// string_edge_cases: const char* argument with only whitespace or embedded '#'
+
+TEST(hxconsole_test, string_edge_cases) {
+	// all-whitespace string arg -> empty string (pointer to '\0').
+	s_hxconsole_test_fn_str = hxnull;
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_str   "));
+	EXPECT_TRUE(s_hxconsole_test_fn_str != hxnull && *s_hxconsole_test_fn_str == '\0');
+
+	// embedded '#' is captured verbatim (not treated as comment).
+	s_hxconsole_test_fn_str = hxnull;
+	EXPECT_TRUE(hxconsole_exec_line("hxconsole_test_fn_str hello#world"));
+	EXPECT_TRUE(s_hxconsole_test_fn_str != hxnull
+		&& ::strncmp(s_hxconsole_test_fn_str, "hello#world", 11) == 0);
+}
+
+
+// ============================================================================
 // null_test
 
 #if defined __GNUC__
@@ -705,6 +756,20 @@ TEST(hxconsole_test, file_fail) {
 		hxfile(hxfile::out, "hxconsole_test_file_test.txt") << "hxconsole_test_failing_command\n";
 	}
 	EXPECT_FALSE(hxconsole_exec_filename("hxconsole_test_file_test.txt"));
+
+	// issue 5: mid-file failure stops execution; line 3 must not run.
+	s_hxconsole_test_file_var1 = 0.0f;
+	{
+		hxfile(hxfile::out, "hxconsole_test_file_test.txt")
+			<< "hxconsole_test_file_var 5\n"
+			   "<unknown command>\n"
+			   "hxconsole_test_file_var 99\n";
+	}
+	EXPECT_FALSE(hxconsole_exec_filename("hxconsole_test_file_test.txt"));
+	EXPECT_EQ(s_hxconsole_test_file_var1, 5.0f);
+
+	// issue 6: missing file returns false.
+	EXPECT_FALSE(hxconsole_exec_filename("__nonexistent_hxconsole_test__.txt"));
 }
 
 // ============================================================================
@@ -738,3 +803,5 @@ TEST(hxconsole_test, file_peek_poke_floats) {
 	EXPECT_EQ(target[2], 333.0f);
 }
 #endif
+
+#endif // HX_CPLUSPLUS >= 202002L

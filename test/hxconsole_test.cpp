@@ -778,9 +778,9 @@ TEST(hxconsole_test, file_peek_poke) {
 	uint32_t target[] = { 111, 777, 333 };
 	{
 		hxfile f(hxfile::out, "hxconsole_test_file_test.txt");
-		f.print("peek %zx 4\n", reinterpret_cast<size_t>(target));
-		f.print("poke %zx 4 de\n", reinterpret_cast<size_t>(target + 1));
-		f.print("hexdump %zx 12\n", reinterpret_cast<size_t>(target));
+		f.print("peek 0x%zx 4\n", reinterpret_cast<size_t>(target));
+		f.print("poke 0x%zx 4 0xde\n", reinterpret_cast<size_t>(target + 1));
+		f.print("hexdump 0x%zx 12\n", reinterpret_cast<size_t>(target));
 	}
 	EXPECT_TRUE(hxconsole_exec_line("exec hxconsole_test_file_test.txt"));
 	EXPECT_EQ(target[0], 111);
@@ -792,8 +792,8 @@ TEST(hxconsole_test, file_peek_poke_floats) {
 	float target[] = { 111.0f, 777.0f, 333.0f };
 	{
 		hxfile f(hxfile::out, "hxconsole_test_file_test.txt");
-		f.print("poke %zx 4 435E0000\n", reinterpret_cast<size_t>(target + 1));
-		f.print("floatdump %zx 3\n", reinterpret_cast<size_t>(target));
+		f.print("poke 0x%zx 4 0x435E0000\n", reinterpret_cast<size_t>(target + 1));
+		f.print("floatdump 0x%zx 3\n", reinterpret_cast<size_t>(target));
 	}
 	EXPECT_TRUE(hxconsole_exec_line("exec hxconsole_test_file_test.txt"));
 	EXPECT_EQ(target[0], 111.0f);

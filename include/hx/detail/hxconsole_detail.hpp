@@ -239,7 +239,7 @@ public:
 			*m_var_ = val_;
 			return true;
 		}
-		hxlogconsole("parse error: %s", str_);
+		hxlogconsole("parse error at: %s\n", str_);
 		return false;
 	}
 

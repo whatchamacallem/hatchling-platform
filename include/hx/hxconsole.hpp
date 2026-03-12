@@ -6,20 +6,6 @@
 /// \file hx/hxconsole.hpp Implements a simple console for debugging, remote use
 /// or for parsing configuration files. Output is directed to the system log
 /// with `hxloglevel_console`. Requires C++20 or later.
-///
-/// A remote console requires forwarding commands to the target and reporting
-/// the system log back. Configuration files only need file I/O. C-style calls
-/// that return `bool` with any number of arguments using `double`, `int32_t`,
-/// `uint32_t`, `uint64_t`, or `const char*` parameter types are required for
-/// the bindings to work. See the following commands for examples.
-///
-/// | Parameter Type | Purpose |
-/// | --- | --- |
-/// | `double` | Parsed with strtod. |
-/// | `int32_t` | Parsed with strtol (base 0, accepts 0x prefix). |
-/// | `uint32_t` | Parsed with strtoul (base 0). |
-/// | `uint64_t` | Parsed with strtoull (base 16, hexadecimal). |
-/// | `const char*` | Captures remainder of line (must be last parameter). |
 
 #include "hatchling.h"
 

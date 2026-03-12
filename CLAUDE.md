@@ -3,8 +3,9 @@
 ## Testing
 
 Use debugbuild.sh to test changes and not cmake. 🐉🐉🐉 indicates success.
-Execute bin/hxtest when asked to run tests. ILP32, LLP64, LP64 are all
-required to pass tests.
+Execute bin/hxtest when asked to run tests. Run tests in the `bin` subdirectory.
+
+Support for ILP32, LLP64 and LP64 are required to pass tests.
 
 ## Style Guide
 

@@ -7,8 +7,6 @@
 #include <hx/hxarray.hpp>
 #include <hx/hxtest.hpp>
 
-HX_REGISTER_FILENAME_HASH
-
 namespace {
 
 // Checks API use and correct use of references to temporaries.

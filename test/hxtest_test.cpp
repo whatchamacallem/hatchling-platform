@@ -7,8 +7,6 @@
 
 #include "hxctest.h"
 
-HX_REGISTER_FILENAME_HASH
-
 namespace {
 
 template<typename T>

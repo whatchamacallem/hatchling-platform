@@ -8,8 +8,6 @@
 
 #if HX_CPLUSPLUS >= 202002L
 
-HX_REGISTER_FILENAME_HASH
-
 // TEST_F fixtures would not work as the console registers static variables.
 
 namespace {

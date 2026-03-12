@@ -6,8 +6,6 @@
 #include <hx/hxtest.hpp>
 #include <hx/hxutility.h>
 
-HX_REGISTER_FILENAME_HASH
-
 #if defined __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-zero-length"

@@ -6,8 +6,6 @@
 #include "../include/hx/hxthread.hpp"
 #include "../include/hx/hxutility.h"
 
-HX_REGISTER_FILENAME_HASH
-
 // Switches heap to using allocation tracking headers in debug.
 #define HX_USE_STD_ALIGNED_ALLOC (HX_CPLUSPLUS >= 201703L && (HX_RELEASE) >= 1)
 

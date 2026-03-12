@@ -11,8 +11,6 @@
 #include <utility>
 #endif
 
-HX_REGISTER_FILENAME_HASH
-
 static class hxarray_test_f* s_hxtest_current = hxnull;
 
 class hxarray_test_f :

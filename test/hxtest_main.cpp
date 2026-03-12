@@ -10,8 +10,6 @@
 
 #include "hxctest.h"
 
-HX_REGISTER_FILENAME_HASH
-
 int hxtest_main(int argc, char**argv);
 
 static bool hxrun_all_tests(void) {

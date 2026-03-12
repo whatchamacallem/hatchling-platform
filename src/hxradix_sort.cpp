@@ -5,8 +5,6 @@
 #include "../include/hx/hxradix_sort.hpp"
 #include "../include/hx/hxalgorithm.hpp"
 
-HX_REGISTER_FILENAME_HASH
-
 // An unsigned integer used for the histogram. uint32_t or size_t would be a
 // reasonable choice here.
 using hxhistogram_t = uint32_t;

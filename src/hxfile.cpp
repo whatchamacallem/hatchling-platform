@@ -18,8 +18,6 @@
 
 // NOLINTBEGIN(clang-analyzer-core.NonNullParamChecker)
 
-HX_REGISTER_FILENAME_HASH
-
 // hxfile - Targets require an implementation of fopen(), fclose(), fread(),
 // fwrite(), fgets(), and feof().
 

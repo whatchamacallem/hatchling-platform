@@ -6,8 +6,6 @@
 #include <hx/hxtest.hpp>
 #include <hx/hxarray.hpp>
 
-HX_REGISTER_FILENAME_HASH
-
 TEST(hxrandom_test, generation) {
 	hxrandom rng(1u);
 

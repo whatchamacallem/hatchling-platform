@@ -8,8 +8,6 @@
 #include "../include/hx/hxalgorithm.hpp"
 #include "../include/hx/hxarray.hpp"
 
-HX_REGISTER_FILENAME_HASH
-
 #if HX_CPLUSPLUS >= 202002L
 
 // ----------------------------------------------------------------------------

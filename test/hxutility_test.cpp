@@ -8,8 +8,6 @@
 // This is not a normal dependency of Hatchling Platform.
 #include <ctype.h>
 
-HX_REGISTER_FILENAME_HASH
-
 static_assert(hxtrue_t::value, "hxtrue_t must report true");
 static_assert(!hxfalse_t::value, "hxfalse_t must report false");
 

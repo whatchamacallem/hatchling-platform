@@ -9,8 +9,6 @@
 #include <hx/hxmemory_manager.h>
 #include <hx/hxtest.hpp>
 
-HX_REGISTER_FILENAME_HASH
-
 class hxradix_sort_test_f :
 	public testing::Test
 {

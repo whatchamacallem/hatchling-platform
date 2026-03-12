@@ -6,8 +6,6 @@
 #include <hx/hxhash_table.hpp>
 #include <hx/hxtest.hpp>
 
-HX_REGISTER_FILENAME_HASH
-
 static class hxhash_table_test_f* s_hxtest_current = 0;
 
 class hxhash_table_test_f :

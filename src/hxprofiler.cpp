@@ -6,8 +6,6 @@
 #include "../include/hx/hxconsole.hpp"
 #include "../include/hx/hxfile.hpp"
 
-HX_REGISTER_FILENAME_HASH
-
 #if HX_PROFILE
 
 namespace {

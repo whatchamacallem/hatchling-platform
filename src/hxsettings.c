@@ -4,8 +4,6 @@
 
 #include "../include/hx/hatchling.h"
 
-HX_REGISTER_FILENAME_HASH
-
 // The global settings object. Constructed by hxinit after some global
 // constructors may have run and before setting up memory management.
 // Logging and asserts default to on until construction completes.

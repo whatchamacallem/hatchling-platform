@@ -11,7 +11,7 @@
 // because adding files to a `.pch` incurs a cost as well.
 
 // { stdarg.h, stddef.h, stdint.h, stdlib.h, string.h, signal.h,
-//   hxsettings.h, hxmemory_manager.h, hxstring_literal_hash.h }
+//   hxsettings.h, hxmemory_manager.h }
 // Optional: <new>
 #include "hatchling.h"
 

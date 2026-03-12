@@ -5,8 +5,6 @@
 #include <hx/hxkey.hpp>
 #include <hx/hxtest.hpp>
 
-HX_REGISTER_FILENAME_HASH
-
 static_assert(hxis_same<
 	decltype(hxkey_equal_function<const volatile char*>()),
 	bool (*)(const volatile char* const&, const volatile char* const&)>::value,

@@ -31,6 +31,13 @@
 #include <stdbool.h>
 #endif
 
+#include "hxsettings.h"
+#include "hxmemory_manager.h"
+
+#if HX_CPLUSPLUS
+extern "C" {
+#endif
+
 /// `int HATCHLING_VER` - One digit major, and two digit minor and patch
 /// versions. Odd numbered minor versions are development branches.
 #define HATCHLING_VER 33300
@@ -39,12 +46,9 @@
 /// minor versions are development branches and their tags end in `-dev`.
 #define HATCHLING_TAG "v3.33.0-dev"
 
-#include "hxsettings.h"
-#include "hxmemory_manager.h"
-#include "hxstring_literal_hash.h"
-
-#if HX_CPLUSPLUS
-extern "C" {
+/// Compile-time assertion for `HX_RELEASE` [0..3] range.
+#if (HX_RELEASE) < 0 || (HX_RELEASE) >= 4
+#error HX_RELEASE must be [0..3].
 #endif
 
 // Hatchling Platform C and C++ API. Above headers are C and C++ too.
@@ -73,10 +77,11 @@ enum hxloglevel_t {
 /// you need a `std::nullptr_t` replacement.
 #define hxnull 0
 
-/// Compile-time assertion for `HX_RELEASE` [0..3] range.
-#if (HX_RELEASE) < 0 || (HX_RELEASE) >= 4
-#error HX_RELEASE must be [0..3].
-#endif
+/// `hxhash_t` - Unsigned 32-bit hash value. Expect collisions.
+typedef uint32_t hxhash_t;
+
+/// `hxhash_bits` - Number of bits in `hxhash_t`.
+#define hxhash_bits 32u
 
 /// `hxinit` - Initializes the platform if needed. Does a quick version check to
 /// determine if the platform is already correctly initialized first. Designed
@@ -132,7 +137,7 @@ bool hxasserthandler(const char* file_, size_t line_) hxattr_noexcept hxattr_non
 #endif
 
 #define hxlog(...) ((void)0)
-void hxasserthandler(hxhash_t file_, size_t line_) hxattr_noexcept hxattr_noreturn hxattr_cold;
+void hxasserthandler(void) hxattr_noexcept hxattr_noreturn hxattr_cold;
 #endif
 
 #if (HX_RELEASE) <= 1
@@ -171,10 +176,10 @@ void hxasserthandler(hxhash_t file_, size_t line_) hxattr_noexcept hxattr_noretu
 #if (HX_RELEASE) == 1
 #define hxassertrelease(x_, ...) (void)((bool)(x_) \
 	|| (hxloghandler(hxloglevel_assert, __VA_ARGS__), \
-		hxasserthandler(hxstring_literal_hash(__FILE__), __LINE__), 0))
+		hxasserthandler(), 0))
 #elif (HX_RELEASE) == 2
 #define hxassertrelease(x_, ...) (void)((bool)(x_) \
-	|| (hxasserthandler(hxstring_literal_hash(__FILE__), __LINE__), 0))
+	|| (hxasserthandler(), 0))
 #elif (HX_RELEASE) == 3
 // This is an extreme level of optimization where asserts are assumed to be
 // valid.

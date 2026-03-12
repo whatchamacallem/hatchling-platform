@@ -6,13 +6,10 @@
 #include "../include/hx/hxarray.hpp"
 #include "../include/hx/hxconsole.hpp"
 #include "../include/hx/hxfile.hpp"
-#include "../include/hx/hxhash_table_nodes.hpp"
 #include "../include/hx/hxprofiler.hpp"
 #include "../include/hx/hxalgorithm.hpp"
 
 #include <stdio.h> // vsnprintf only.
-
-HX_REGISTER_FILENAME_HASH
 
 // g_hxinit_ver_ should not be explicitly zero-initialized; MSVC handles that
 // differently.
@@ -116,86 +113,6 @@ void __sanitizer_report_error_summary(const char *error_summary) {
 } // extern "C"
 
 // ----------------------------------------------------------------------------
-#if (HX_RELEASE) < 1
-
-// Implements HX_REGISTER_FILENAME_HASH in debug builds. See hxstring_literal_hash.h.
-namespace {
-
-class hxhash_string_literal_
-		: public hxhash_table<hxregister_string_literal_hash, 5, hxdo_not_delete> { };
-
-class hxfilename_less {
-public:
-	bool operator()(const char* a, const char* b) const {
-		return hxstring_literal_hash_debug(a) < hxstring_literal_hash_debug(b);
-	}
-};
-
-hxhash_string_literal_& hxstring_literal_hashes_(void) {
-	static hxhash_string_literal_ s_hxstring_literal_hashes_;
-	return s_hxstring_literal_hashes_;
-}
-
-} // namespace {
-
-// The key for the table is a string hash.
-hxregister_string_literal_hash::hxregister_string_literal_hash(const char* str_)
-		: m_hash_next_(0), m_hash_(hxstring_literal_hash_debug(str_)), m_str_(str_) {
-	hxstring_literal_hashes_().insert_node(this);
-}
-
-// The hash table code expects to be able to hash a `key_t` and compare it equal
-// to the `node_t`'s hash value. That results in double hashing here. It is just
-// another multiply.
-hxhash_t hxregister_string_literal_hash::hash(void) const {
-	return hxkey_hash(m_hash_);
-};
-
-static bool hxprint_hashes(void) {
-	hxinit();
-
-	// Sort by hash.
-	hxlogconsole("string literals in hash order:\n");
-	const hxsystem_allocator_scope temporary_stack(hxsystem_allocator_temporary_stack);
-
-	hxarray<const char*> filenames; filenames.reserve(hxstring_literal_hashes_().size());
-
-	for(const auto& it : hxstring_literal_hashes_()) {
-		filenames.push_back(it.str());
-	}
-
-	hxinsertion_sort(filenames.begin(), filenames.end(), hxfilename_less());
-
-	for(const char* str : filenames) {
-		hxlog("  %08zx %s\n", (size_t)hxstring_literal_hash_debug(str), str);
-	}
-	return true;
-}
-
-static bool hxcheck_hash(uint32_t hash_) {
-	hxregister_string_literal_hash* node = hxstring_literal_hashes_().find(hash_);
-	if(node != hxnull) {
-		while(node != hxnull) {
-			hxlogconsole("%08zx: %s\n", (size_t)hash_, node->str());
-			node = hxstring_literal_hashes_().find(hash_, node);
-		}
-	}
-	else {
-		hxlogconsole("%08zx: not found\n", (size_t)hash_);
-		return false;
-	}
-	return true;
-}
-
-// Use the debug console to emit and check file hashes.
-#if HX_CPLUSPLUS >= 202002L
-hxconsole_command_named(hxprint_hashes, printhashes);
-hxconsole_command_named(hxcheck_hash, checkhash);
-#endif // HX_CPLUSPLUS >= 202002L
-
-#endif
-
-// ----------------------------------------------------------------------------
 // Initialization, shutdown, exit, assert, and logging.
 
 extern "C"
@@ -271,20 +188,20 @@ hxattr_noexcept bool hxasserthandler(const char* file, size_t line) {
 	const char* f = hxbasename(file);
 	if((g_hxinit_ver_ != 0) && g_hxsettings.asserts_to_be_skipped > 0) {
 		--g_hxsettings.asserts_to_be_skipped;
-		hxloghandler(hxloglevel_assert, "skipped %s(%zu) hash %08zx",
-			f, line, (size_t)hxstring_literal_hash_debug(file));
+		hxloghandler(hxloglevel_assert, "skipped %s(%zu)",
+			f, line);
 		return true;
 	}
-	hxloghandler(hxloglevel_assert, "breakpoint %s(%zu) hash %08zx\n",
-		f, line, (size_t)hxstring_literal_hash_debug(file));
+	hxloghandler(hxloglevel_assert, "breakpoint %s(%zu)\n",
+		f, line);
 
 	// Return to hxbreakpoint at the calling line.
 	return false;
 }
 #else
 extern "C"
-hxattr_noexcept hxattr_noreturn void hxasserthandler(hxhash_t file, size_t line) {
-	hxloghandler(hxloglevel_assert, "exit file %08zx line %zu\n", (size_t)file, line);
+hxattr_noexcept hxattr_noreturn void hxasserthandler(void) {
+	hxloghandler(hxloglevel_assert, "exit\n");
 	_Exit(EXIT_FAILURE);
 }
 #endif

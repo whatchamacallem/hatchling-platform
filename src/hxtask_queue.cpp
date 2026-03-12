@@ -5,8 +5,6 @@
 #include "../include/hx/hxtask_queue.hpp"
 #include "../include/hx/hxprofiler.hpp"
 
-HX_REGISTER_FILENAME_HASH
-
 #if HX_USE_THREADS
 // hxtask_wait_for_tasks_ keeps worker threads waiting for tasks or shutdown.
 class hxtask_wait_for_tasks_ {

@@ -10,8 +10,6 @@
 
 #include <hx/hxtest.hpp>
 
-HX_REGISTER_FILENAME_HASH
-
 #if HX_PROFILE
 
 static const char* s_hxtest_labels[] = {

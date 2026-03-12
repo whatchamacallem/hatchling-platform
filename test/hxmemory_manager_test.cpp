@@ -6,8 +6,6 @@
 #include <hx/hxtest.hpp>
 #include <hx/hxutility.h>
 
-HX_REGISTER_FILENAME_HASH
-
 // Using ASSERT* instead of EXPECT* in this file adds coverage for those
 // macros. Memory corruption sounds fatal, so that seems appropriate.
 

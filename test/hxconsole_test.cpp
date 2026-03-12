@@ -657,25 +657,26 @@ TEST(hxconsole_test, comment_lines) {
 }
 
 // ============================================================================
-// unsigned_negative: strtoul wraps negative inputs; document the behaviour.
+// unsigned_negative: negative inputs are rejected for unsigned integer types.
 
 TEST(hxconsole_test, unsigned_negative) {
-	// strtoul accepts '-' and wraps. This is standard C behaviour.
-	s_hxconsole_test_u8 = 0;
-	EXPECT_TRUE(hxconsole_exec_line("s_hxconsole_test_u8 -1"));
-	EXPECT_EQ(s_hxconsole_test_u8, (uint8_t)255);
+	hxlogconsole("EXPECTING_TEST_WARNINGS\n");
 
-	s_hxconsole_test_u16 = 0;
-	EXPECT_TRUE(hxconsole_exec_line("s_hxconsole_test_u16 -1"));
-	EXPECT_EQ(s_hxconsole_test_u16, (uint16_t)65535);
+	s_hxconsole_test_u8 = 7;
+	EXPECT_FALSE(hxconsole_exec_line("s_hxconsole_test_u8 -1"));
+	EXPECT_EQ(s_hxconsole_test_u8, (uint8_t)7);
 
-	s_hxconsole_test_u32 = 0;
-	EXPECT_TRUE(hxconsole_exec_line("s_hxconsole_test_u32 -1"));
-	EXPECT_EQ(s_hxconsole_test_u32, (uint32_t)4294967295u);
+	s_hxconsole_test_u16 = 77;
+	EXPECT_FALSE(hxconsole_exec_line("s_hxconsole_test_u16 -11"));
+	EXPECT_EQ(s_hxconsole_test_u16, (uint16_t)77);
 
-	s_hxconsole_test_u64 = 0;
-	EXPECT_TRUE(hxconsole_exec_line("s_hxconsole_test_u64 -1"));
-	EXPECT_EQ(s_hxconsole_test_u64, (uint64_t)18446744073709551615ull);
+	s_hxconsole_test_u32 = 777;
+	EXPECT_FALSE(hxconsole_exec_line("s_hxconsole_test_u32 -111"));
+	EXPECT_EQ(s_hxconsole_test_u32, (uint32_t)777);
+
+	s_hxconsole_test_u64 = 7777;
+	EXPECT_FALSE(hxconsole_exec_line("s_hxconsole_test_u64 -1111"));
+	EXPECT_EQ(s_hxconsole_test_u64, (uint64_t)7777);
 }
 
 // ============================================================================

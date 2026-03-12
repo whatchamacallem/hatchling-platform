@@ -10,6 +10,48 @@
 
 #if HX_CPLUSPLUS >= 202002L
 
+namespace hxdetail_ {
+
+long hxconsole_strtol_(const char* str_, char** next_) {
+	errno = 0;
+	char* end_ = const_cast<char*>(str_);
+	long v_ = ::strtol(str_, &end_, 0);
+	if(errno == ERANGE) { end_ = const_cast<char*>(str_); }
+	*next_ = end_; return v_;
+}
+
+long long hxconsole_strtoll_(const char* str_, char** next_) {
+	errno = 0;
+	char* end_ = const_cast<char*>(str_);
+	long long v_ = ::strtoll(str_, &end_, 0);
+	if(errno == ERANGE) { end_ = const_cast<char*>(str_); }
+	*next_ = end_; return v_;
+}
+
+unsigned long hxconsole_strtoul_(const char* str_, char** next_) {
+	const char* p_ = str_;
+	while(hxisspace(*p_)) { ++p_; }
+	if(*p_ == '-') { *next_ = const_cast<char*>(str_); return 0; }
+	errno = 0;
+	char* end_ = const_cast<char*>(str_);
+	unsigned long v_ = ::strtoul(str_, &end_, 0);
+	if(errno == ERANGE) { end_ = const_cast<char*>(str_); }
+	*next_ = end_; return v_;
+}
+
+unsigned long long hxconsole_strtoull_(const char* str_, char** next_) {
+	const char* p_ = str_;
+	while(hxisspace(*p_)) { ++p_; }
+	if(*p_ == '-') { *next_ = const_cast<char*>(str_); return 0; }
+	errno = 0;
+	char* end_ = const_cast<char*>(str_);
+	unsigned long long v_ = ::strtoull(str_, &end_, 0);
+	if(errno == ERANGE) { end_ = const_cast<char*>(str_); }
+	*next_ = end_; return v_;
+}
+
+} // hxdetail_
+
 // ----------------------------------------------------------------------------
 // hxconsole_command_table_
 //

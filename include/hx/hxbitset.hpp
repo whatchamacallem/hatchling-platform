@@ -26,10 +26,10 @@ public:
 		while(dst_ != end_) { *dst_++ = *src_++; }
 	}
 
-	static constexpr size_t size(void) { return bits_; }
-	static constexpr size_t bytes(void) { return s_words_ * sizeof(size_t); }
-	size_t* data(void) { return m_data_; }
-	const size_t* data(void) const { return m_data_; }
+	static constexpr size_t size(void) hxattr_nodiscard { return bits_; }
+	static constexpr size_t bytes(void) hxattr_nodiscard { return s_words_ * sizeof(size_t); }
+	size_t* data(void) hxattr_nodiscard { return m_data_; }
+	const size_t* data(void) const hxattr_nodiscard { return m_data_; }
 
 	void load(const char* src_, size_t len_) {
 		hxassertmsg(len_ <= bytes(), "overflow_load %zu", len_);
@@ -37,7 +37,7 @@ public:
 		assert_no_trailing_bits_();
 	}
 
-	bool operator[](size_t pos_) const {
+	bool operator[](size_t pos_) const hxattr_nodiscard {
 		hxassertmsg(pos_ < bits_, "invalid_index %zu", pos_);
 		return (m_data_[pos_ / s_bits_per_word_] & (static_cast<size_t>(1u) << (pos_ % s_bits_per_word_))) != 0u;
 	}
@@ -213,30 +213,3 @@ private:
 
 	size_t m_data_[s_words_];
 };
-
-template<size_t bits_>
-hxbitset<bits_> operator&(const hxbitset<bits_>& x_, const hxbitset<bits_>& y_) {
-	hxassertmsg(static_cast<const void*>(&x_) != static_cast<const void*>(&y_),
-		"invalid_reference Operation with self.");
-	hxbitset<bits_> result_(x_);
-	result_ &= y_;
-	return result_;
-}
-
-template<size_t bits_>
-hxbitset<bits_> operator|(const hxbitset<bits_>& x_, const hxbitset<bits_>& y_) {
-	hxassertmsg(static_cast<const void*>(&x_) != static_cast<const void*>(&y_),
-		"invalid_reference Operation with self.");
-	hxbitset<bits_> result_(x_);
-	result_ |= y_;
-	return result_;
-}
-
-template<size_t bits_>
-hxbitset<bits_> operator^(const hxbitset<bits_>& x_, const hxbitset<bits_>& y_) {
-	hxassertmsg(static_cast<const void*>(&x_) != static_cast<const void*>(&y_),
-		"invalid_reference Operation with self.");
-	hxbitset<bits_> result_(x_);
-	result_ ^= y_;
-	return result_;
-}

@@ -77,7 +77,7 @@ public:
 // Static-capacity construction and initial state
 
 TEST(hxdeque_test, static_ctor_empty_state) {
-	hxdeque<int, 4u> d;
+	const hxdeque<int, 4u> d;
 	EXPECT_EQ(d.size(), 0u);
 	EXPECT_EQ(d.capacity(), 4u);
 	EXPECT_TRUE(d.empty());
@@ -86,7 +86,7 @@ TEST(hxdeque_test, static_ctor_empty_state) {
 
 TEST(hxdeque_test, dynamic_ctor_empty_state) {
 	const hxsystem_allocator_scope temporary_stack_scope(hxsystem_allocator_temporary_stack);
-	hxdeque<int> d(4u);
+	const hxdeque<int> d(4u);
 	EXPECT_EQ(d.size(), 0u);
 	EXPECT_EQ(d.capacity(), 4u);
 	EXPECT_TRUE(d.empty());
@@ -335,14 +335,14 @@ TEST_F(hxdeque_test_f, clear_after_ring_wraparound_destroys_all) {
 	for(int i = 0; i < 4; ++i) { EXPECT_TRUE(d.emplace_back(i)); }
 	hxtest_object out(0);
 	// Consume m_constructed from default ctor above
-	size_t baseline = m_constructed;
+	const size_t baseline = m_constructed;
 	EXPECT_TRUE(d.pop_front(out)); // head advances; out receives move
 	EXPECT_TRUE(d.pop_front(out));
 	// Push two more so tail wraps around
 	EXPECT_TRUE(d.emplace_back(100));
 	EXPECT_TRUE(d.emplace_back(101));
 	EXPECT_EQ(d.size(), 4u);
-	size_t before_clear = m_destructed;
+	const size_t before_clear = m_destructed;
 	d.clear();
 	// Must have destructed exactly the 4 live elements
 	EXPECT_EQ(m_destructed, before_clear + 4u);
@@ -384,8 +384,8 @@ TEST_F(hxdeque_test_f, pop_front_moves_element_and_destroys_slot) {
 	EXPECT_EQ(m_constructed, 1u);
 
 	hxtest_object out(0);
-	size_t c_before = m_constructed;
-	size_t d_before = m_destructed;
+	const size_t c_before = m_constructed;
+	const size_t d_before = m_destructed;
 	EXPECT_TRUE(d.pop_front(out));
 	// The slot destructor is called for the in-place object.
 	EXPECT_EQ(m_destructed, d_before + 1u);
@@ -399,7 +399,7 @@ TEST_F(hxdeque_test_f, pop_back_moves_element_and_destroys_slot) {
 	hxdeque<hxtest_object, 4u> d;
 	EXPECT_TRUE(d.emplace_back(77));
 	hxtest_object out(0);
-	size_t d_before = m_destructed;
+	const size_t d_before = m_destructed;
 	EXPECT_TRUE(d.pop_back(out));
 	EXPECT_EQ(m_destructed, d_before + 1u);
 	EXPECT_EQ(out.id, 77);

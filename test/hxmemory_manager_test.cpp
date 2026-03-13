@@ -27,7 +27,7 @@ TEST(hxmemory_manager_test, bytes) {
 const hxsystem_allocator_scope temporary_stack_scope(hxsystem_allocator_temporary_stack);
 	for(size_t i=10u; i-- != 0u;) {
 		void* p = hxmalloc(i);
-		ASSERT_NE(p, hxnull);
+		ASSERT_NE(p, hxnullptr);
 		::memset(p, 0x66, i);
 		hxfree(p);
 	}
@@ -37,7 +37,7 @@ TEST(hxmemory_manager_test, string_duplicate) {
 const hxsystem_allocator_scope temporary_stack_scope(hxsystem_allocator_temporary_stack);
 	// "Allocates a copy of a string using the specified allocator." Duplicate literal into temp arena then release.
 	char* p = hxstring_duplicate("str");
-	ASSERT_NE(p, hxnull);
+	ASSERT_NE(p, hxnullptr);
 	ASSERT_STREQ(p, "str");
 	hxfree(p);
 }
@@ -49,14 +49,14 @@ TEST(hxmemory_manager_test, temp_overflow) {
 	// alignment." Request temp_stack byte-count { budget + 1 } using explicit
 	// alignment.
 	void* p = hxmalloc_ext(HX_MEMORY_BUDGET_TEMPORARY_STACK + 1, hxsystem_allocator_temporary_stack, 1u);
-	ASSERT_NE(p, hxnull);
+	ASSERT_NE(p, hxnullptr);
 	hxfree(p);
 
 const hxsystem_allocator_scope temp(hxsystem_allocator_temporary_stack);
 	// Fallback path through default allocator should still succeed for { budget
 	// + 1 } bytes.
 	p = hxmalloc(HX_MEMORY_BUDGET_TEMPORARY_STACK + 1);
-	ASSERT_NE(p, hxnull);
+	ASSERT_NE(p, hxnullptr);
 	hxfree(p);
 }
 

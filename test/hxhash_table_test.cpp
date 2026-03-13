@@ -115,26 +115,26 @@ const hxsystem_allocator_scope temporary_stack_scope(hxsystem_allocator_temporar
 		EXPECT_EQ(table.insert_unique(k).value.id, node->value.id);
 		// Lookup stack: find() returns { node }, subsequent cursor with previous skips duplicates.
 		EXPECT_EQ(table.find(k), node);
-		EXPECT_EQ(table.find(k, node), hxnull);
+		EXPECT_EQ(table.find(k, node), hxnullptr);
 		EXPECT_EQ(const_table.find(k), node);
-		EXPECT_EQ(const_table.find(k, node), hxnull);
+		EXPECT_EQ(const_table.find(k, node), hxnullptr);
 
-		// "Removes and returns the first node_t with the given key." Ensure repeated calls -> { node, hxnull }.
+		// "Removes and returns the first node_t with the given key." Ensure repeated calls -> { node, hxnullptr }.
 		EXPECT_EQ(table.extract(k), node);
-		EXPECT_EQ(table.extract(k), hxnull);
+		EXPECT_EQ(table.extract(k), hxnullptr);
 
 		table.insert_node(node);
 		EXPECT_EQ(table.find(k), node);
-		// "Clears the hash table without deleting any Nodes." After release_all(), find returns hxnull while node still alive.
+		// "Clears the hash table without deleting any Nodes." After release_all(), find returns hxnullptr while node still alive.
 		table.release_all();
-		EXPECT_EQ(table.find(k), hxnull);
+		EXPECT_EQ(table.find(k), hxnullptr);
 		EXPECT_EQ(table.size(), 0u);
 
 		// Operations after the single node was removed.
 		EXPECT_EQ(table.size(), 0u);
 		EXPECT_EQ(table.count(k), 0u);
-		EXPECT_EQ(table.find(k), hxnull);
-		EXPECT_EQ(const_table.find(k), hxnull);
+		EXPECT_EQ(table.find(k), hxnullptr);
+		EXPECT_EQ(const_table.find(k), hxnullptr);
 
 		// MODIFIES TABLE
 		EXPECT_EQ(table[k].key(), k);
@@ -175,14 +175,14 @@ TEST_F(hxhash_table_test_f, map_node_usage) {
 		EXPECT_EQ(&table[10], &via_subscript);
 		const table_t& const_table = table;
 		const map_node_t* const_lookup = const_table.find(10);
-		EXPECT_NE(const_lookup, hxnull);
-		if(const_lookup != hxnull) {
+		EXPECT_NE(const_lookup, hxnullptr);
+		if(const_lookup != hxnullptr) {
 			EXPECT_EQ(const_lookup->value().id, 123);
 		}
 
 		map_node_t* manual_lookup = table.find(20);
-		EXPECT_NE(manual_lookup, hxnull);
-		if(manual_lookup != hxnull) {
+		EXPECT_NE(manual_lookup, hxnullptr);
+		if(manual_lookup != hxnullptr) {
 			EXPECT_EQ(manual_lookup->value().id, 321);
 		}
 
@@ -221,7 +221,7 @@ TEST_F(hxhash_table_test_f, multiple) {
 		for(int i = 0; i < size_i; ++i) {
 			hxtest_integer* ti = table.find(i);
 			EXPECT_EQ(ti->value, i);
-			EXPECT_EQ(table.find(i, ti), hxnull);
+			EXPECT_EQ(table.find(i, ti), hxnullptr);
 
 			// Iteration over.
 			EXPECT_NE(it, table.end());
@@ -257,7 +257,7 @@ TEST_F(hxhash_table_test_f, multiple) {
 			EXPECT_EQ(ti->key(), i);
 			const hxtest_integer* ti2 = const_table.find(i, ti); // test const version
 			EXPECT_EQ(ti2->key(), i);
-			EXPECT_EQ(table.find(i, ti2), hxnull);
+			EXPECT_EQ(table.find(i, ti2), hxnullptr);
 
 			EXPECT_EQ(table.count(i), 2u);
 
@@ -296,12 +296,12 @@ TEST_F(hxhash_table_test_f, multiple) {
 		// Check properties of size_i/2 remaining keys.
 		for(int i = 0; i < (size_i/2); ++i) {
 			EXPECT_EQ(table.release_key(i), 0);
-			EXPECT_EQ(table.find(i), hxnull);
+			EXPECT_EQ(table.find(i), hxnullptr);
 		}
 		for(int i = (size_i/2); i < size_i; ++i) {
 			hxtest_integer* ti = table.find(i);
 			EXPECT_EQ(ti->key(), i);
-			EXPECT_EQ(table.find(i, ti), hxnull);
+			EXPECT_EQ(table.find(i, ti), hxnullptr);
 			EXPECT_EQ(table.count(i), 1u);
 		}
 
@@ -335,8 +335,8 @@ TEST_F(hxhash_table_test_f, strings) {
 		for(int i = sz; i-- != 0;) {
 			EXPECT_STREQ(table[colors[i]].key(), colors[i]);
 		}
-		EXPECT_NE(table.find("Cyan"), hxnull);
-		EXPECT_EQ(table.find("Pink"), hxnull);
+		EXPECT_NE(table.find("Cyan"), hxnullptr);
+		EXPECT_EQ(table.find("Pink"), hxnullptr);
 
 	}
 	EXPECT_EQ(m_constructed, sz);
@@ -366,6 +366,6 @@ TEST_F(hxhash_table_test_f, string_literal_nodes) {
 	}
 
 	EXPECT_EQ(table.size(), (size_t)hxsize(literals));
-	EXPECT_NE(table.find("Crimson"), hxnull);
-	EXPECT_EQ(table.find("Cerulean"), hxnull);
+	EXPECT_NE(table.find("Crimson"), hxnullptr);
+	EXPECT_EQ(table.find("Cerulean"), hxnullptr);
 }

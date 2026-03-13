@@ -130,15 +130,18 @@ The scripted builds exercise the following toolchains, language modes, and
 | Script | Toolchain | Language Modes | `HX_RELEASE` | Notes |
 | --- | --- | --- | --- | --- |
 | `debugbuild.sh` | `clang`/`clang++` | C17, C++20 | 0 | 32-bit debug build with ccache and no exceptions/RTTI. |
-| `testcmake.sh` | `cmake` + default compiler | Project defaults (C/C++) | 0 (default) | Configures Google Test build and runs `hxtest`. |
+| `testcmake.sh` | `cmake` + default compiler | C17, C++20 | 0 (default) | Uses the real Google Test and runs `hxtest` and clang-tidy. |
 | `testcoverage.sh` | `gcc`, `g++` + `--coverage` | C99, C++20 | 0 | Enables `HX_TEST_ERROR_HANDLING=1` and emits `coverage.html`. |
 | `testmatrix.sh` | `gcc`, `clang` (ASan/UBSan) | C99, C17, C++11, C++20 | 0-3 | Sweeps optimization levels and sets `HX_USE_THREADS=0/1/11`. |
 | `teststrip.sh` | `musl-gcc` (static) | C17, C++11/14/17/20 | 3 | Size-focused static build with allocator/library stripping. |
 | `testwasm.sh` | `emcc` | Emscripten defaults (Clang-based C/C++) | 0 (default) | WebAssembly build with allocator disabled and single-thread mode. |
 
+`testall.sh` runs all of the above and also enforces certain naming conventions.
+
 Supporting scripts such as `clean.sh`, `diff.sh`, and `listsymbols.sh` manage
 workspace cleanup, diff viewing, and symbol inspection without compiling new
-artifacts.
+artifacts. `ubuntu_packages.sh` will install the required packages on Ubuntu.
+This is only tested on the latest LTS, use with care.
 
 ## Project Structure
 

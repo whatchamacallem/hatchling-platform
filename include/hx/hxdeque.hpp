@@ -8,7 +8,7 @@
 #include "hxutility.h"
 
 /// A fixed-capacity deque backed by a power-of-two ring buffer. All operations
-/// are O(1). The capacity must be a power of two and greater than zero.
+/// are `O(1)`. The capacity must be a power of two and greater than zero.
 /// - `T` : The element type stored in the deque.
 /// - `capacity` : Maximum element count or `hxallocator_dynamic_capacity` for dynamic storage.
 template<typename T_, size_t capacity_=hxallocator_dynamic_capacity>
@@ -44,9 +44,6 @@ public:
 
 	/// Destroys all elements in the deque.
 	~hxdeque(void) { clear(); }
-
-	hxdeque(const hxdeque&) = delete;
-	void operator=(const hxdeque&) = delete;
 
 	/// Destroys all elements and resets the deque to empty without deallocating.
 	void clear(void) {
@@ -213,6 +210,10 @@ public:
 private:
 	// This is raw underlying data and would not be what was expected.
 	using hxallocator<T_, capacity_>::data;
+
+	hxdeque(const hxdeque&) = delete;
+	void operator=(const hxdeque&) = delete;
+
 	size_t m_mask_;
 	size_t m_head_;
 	size_t m_tail_;

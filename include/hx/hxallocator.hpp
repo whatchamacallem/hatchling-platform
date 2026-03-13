@@ -47,7 +47,7 @@ protected:
 	/// - `size` : The number of elements of type `T` to ensure are available.
 	/// - `allocator` : Ignored.
 	/// - `alignment` : The alignment of the allocator is checked against this.
-	constexpr void reserve_storage(size_t size_,
+	constexpr void reserve_storage_(size_t size_,
 			hxsystem_allocator_t allocator_=hxsystem_allocator_current,
 			hxalignment_t alignment_=HX_ALIGNMENT) {
 		(void)size_; (void)allocator_; (void)alignment_;
@@ -99,7 +99,7 @@ protected:
 	/// - `size` : The number of elements of type `T` to allocate space for.
 	/// - `allocator` : The memory manager ID to use for allocation (default: `hxsystem_allocator_current`)
 	/// - `alignment` : The alignment to use for the allocation. (default: `HX_ALIGNMENT`)
-	void reserve_storage(size_t size_,
+	void reserve_storage_(size_t size_,
 			hxsystem_allocator_t allocator_=hxsystem_allocator_current,
 			hxalignment_t alignment_=HX_ALIGNMENT) {
 		if(size_ <= m_capacity_) { return; }
@@ -108,7 +108,6 @@ protected:
 		m_capacity_ = size_;
 	}
 
-private:
 	hxallocator(const hxallocator&) = delete;
 	void operator=(const hxallocator&) = delete;
 

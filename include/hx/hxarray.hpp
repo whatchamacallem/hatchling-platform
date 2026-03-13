@@ -1097,7 +1097,7 @@ template<hxarray_concept_ T_, size_t capacity_>
 void hxarray<T_, capacity_>::reserve(size_t size_,
 		hxsystem_allocator_t allocator_,
 		hxalignment_t alignment_) {
-	this->reserve_storage(size_, allocator_, alignment_);
+	this->reserve_storage_(size_, allocator_, alignment_);
 	if(m_end_ == hxnull) {
 		m_end_ = this->data();
 	}

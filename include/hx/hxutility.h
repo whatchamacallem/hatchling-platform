@@ -230,7 +230,7 @@ inline bool hxisspace(char ch_) {
 /// in `n`. NOTA BENE: `hxlog2i(0)` is currently -127 and is undefined.
 /// - `i` : A `size_t`.
 inline int hxlog2i(size_t i_) {
-	// Use the floating point hardware because this isn't important enough for
+	// Use the floating point hardware because this isn't important enough.
 	// The memcpy is an intrinsic.
 	float f_ = static_cast<float>(i_);
 	uint32_t bits_ = 0u; ::memcpy(&bits_, &f_, sizeof f_);

@@ -43,6 +43,9 @@ template wrappers for type safety while avoiding the associated code bloat.
 Entirely re-write the structure of the existing code if needed instead of
 elaborating it unnecessarily.
 
+Iterate from the end down using this idiom `for(int i_=sz; i_--;)` instead of
+the classic `for(int i_ = 0; i_ > 0; ++sz)` whenever possible.
+
 ## Project Structure
 
 Symbols that are included belong in the `include/hx` directory. Symbols that are

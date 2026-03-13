@@ -40,8 +40,7 @@ public:
 		static_assert(bits_ != hxallocator_dynamic_capacity,
 			"Fixed capacity required for value constructor.");
 		this->zero_();
-		const size_t n_ = this->num_words_();
-		if(n_ > 0u) {
+		if(this->num_words_() > 0u) {
 			this->data()[0] = value_;
 		}
 		this->mask_last_word_();
@@ -52,8 +51,7 @@ public:
 			this->m_bits_ = x_.m_bits_;
 			this->reserve_storage(words_for_bits_(x_.m_bits_));
 		}
-		const size_t words_ = this->num_words_();
-		for(size_t i_ = 0u; i_ < words_; ++i_) {
+		for(size_t i_ = this->num_words_(); i_-- != 0u; ) {
 			this->data()[i_] = x_.data()[i_];
 		}
 	}
@@ -92,8 +90,7 @@ public:
 				this->reserve_storage(words_for_bits_(x_.m_bits_));
 			}
 		}
-		const size_t words_ = this->num_words_();
-		for(size_t i_ = 0u; i_ < words_; ++i_) {
+		for(size_t i_ = this->num_words_(); i_-- != 0u; ) {
 			this->data()[i_] = x_.data()[i_];
 		}
 	}
@@ -112,8 +109,7 @@ public:
 
 	hxbitset& operator&=(const hxbitset& x_) {
 		hxassertmsg(this->size() == x_.size(), "size_mismatch");
-		const size_t words_ = this->num_words_();
-		for(size_t i_ = 0u; i_ < words_; ++i_) {
+		for(size_t i_ = this->num_words_(); i_-- != 0u; ) {
 			this->data()[i_] &= x_.data()[i_];
 		}
 		return *this;
@@ -121,8 +117,7 @@ public:
 
 	hxbitset& operator|=(const hxbitset& x_) {
 		hxassertmsg(this->size() == x_.size(), "size_mismatch");
-		const size_t words_ = this->num_words_();
-		for(size_t i_ = 0u; i_ < words_; ++i_) {
+		for(size_t i_ = this->num_words_(); i_-- != 0u; ) {
 			this->data()[i_] |= x_.data()[i_];
 		}
 		return *this;
@@ -130,8 +125,7 @@ public:
 
 	hxbitset& operator^=(const hxbitset& x_) {
 		hxassertmsg(this->size() == x_.size(), "size_mismatch");
-		const size_t words_ = this->num_words_();
-		for(size_t i_ = 0u; i_ < words_; ++i_) {
+		for(size_t i_ = this->num_words_(); i_-- != 0u; ) {
 			this->data()[i_] ^= x_.data()[i_];
 		}
 		return *this;
@@ -150,8 +144,7 @@ public:
 	}
 
 	hxbitset& operator<<=(size_t count_) {
-		const size_t n_ = this->size();
-		if(count_ >= n_) {
+		if(count_ >= this->size()) {
 			this->zero_();
 			return *this;
 		}
@@ -187,8 +180,7 @@ public:
 	}
 
 	hxbitset& operator>>=(size_t count_) {
-		const size_t n_ = this->size();
-		if(count_ >= n_) {
+		if(count_ >= this->size()) {
 			this->zero_();
 			return *this;
 		}
@@ -234,9 +226,8 @@ public:
 	}
 
 	bool any(void) const hxattr_nodiscard {
-		const size_t words_ = this->num_words_();
 		const size_t* d_ = this->data();
-		for(size_t i_ = 0u; i_ < words_; ++i_) {
+		for(size_t i_ = this->num_words_(); i_-- != 0u; ) {
 			if(d_[i_] != 0u) { return true; }
 		}
 		return false;
@@ -246,9 +237,8 @@ public:
 
 	size_t count(void) const hxattr_nodiscard {
 		size_t count_ = 0u;
-		const size_t words_ = this->num_words_();
 		const size_t* d_ = this->data();
-		for(size_t i_ = 0u; i_ < words_; ++i_) {
+		for(size_t i_ = this->num_words_(); i_-- != 0u; ) {
 			size_t w_ = d_[i_];
 			while(w_ != 0u) {
 				count_ += static_cast<size_t>(w_ & 1u);
@@ -266,9 +256,8 @@ public:
 	size_t size(void) const hxattr_nodiscard { return this->size_(); }
 
 	hxbitset& set(void) {
-		const size_t words_ = this->num_words_();
 		size_t* d_ = this->data();
-		for(size_t i_ = 0u; i_ < words_; ++i_) {
+		for(size_t i_ = this->num_words_(); i_-- != 0u; ) {
 			d_[i_] = ~static_cast<size_t>(0u);
 		}
 		this->mask_last_word_();
@@ -299,9 +288,8 @@ public:
 	}
 
 	hxbitset& flip(void) {
-		const size_t words_ = this->num_words_();
 		size_t* d_ = this->data();
-		for(size_t i_ = 0u; i_ < words_; ++i_) {
+		for(size_t i_ = this->num_words_(); i_-- != 0u; ) {
 			d_[i_] ^= ~static_cast<size_t>(0u);
 		}
 		this->mask_last_word_();
@@ -316,10 +304,9 @@ public:
 
 	bool operator==(const hxbitset& x_) const hxattr_nodiscard {
 		hxassertmsg(this->size() == x_.size(), "size_mismatch");
-		const size_t words_ = this->num_words_();
 		const size_t* d0_ = this->data();
 		const size_t* d1_ = x_.data();
-		for(size_t i_ = 0u; i_ < words_; ++i_) {
+		for(size_t i_ = this->num_words_(); i_-- != 0u; ) {
 			if(d0_[i_] != d1_[i_]) { return false; }
 		}
 		return true;
@@ -358,9 +345,8 @@ private:
 	}
 
 	void zero_(void) {
-		const size_t words_ = this->num_words_();
 		size_t* d_ = this->data();
-		for(size_t i_ = 0u; i_ < words_; ++i_) {
+		for(size_t i_ = this->num_words_(); i_-- != 0u; ) {
 			d_[i_] = 0u;
 		}
 	}

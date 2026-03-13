@@ -166,6 +166,8 @@
         "Wwrite",
         "Xclang"
     ],
+    "C_Cpp.codeAnalysis.clangTidy.enabled": true,
+    "C_Cpp.codeAnalysis.clangTidy.useBuildPath": false,
     "markdownlint.config": {
         "MD033": {
             // Doxygen renders images with the alt text after them.

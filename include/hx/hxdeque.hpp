@@ -52,28 +52,30 @@ public:
 	}
 
 	/// Constructs an element in place at the back using forwarded arguments.
-	/// Returns a reference to the new element. Asserts if full or unallocated.
+	/// Returns a pointer to the new element or null if the deque is full or
+	/// unallocated.
 	/// - `args` : Arguments forwarded to `T`'s constructor.
 	template<typename... args_t_>
-	T_& emplace_back(args_t_&&... args_) {
+	T_* emplace_back(args_t_&&... args_) hxattr_nodiscard {
 		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
-		hxassertrelease(m_count_ < this->capacity(), "overflow_emplace_back");
+		if(m_count_ >= this->capacity()) { return nullptr; }
 		T_* slot_ = this->data() + m_tail_;
 		m_tail_ = (m_tail_ + 1u) & m_mask_; ++m_count_;
-		return *::new(slot_) T_(hxforward<args_t_>(args_)...);
+		return ::new(slot_) T_(hxforward<args_t_>(args_)...);
 	}
 
 	/// Constructs an element in place at the front using forwarded arguments.
-	/// Returns a reference to the new element. Asserts if full or unallocated.
+	/// Returns a pointer to the new element or null if the deque is full or
+	/// unallocated.
 	/// - `args` : Arguments forwarded to `T`'s constructor.
 	template<typename... args_t_>
-	T_& emplace_front(args_t_&&... args_) {
+	T_* emplace_front(args_t_&&... args_) hxattr_nodiscard {
 		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
-		hxassertrelease(m_count_ < this->capacity(), "overflow_emplace_front");
+		if(m_count_ >= this->capacity()) { return nullptr; }
 		m_head_ = (m_head_ + m_mask_) & m_mask_;
 		T_* slot_ = this->data() + m_head_;
 		++m_count_;
-		return *::new(slot_) T_(hxforward<args_t_>(args_)...);
+		return ::new(slot_) T_(hxforward<args_t_>(args_)...);
 	}
 
 	/// Inserts `v` at the back. Returns `false` if the deque is full or
@@ -201,6 +203,8 @@ public:
 	bool full(void) const hxattr_nodiscard { return m_count_ == this->capacity(); }
 
 private:
+	// This is raw underlying data and would not be what was expected.
+	using hxallocator<T_, capacity_>::data;
 	size_t m_mask_;
 	size_t m_head_;
 	size_t m_tail_;

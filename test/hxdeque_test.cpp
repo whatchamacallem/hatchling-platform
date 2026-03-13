@@ -2,36 +2,6 @@
 // SPDX-License-Identifier: MIT
 // This file is licensed under the MIT license found in the LICENSE.md file.
 
-// Design flaws found:
-//
-// 1. `at()` is identical to `operator[]` but the API doc implies a bounds-checked
-//    alternative (like std::deque::at throws). Since this project disables exceptions,
-//    duplicating `operator[]` as `at()` provides no additional contract or safety
-//    guarantee and adds dead surface area.
-//
-// 2. `m_head_` and `m_tail_` are bare `size_t` counters that grow monotonically
-//    without wrapping. On a 32-bit ILP32 target (size_t == 32 bits) they will
-//    silently overflow after 2^32 operations and corrupt the ring-buffer indices.
-//    The mask is applied only at the point of slot computation, not to the
-//    counters themselves. All other ring-buffer designs either keep the counters
-//    masked or use modular types to make overflow defined.
-//
-// 3. `reserve()` asserts that the capacity is a power of two but the assertion is
-//    placed *after* `reserve_storage_()`, which for dynamic storage may already
-//    have allocated memory. If the caller passes a non-power-of-two value the
-//    memory is allocated before the assert fires, leaking it (the destructor will
-//    free it, but `m_mask_` is never updated so subsequent operations are
-//    undefined).
-//
-// 4. `push_back` / `push_front` return `bool` (hxattr_nodiscard) but `emplace_back`
-//    / `emplace_front` do not: an overflow in the emplace path triggers a hard
-//    release assert rather than giving the caller a chance to handle backpressure.
-//    The API is asymmetric with no documented rationale.
-//
-// 5. There is no iterator interface, `data()` returns the raw ring-buffer storage
-//    whose layout is not contiguous in the logical order. Range-for and standard
-//    algorithms cannot be used without resorting to `operator[]` loops.
-
 #include <hx/hxdeque.hpp>
 #include <hx/hxtest.hpp>
 
@@ -250,9 +220,10 @@ TEST(hxdeque_test, ring_wraparound_push_front_pop_back) {
 
 TEST_F(hxdeque_test_f, emplace_back_constructs_in_place) {
 	hxdeque<hxtest_object, 4u> d;
-	hxtest_object& r = d.emplace_back(42);
-	EXPECT_EQ(r.id, 42);
-	EXPECT_FALSE(r.moved_from);
+	hxtest_object* p = d.emplace_back(42);
+	EXPECT_NE(p, hxnull);
+	EXPECT_EQ(p->id, 42);
+	EXPECT_FALSE(p->moved_from);
 	EXPECT_EQ(d.size(), 1u);
 	EXPECT_EQ(m_constructed, 1u);
 	EXPECT_EQ(m_destructed, 0u);
@@ -260,9 +231,10 @@ TEST_F(hxdeque_test_f, emplace_back_constructs_in_place) {
 
 TEST_F(hxdeque_test_f, emplace_front_constructs_in_place) {
 	hxdeque<hxtest_object, 4u> d;
-	d.emplace_back(10);
-	hxtest_object& r = d.emplace_front(99);
-	EXPECT_EQ(r.id, 99);
+	(void)d.emplace_back(10);
+	hxtest_object* p = d.emplace_front(99);
+	EXPECT_NE(p, hxnull);
+	EXPECT_EQ(p->id, 99);
 	EXPECT_EQ(d.size(), 2u);
 	// Front is the newly emplaced element.
 	EXPECT_EQ(d.front().id, 99);
@@ -277,9 +249,26 @@ TEST_F(hxdeque_test_f, emplace_back_forward_multiple_args) {
 		int x, y;
 	};
 	hxdeque<hxpair, 2u> d;
-	hxpair& r = d.emplace_back(3, 7);
-	EXPECT_EQ(r.x, 3);
-	EXPECT_EQ(r.y, 7);
+	hxpair* p = d.emplace_back(3, 7);
+	EXPECT_NE(p, hxnull);
+	EXPECT_EQ(p->x, 3);
+	EXPECT_EQ(p->y, 7);
+}
+
+TEST_F(hxdeque_test_f, emplace_back_returns_null_when_full) {
+	hxdeque<hxtest_object, 2u> d;
+	EXPECT_NE(d.emplace_back(1), hxnull);
+	EXPECT_NE(d.emplace_back(2), hxnull);
+	EXPECT_EQ(d.emplace_back(3), hxnull);
+	EXPECT_EQ(d.size(), 2u);
+}
+
+TEST_F(hxdeque_test_f, emplace_front_returns_null_when_full) {
+	hxdeque<hxtest_object, 2u> d;
+	EXPECT_NE(d.emplace_front(1), hxnull);
+	EXPECT_NE(d.emplace_front(2), hxnull);
+	EXPECT_EQ(d.emplace_front(3), hxnull);
+	EXPECT_EQ(d.size(), 2u);
 }
 
 // ---------------------------------------------------------------------------
@@ -382,9 +371,9 @@ TEST(hxdeque_test, operator_index_after_wraparound) {
 
 TEST_F(hxdeque_test_f, clear_destroys_all_elements) {
 	hxdeque<hxtest_object, 4u> d;
-	d.emplace_back(1);
-	d.emplace_back(2);
-	d.emplace_back(3);
+	(void)d.emplace_back(1);
+	(void)d.emplace_back(2);
+	(void)d.emplace_back(3);
 	EXPECT_EQ(m_constructed, 3u);
 	EXPECT_EQ(m_destructed, 0u);
 	d.clear();
@@ -403,15 +392,15 @@ TEST_F(hxdeque_test_f, clear_empty_deque_is_noop) {
 // be destroyed correctly.
 TEST_F(hxdeque_test_f, clear_after_ring_wraparound_destroys_all) {
 	hxdeque<hxtest_object, 4u> d;
-	for(int i = 0; i < 4; ++i) { d.emplace_back(i); }
+	for(int i = 0; i < 4; ++i) { (void)d.emplace_back(i); }
 	hxtest_object out(0);
 	// Consume m_constructed from default ctor above
 	size_t baseline = m_constructed;
 	(void)d.pop_front(out); // head advances; out receives move
 	(void)d.pop_front(out);
 	// Push two more so tail wraps around
-	d.emplace_back(100);
-	d.emplace_back(101);
+	(void)d.emplace_back(100);
+	(void)d.emplace_back(101);
 	EXPECT_EQ(d.size(), 4u);
 	size_t before_clear = m_destructed;
 	d.clear();
@@ -428,8 +417,8 @@ TEST_F(hxdeque_test_f, clear_after_ring_wraparound_destroys_all) {
 TEST_F(hxdeque_test_f, destructor_calls_clear) {
 	{
 		hxdeque<hxtest_object, 4u> d;
-		d.emplace_back(7);
-		d.emplace_back(8);
+		(void)d.emplace_back(7);
+		(void)d.emplace_back(8);
 		EXPECT_EQ(m_constructed, 2u);
 	} // destructor fires here
 	EXPECT_EQ(m_destructed, 2u);
@@ -457,7 +446,7 @@ TEST(hxdeque_test, full_predicate) {
 
 TEST_F(hxdeque_test_f, pop_front_moves_element_and_destroys_slot) {
 	hxdeque<hxtest_object, 4u> d;
-	d.emplace_back(55);
+	(void)d.emplace_back(55);
 	EXPECT_EQ(m_constructed, 1u);
 
 	hxtest_object out(0);
@@ -474,7 +463,7 @@ TEST_F(hxdeque_test_f, pop_front_moves_element_and_destroys_slot) {
 
 TEST_F(hxdeque_test_f, pop_back_moves_element_and_destroys_slot) {
 	hxdeque<hxtest_object, 4u> d;
-	d.emplace_back(77);
+	(void)d.emplace_back(77);
 	hxtest_object out(0);
 	size_t d_before = m_destructed;
 	EXPECT_TRUE(d.pop_back(out));

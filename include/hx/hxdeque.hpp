@@ -3,7 +3,9 @@
 // SPDX-License-Identifier: MIT
 // This file is licensed under the MIT license found in the LICENSE.md file.
 
+#include "hatchling.h"
 #include "hxallocator.hpp"
+#include "hxutility.h"
 
 /// A fixed-capacity deque backed by a power-of-two ring buffer. All operations
 /// are O(1). The capacity must be a power of two and greater than zero.
@@ -23,84 +25,172 @@ public:
 		, m_tail_(0u)
 		, m_count_(0u)
 	{
+		hxassertmsg(capacity_ == 0u || capacity_ == dynamic_capacity_, "capacity_mismatch");
 		reserve(dynamic_capacity_);
 	}
+
+	/// Destroys all elements in the deque.
+	~hxdeque(void) { clear(); }
 
 	hxdeque(const hxdeque&) = delete;
 	void operator=(const hxdeque&) = delete;
 
 	/// Allocates dynamic storage for `cap` elements. Asserts if a reallocation
 	/// is requested. Asserts that `cap` is a power of two and greater than zero.
-	/// - `cap` : Element capacity. Must be a power of two.
+	/// For static storage asserts that `cap` is zero or matches the static capacity.
+	/// - `dynamic_capacity` : Element capacity for dynamic storage. Must be a power of two.
 	void reserve(size_t dynamic_capacity_) {
-		size_t current_ = this->capacity();
-		if(current_ == 0u) {
-			this->reserve_storage_(dynamic_capacity_);
-			current_ = this->capacity();
-		}
-		hxassertmsg(current_ > 0u && (current_ & (current_ - 1u)) == 0u,
+		this->reserve_storage_(dynamic_capacity_);
+		hxassertmsg(this->capacity() > 0u && (this->capacity() & (this->capacity() - 1u)) == 0u,
 			"invalid_capacity capacity must be a power of two");
-		m_mask_ = current_ - 1u;
+		m_mask_ = this->capacity() - 1u;
 	}
 
-	/// Inserts `v` at the back. Asserts if the deque is full or unallocated.
+	/// Destroys all elements and resets the deque to empty without deallocating.
+	void clear(void) {
+		T_* const data_ = this->data();
+		for(size_t i_ = 0u; i_ < m_count_; ++i_) {
+			data_[(m_head_ + i_) & m_mask_].~T_();
+		}
+		m_head_ = 0u;
+		m_tail_ = 0u;
+		m_count_ = 0u;
+	}
+
+	/// Constructs an element in place at the back using forwarded arguments.
+	/// Returns a reference to the new element. Asserts if full or unallocated.
+	/// - `args` : Arguments forwarded to `T`'s constructor.
+	template<typename... args_t_>
+	T_& emplace_back(args_t_&&... args_) {
+		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
+		hxassertrelease(m_count_ < this->capacity(), "overflow_emplace_back");
+		T_* slot_ = this->data() + (m_tail_ & m_mask_);
+		++m_tail_; ++m_count_;
+		return *::new(slot_) T_(hxforward<args_t_>(args_)...);
+	}
+
+	/// Constructs an element in place at the front using forwarded arguments.
+	/// Returns a reference to the new element. Asserts if full or unallocated.
+	/// - `args` : Arguments forwarded to `T`'s constructor.
+	template<typename... args_t_>
+	T_& emplace_front(args_t_&&... args_) {
+		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
+		hxassertrelease(m_count_ < this->capacity(), "overflow_emplace_front");
+		T_* slot_ = this->data() + (--m_head_ & m_mask_);
+		++m_count_;
+		return *::new(slot_) T_(hxforward<args_t_>(args_)...);
+	}
+
+	/// Inserts `v` at the back. Returns `false` if the deque is full or
+	/// unallocated.
 	/// - `v` : Value to insert.
 	bool push_back(const T_& v_) hxattr_nodiscard {
 		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
 		if(m_count_ >= this->capacity()) { return false; }
-		this->data()[m_tail_ & m_mask_] = v_;
+		::new(this->data() + (m_tail_ & m_mask_)) T_(v_);
 		++m_tail_; ++m_count_;
 		return true;
 	}
 
-	/// Inserts `v` at the front. Asserts if the deque is full or unallocated.
+	/// Inserts `v` at the front. Returns `false` if the deque is full or
+	/// unallocated.
 	/// - `v` : Value to insert.
 	bool push_front(const T_& v_) hxattr_nodiscard {
 		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
 		if(m_count_ >= this->capacity()) { return false; }
-		this->data()[--m_head_ & m_mask_] = v_;
+		::new(this->data() + (--m_head_ & m_mask_)) T_(v_);
 		++m_count_;
 		return true;
 	}
 
-	/// Removes and returns the front element in `out`. Returns `false` if empty.
+	/// Removes and destroys the front element, returning it in `out`. Returns
+	/// `false` if empty. Asserts if unallocated.
 	/// - `out` : Receives the removed element.
 	bool pop_front(T_& out_) hxattr_nodiscard {
 		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
 		if(m_count_ == 0u) { return false; }
-		out_ = this->data()[m_head_++ & m_mask_];
+		T_* slot_ = this->data() + (m_head_++ & m_mask_);
+		out_ = hxmove(*slot_);
+		slot_->~T_();
 		--m_count_;
 		return true;
 	}
 
-	/// Removes and returns the back element in `out`. Returns `false` if empty.
+	/// Removes and destroys the back element, returning it in `out`. Returns
+	/// `false` if empty. Asserts if unallocated.
 	/// - `out` : Receives the removed element.
 	bool pop_back(T_& out_) hxattr_nodiscard {
 		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
 		if(m_count_ == 0u) { return false; }
-		out_ = this->data()[--m_tail_ & m_mask_];
+		T_* slot_ = this->data() + (--m_tail_ & m_mask_);
+		out_ = hxmove(*slot_);
+		slot_->~T_();
 		--m_count_;
 		return true;
 	}
 
-	/// Copies the front element into `out` without removing it. Returns `false`
-	/// if empty.
-	/// - `out` : Receives the front element.
-	bool peek_front(T_& out_) const hxattr_nodiscard {
+	/// Returns a reference to the front element.
+	T_& front(void) hxattr_nodiscard {
 		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
-		if(m_count_ == 0u) { return false; }
-		out_ = this->data()[m_head_ & m_mask_];
-		return true;
+		hxassertmsg(m_count_ > 0u, "empty_deque");
+		return this->data()[m_head_ & m_mask_];
 	}
 
-	/// Copies the back element into `out` without removing it. Returns `false`
-	/// if empty.
-	/// - `out` : Receives the back element.
-	bool peek_back(T_& out_) const hxattr_nodiscard {
+	/// Returns a const reference to the front element.
+	const T_& front(void) const hxattr_nodiscard {
 		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
-		if(m_count_ == 0u) { return false; }
-		out_ = this->data()[(m_tail_ - 1u) & m_mask_];
-		return true;
+		hxassertmsg(m_count_ > 0u, "empty_deque");
+		return this->data()[m_head_ & m_mask_];
+	}
+
+	/// Returns a reference to the back element.
+	T_& back(void) hxattr_nodiscard {
+		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
+		hxassertmsg(m_count_ > 0u, "empty_deque");
+		return this->data()[(m_tail_ - 1u) & m_mask_];
+	}
+
+	/// Returns a const reference to the back element.
+	const T_& back(void) const hxattr_nodiscard {
+		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
+		hxassertmsg(m_count_ > 0u, "empty_deque");
+		return this->data()[(m_tail_ - 1u) & m_mask_];
+	}
+
+	/// Returns a reference to the element at logical index `index`. Asserts if
+	/// `index` is out of range or the deque is unallocated.
+	/// - `index` : Zero-based index from the front.
+	T_& operator[](size_t index_) hxattr_nodiscard {
+		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
+		hxassertmsg(index_ < m_count_, "invalid_index %zu", index_);
+		return this->data()[(m_head_ + index_) & m_mask_];
+	}
+
+	/// Returns a const reference to the element at logical index `index`.
+	/// Asserts if `index` is out of range or the deque is unallocated.
+	/// - `index` : Zero-based index from the front.
+	const T_& operator[](size_t index_) const hxattr_nodiscard {
+		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
+		hxassertmsg(index_ < m_count_, "invalid_index %zu", index_);
+		return this->data()[(m_head_ + index_) & m_mask_];
+	}
+
+	/// Returns a reference to the element at logical index `index`. Asserts if
+	/// `index` is out of range or the deque is unallocated.
+	/// - `index` : Zero-based index from the front.
+	T_& at(size_t index_) hxattr_nodiscard {
+		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
+		hxassertmsg(index_ < m_count_, "invalid_index %zu", index_);
+		return this->data()[(m_head_ + index_) & m_mask_];
+	}
+
+	/// Returns a const reference to the element at logical index `index`.
+	/// Asserts if `index` is out of range or the deque is unallocated.
+	/// - `index` : Zero-based index from the front.
+	const T_& at(size_t index_) const hxattr_nodiscard {
+		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
+		hxassertmsg(index_ < m_count_, "invalid_index %zu", index_);
+		return this->data()[(m_head_ + index_) & m_mask_];
 	}
 
 	/// Returns the number of elements currently in the deque.

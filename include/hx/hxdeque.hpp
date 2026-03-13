@@ -52,30 +52,30 @@ public:
 	}
 
 	/// Constructs an element in place at the back using forwarded arguments.
-	/// Returns a pointer to the new element or null if the deque is full or
-	/// unallocated.
+	/// Returns `false` if the deque is full or unallocated.
 	/// - `args` : Arguments forwarded to `T`'s constructor.
 	template<typename... args_t_>
-	T_* emplace_back(args_t_&&... args_) hxattr_nodiscard {
+	bool emplace_back(args_t_&&... args_) hxattr_nodiscard {
 		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
-		if(m_count_ >= this->capacity()) { return nullptr; }
+		if(m_count_ >= this->capacity()) { return false; }
 		T_* slot_ = this->data() + m_tail_;
 		m_tail_ = (m_tail_ + 1u) & m_mask_; ++m_count_;
-		return ::new(slot_) T_(hxforward<args_t_>(args_)...);
+		::new(slot_) T_(hxforward<args_t_>(args_)...);
+		return true;
 	}
 
 	/// Constructs an element in place at the front using forwarded arguments.
-	/// Returns a pointer to the new element or null if the deque is full or
-	/// unallocated.
+	/// Returns `false` if the deque is full or unallocated.
 	/// - `args` : Arguments forwarded to `T`'s constructor.
 	template<typename... args_t_>
-	T_* emplace_front(args_t_&&... args_) hxattr_nodiscard {
+	bool emplace_front(args_t_&&... args_) hxattr_nodiscard {
 		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
-		if(m_count_ >= this->capacity()) { return nullptr; }
+		if(m_count_ >= this->capacity()) { return false; }
 		m_head_ = (m_head_ + m_mask_) & m_mask_;
 		T_* slot_ = this->data() + m_head_;
 		++m_count_;
-		return ::new(slot_) T_(hxforward<args_t_>(args_)...);
+		::new(slot_) T_(hxforward<args_t_>(args_)...);
+		return true;
 	}
 
 	/// Inserts `v` at the back. Returns `false` if the deque is full or

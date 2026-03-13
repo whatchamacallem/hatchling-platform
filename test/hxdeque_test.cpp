@@ -89,6 +89,7 @@ TEST(hxdeque_test, static_ctor_empty_state) {
 }
 
 TEST(hxdeque_test, dynamic_ctor_empty_state) {
+	const hxsystem_allocator_scope temporary_stack_scope(hxsystem_allocator_temporary_stack);
 	hxdeque<int> d(4u);
 	EXPECT_EQ(d.size(), 0u);
 	EXPECT_EQ(d.capacity(), 4u);
@@ -220,10 +221,9 @@ TEST(hxdeque_test, ring_wraparound_push_front_pop_back) {
 
 TEST_F(hxdeque_test_f, emplace_back_constructs_in_place) {
 	hxdeque<hxtest_object, 4u> d;
-	hxtest_object* p = d.emplace_back(42);
-	EXPECT_NE(p, hxnull);
-	EXPECT_EQ(p->id, 42);
-	EXPECT_FALSE(p->moved_from);
+	EXPECT_TRUE(d.emplace_back(42));
+	EXPECT_EQ(d.back().id, 42);
+	EXPECT_FALSE(d.back().moved_from);
 	EXPECT_EQ(d.size(), 1u);
 	EXPECT_EQ(m_constructed, 1u);
 	EXPECT_EQ(m_destructed, 0u);
@@ -231,10 +231,8 @@ TEST_F(hxdeque_test_f, emplace_back_constructs_in_place) {
 
 TEST_F(hxdeque_test_f, emplace_front_constructs_in_place) {
 	hxdeque<hxtest_object, 4u> d;
-	(void)d.emplace_back(10);
-	hxtest_object* p = d.emplace_front(99);
-	EXPECT_NE(p, hxnull);
-	EXPECT_EQ(p->id, 99);
+	EXPECT_TRUE(d.emplace_back(10));
+	EXPECT_TRUE(d.emplace_front(99));
 	EXPECT_EQ(d.size(), 2u);
 	// Front is the newly emplaced element.
 	EXPECT_EQ(d.front().id, 99);
@@ -249,25 +247,24 @@ TEST_F(hxdeque_test_f, emplace_back_forward_multiple_args) {
 		int x, y;
 	};
 	hxdeque<hxpair, 2u> d;
-	hxpair* p = d.emplace_back(3, 7);
-	EXPECT_NE(p, hxnull);
-	EXPECT_EQ(p->x, 3);
-	EXPECT_EQ(p->y, 7);
+	EXPECT_TRUE(d.emplace_back(3, 7));
+	EXPECT_EQ(d.back().x, 3);
+	EXPECT_EQ(d.back().y, 7);
 }
 
-TEST_F(hxdeque_test_f, emplace_back_returns_null_when_full) {
+TEST_F(hxdeque_test_f, emplace_back_returns_false_when_full) {
 	hxdeque<hxtest_object, 2u> d;
-	EXPECT_NE(d.emplace_back(1), hxnull);
-	EXPECT_NE(d.emplace_back(2), hxnull);
-	EXPECT_EQ(d.emplace_back(3), hxnull);
+	EXPECT_TRUE(d.emplace_back(1));
+	EXPECT_TRUE(d.emplace_back(2));
+	EXPECT_FALSE(d.emplace_back(3));
 	EXPECT_EQ(d.size(), 2u);
 }
 
-TEST_F(hxdeque_test_f, emplace_front_returns_null_when_full) {
+TEST_F(hxdeque_test_f, emplace_front_returns_false_when_full) {
 	hxdeque<hxtest_object, 2u> d;
-	EXPECT_NE(d.emplace_front(1), hxnull);
-	EXPECT_NE(d.emplace_front(2), hxnull);
-	EXPECT_EQ(d.emplace_front(3), hxnull);
+	EXPECT_TRUE(d.emplace_front(1));
+	EXPECT_TRUE(d.emplace_front(2));
+	EXPECT_FALSE(d.emplace_front(3));
 	EXPECT_EQ(d.size(), 2u);
 }
 
@@ -277,24 +274,24 @@ TEST_F(hxdeque_test_f, emplace_front_returns_null_when_full) {
 
 TEST(hxdeque_test, front_and_back_single_element) {
 	hxdeque<int, 2u> d;
-	(void)d.push_back(55);
+	EXPECT_TRUE(d.push_back(55));
 	EXPECT_EQ(d.front(), 55);
 	EXPECT_EQ(d.back(), 55);
 }
 
 TEST(hxdeque_test, front_and_back_multiple_elements) {
 	hxdeque<int, 4u> d;
-	(void)d.push_back(1);
-	(void)d.push_back(2);
-	(void)d.push_back(3);
+	EXPECT_TRUE(d.push_back(1));
+	EXPECT_TRUE(d.push_back(2));
+	EXPECT_TRUE(d.push_back(3));
 	EXPECT_EQ(d.front(), 1);
 	EXPECT_EQ(d.back(), 3);
 }
 
 TEST(hxdeque_test, const_front_and_back) {
 	hxdeque<int, 4u> d;
-	(void)d.push_back(7);
-	(void)d.push_back(8);
+	EXPECT_TRUE(d.push_back(7));
+	EXPECT_TRUE(d.push_back(8));
 	const hxdeque<int, 4u>& cd = d;
 	EXPECT_EQ(cd.front(), 7);
 	EXPECT_EQ(cd.back(), 8);
@@ -303,8 +300,8 @@ TEST(hxdeque_test, const_front_and_back) {
 // front/back mutability: write through the reference
 TEST(hxdeque_test, front_back_reference_mutation) {
 	hxdeque<int, 4u> d;
-	(void)d.push_back(1);
-	(void)d.push_back(2);
+	EXPECT_TRUE(d.push_back(1));
+	EXPECT_TRUE(d.push_back(2));
 	d.front() = 10;
 	d.back()  = 20;
 	EXPECT_EQ(d[0], 10);
@@ -318,7 +315,7 @@ TEST(hxdeque_test, front_back_reference_mutation) {
 TEST(hxdeque_test, operator_index_sequential) {
 	hxdeque<int, 8u> d;
 	for(int i = 0; i < 5; ++i) {
-		(void)d.push_back(i * 10);
+		EXPECT_TRUE(d.push_back(i * 10));
 	}
 	for(size_t i = 0u; i < 5u; ++i) {
 		EXPECT_EQ(d[i], static_cast<int>(i * 10));
@@ -327,8 +324,8 @@ TEST(hxdeque_test, operator_index_sequential) {
 
 TEST(hxdeque_test, const_operator_index) {
 	hxdeque<int, 4u> d;
-	(void)d.push_back(3);
-	(void)d.push_back(6);
+	EXPECT_TRUE(d.push_back(3));
+	EXPECT_TRUE(d.push_back(6));
 	const hxdeque<int, 4u>& cd = d;
 	EXPECT_EQ(cd[0], 3);
 	EXPECT_EQ(cd[1], 6);
@@ -336,16 +333,16 @@ TEST(hxdeque_test, const_operator_index) {
 
 TEST(hxdeque_test, at_matches_operator_index) {
 	hxdeque<int, 4u> d;
-	(void)d.push_back(11);
-	(void)d.push_back(22);
+	EXPECT_TRUE(d.push_back(11));
+	EXPECT_TRUE(d.push_back(22));
 	EXPECT_EQ(d.at(0u), d[0]);
 	EXPECT_EQ(d.at(1u), d[1]);
 }
 
 TEST(hxdeque_test, const_at_matches_const_operator_index) {
 	hxdeque<int, 4u> d;
-	(void)d.push_back(11);
-	(void)d.push_back(22);
+	EXPECT_TRUE(d.push_back(11));
+	EXPECT_TRUE(d.push_back(22));
 	const hxdeque<int, 4u>& cd = d;
 	EXPECT_EQ(cd.at(0u), cd[0]);
 	EXPECT_EQ(cd.at(1u), cd[1]);
@@ -354,10 +351,11 @@ TEST(hxdeque_test, const_at_matches_const_operator_index) {
 // Indexing after ring wraparound: logical indices must map correctly.
 TEST(hxdeque_test, operator_index_after_wraparound) {
 	hxdeque<int, 4u> d;
-	(void)d.push_back(1); (void)d.push_back(2); (void)d.push_back(3); (void)d.push_back(4);
+	EXPECT_TRUE(d.push_back(1)); EXPECT_TRUE(d.push_back(2));
+	EXPECT_TRUE(d.push_back(3)); EXPECT_TRUE(d.push_back(4));
 	int v = 0;
-	(void)d.pop_front(v); (void)d.pop_front(v); // head is now at slot 2
-	(void)d.push_back(5); (void)d.push_back(6); // tail wraps to slots 0, 1
+	EXPECT_TRUE(d.pop_front(v)); EXPECT_TRUE(d.pop_front(v)); // head is now at slot 2
+	EXPECT_TRUE(d.push_back(5)); EXPECT_TRUE(d.push_back(6)); // tail wraps to slots 0, 1
 	// Logical: [3, 4, 5, 6]
 	EXPECT_EQ(d[0], 3);
 	EXPECT_EQ(d[1], 4);
@@ -371,9 +369,9 @@ TEST(hxdeque_test, operator_index_after_wraparound) {
 
 TEST_F(hxdeque_test_f, clear_destroys_all_elements) {
 	hxdeque<hxtest_object, 4u> d;
-	(void)d.emplace_back(1);
-	(void)d.emplace_back(2);
-	(void)d.emplace_back(3);
+	EXPECT_TRUE(d.emplace_back(1));
+	EXPECT_TRUE(d.emplace_back(2));
+	EXPECT_TRUE(d.emplace_back(3));
 	EXPECT_EQ(m_constructed, 3u);
 	EXPECT_EQ(m_destructed, 0u);
 	d.clear();
@@ -392,15 +390,15 @@ TEST_F(hxdeque_test_f, clear_empty_deque_is_noop) {
 // be destroyed correctly.
 TEST_F(hxdeque_test_f, clear_after_ring_wraparound_destroys_all) {
 	hxdeque<hxtest_object, 4u> d;
-	for(int i = 0; i < 4; ++i) { (void)d.emplace_back(i); }
+	for(int i = 0; i < 4; ++i) { EXPECT_TRUE(d.emplace_back(i)); }
 	hxtest_object out(0);
 	// Consume m_constructed from default ctor above
 	size_t baseline = m_constructed;
-	(void)d.pop_front(out); // head advances; out receives move
-	(void)d.pop_front(out);
+	EXPECT_TRUE(d.pop_front(out)); // head advances; out receives move
+	EXPECT_TRUE(d.pop_front(out));
 	// Push two more so tail wraps around
-	(void)d.emplace_back(100);
-	(void)d.emplace_back(101);
+	EXPECT_TRUE(d.emplace_back(100));
+	EXPECT_TRUE(d.emplace_back(101));
 	EXPECT_EQ(d.size(), 4u);
 	size_t before_clear = m_destructed;
 	d.clear();
@@ -417,8 +415,8 @@ TEST_F(hxdeque_test_f, clear_after_ring_wraparound_destroys_all) {
 TEST_F(hxdeque_test_f, destructor_calls_clear) {
 	{
 		hxdeque<hxtest_object, 4u> d;
-		(void)d.emplace_back(7);
-		(void)d.emplace_back(8);
+		EXPECT_TRUE(d.emplace_back(7));
+		EXPECT_TRUE(d.emplace_back(8));
 		EXPECT_EQ(m_constructed, 2u);
 	} // destructor fires here
 	EXPECT_EQ(m_destructed, 2u);
@@ -431,12 +429,12 @@ TEST_F(hxdeque_test_f, destructor_calls_clear) {
 TEST(hxdeque_test, full_predicate) {
 	hxdeque<int, 2u> d;
 	EXPECT_FALSE(d.full());
-	(void)d.push_back(1);
+	EXPECT_TRUE(d.push_back(1));
 	EXPECT_FALSE(d.full());
-	(void)d.push_back(2);
+	EXPECT_TRUE(d.push_back(2));
 	EXPECT_TRUE(d.full());
 	int v = 0;
-	(void)d.pop_front(v);
+	EXPECT_TRUE(d.pop_front(v));
 	EXPECT_FALSE(d.full());
 }
 
@@ -446,7 +444,7 @@ TEST(hxdeque_test, full_predicate) {
 
 TEST_F(hxdeque_test_f, pop_front_moves_element_and_destroys_slot) {
 	hxdeque<hxtest_object, 4u> d;
-	(void)d.emplace_back(55);
+	EXPECT_TRUE(d.emplace_back(55));
 	EXPECT_EQ(m_constructed, 1u);
 
 	hxtest_object out(0);
@@ -463,7 +461,7 @@ TEST_F(hxdeque_test_f, pop_front_moves_element_and_destroys_slot) {
 
 TEST_F(hxdeque_test_f, pop_back_moves_element_and_destroys_slot) {
 	hxdeque<hxtest_object, 4u> d;
-	(void)d.emplace_back(77);
+	EXPECT_TRUE(d.emplace_back(77));
 	hxtest_object out(0);
 	size_t d_before = m_destructed;
 	EXPECT_TRUE(d.pop_back(out));
@@ -477,6 +475,7 @@ TEST_F(hxdeque_test_f, pop_back_moves_element_and_destroys_slot) {
 // ---------------------------------------------------------------------------
 
 TEST(hxdeque_test, dynamic_capacity_push_pop) {
+	const hxsystem_allocator_scope temporary_stack_scope(hxsystem_allocator_temporary_stack);
 	hxdeque<int> d(4u);
 	EXPECT_EQ(d.capacity(), 4u);
 	for(int i = 0; i < 4; ++i) {
@@ -492,11 +491,12 @@ TEST(hxdeque_test, dynamic_capacity_push_pop) {
 }
 
 TEST(hxdeque_test, dynamic_capacity_ring_wraparound) {
+	const hxsystem_allocator_scope temporary_stack_scope(hxsystem_allocator_temporary_stack);
 	hxdeque<int> d(8u);
-	for(int i = 0; i < 8; ++i) { (void)d.push_back(i); }
+	for(int i = 0; i < 8; ++i) { EXPECT_TRUE(d.push_back(i)); }
 	int v = 0;
-	for(int i = 0; i < 4; ++i) { (void)d.pop_front(v); }
-	for(int i = 8; i < 12; ++i) { (void)d.push_back(i); }
+	for(int i = 0; i < 4; ++i) { EXPECT_TRUE(d.pop_front(v)); }
+	for(int i = 8; i < 12; ++i) { EXPECT_TRUE(d.push_back(i)); }
 	// Logical: [4, 5, 6, 7, 8, 9, 10, 11]
 	for(int i = 0; i < 8; ++i) {
 		EXPECT_EQ(d[static_cast<size_t>(i)], i + 4);
@@ -509,10 +509,10 @@ TEST(hxdeque_test, dynamic_capacity_ring_wraparound) {
 
 TEST(hxdeque_test, interleaved_push_back_push_front) {
 	hxdeque<int, 8u> d;
-	(void)d.push_back(3);
-	(void)d.push_front(2);
-	(void)d.push_back(4);
-	(void)d.push_front(1);
+	EXPECT_TRUE(d.push_back(3));
+	EXPECT_TRUE(d.push_front(2));
+	EXPECT_TRUE(d.push_back(4));
+	EXPECT_TRUE(d.push_front(1));
 	// Logical order: 1, 2, 3, 4
 	EXPECT_EQ(d.size(), 4u);
 	EXPECT_EQ(d[0], 1);
@@ -523,12 +523,12 @@ TEST(hxdeque_test, interleaved_push_back_push_front) {
 
 TEST(hxdeque_test, interleaved_pop_back_pop_front) {
 	hxdeque<int, 4u> d;
-	(void)d.push_back(10);
-	(void)d.push_back(20);
-	(void)d.push_back(30);
+	EXPECT_TRUE(d.push_back(10));
+	EXPECT_TRUE(d.push_back(20));
+	EXPECT_TRUE(d.push_back(30));
 	int v = 0;
-	(void)d.pop_front(v); EXPECT_EQ(v, 10);
-	(void)d.pop_back(v);  EXPECT_EQ(v, 30);
+	EXPECT_TRUE(d.pop_front(v)); EXPECT_EQ(v, 10);
+	EXPECT_TRUE(d.pop_back(v));  EXPECT_EQ(v, 30);
 	EXPECT_EQ(d.size(), 1u);
 	EXPECT_EQ(d.front(), 20);
 	EXPECT_EQ(d.back(), 20);
@@ -560,13 +560,13 @@ TEST(hxdeque_test, single_element_capacity) {
 
 TEST(hxdeque_test, capacity_two_full_wraparound) {
 	hxdeque<int, 2u> d;
-	(void)d.push_back(1); (void)d.push_back(2);
+	EXPECT_TRUE(d.push_back(1)); EXPECT_TRUE(d.push_back(2));
 	int v = 0;
-	(void)d.pop_front(v); // head at 1
-	(void)d.push_back(3); // tail wraps to slot 0
+	EXPECT_TRUE(d.pop_front(v)); // head at 1
+	EXPECT_TRUE(d.push_back(3)); // tail wraps to slot 0
 	EXPECT_EQ(d[0], 2);
 	EXPECT_EQ(d[1], 3);
-	(void)d.pop_back(v); EXPECT_EQ(v, 3);
-	(void)d.pop_back(v); EXPECT_EQ(v, 2);
+	EXPECT_TRUE(d.pop_back(v)); EXPECT_EQ(v, 3);
+	EXPECT_TRUE(d.pop_back(v)); EXPECT_EQ(v, 2);
 	EXPECT_TRUE(d.empty());
 }

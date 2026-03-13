@@ -172,7 +172,7 @@ public:
 	}
 
 	void usage_(const char* id_=hxnull) override {
-		hxloghandler(hxloglevel_console, "%s", (id_ != hxnull) ? id_ : "usage:");
+		hxloghandler(hxloglevel_console, hxloglevel_console, "%s", (id_ != hxnull) ? id_ : "usage:");
 		if constexpr (sizeof...(args_t_) == 0) {
 			hxloghandler(hxloglevel_console, "\n");
 		} else {
@@ -228,8 +228,8 @@ public:
 		return false;
 	}
 
-	void usage_(const char* id_=hxnull) override {
-		hxlogconsole("%s <optional-value>\n", (id_ != hxnull) ? id_ : "usage:");
+	void usage_(const char* id_) override {
+		hxloghandler(hxloglevel_console, "%s <optional-value>\n", (id_ != hxnull) ? id_ : "usage:");
 	}
 private:
 	volatile var_t_* m_var_;

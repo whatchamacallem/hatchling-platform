@@ -362,12 +362,14 @@ TEST(hxbitset_test, left_shift_trailing_bits_masked_off) {
 	// After shifting, bits beyond bits_-1 must be masked to 0.
 	hxbitset<sizeof(size_t) * 8u + 1u> b;
 	b.set();
-	// Shift by 1: the top valid bit shifts out of range.
+	// Shift by 1: bit s_bits_per_word shifts out of range, bit s_bits_per_word-1
+	// shifts into bit s_bits_per_word (word[1] bit 0).
 	b <<= 1u;
-	// data()[1] must hold 0 since the only bit that could land there was bit
-	// s_bits_per_word which shifted to s_bits_per_word+1 (out of range).
-	EXPECT_FALSE(b[sizeof(size_t) * 8u]);
-	EXPECT_EQ(b.data()[1], static_cast<size_t>(0u));
+	// bit s_bits_per_word is now set (from bit s_bits_per_word-1).
+	EXPECT_TRUE(b[sizeof(size_t) * 8u]);
+	EXPECT_EQ(b.data()[1], static_cast<size_t>(1u));
+	// bit s_bits_per_word+1 does not exist; the mask keeps word[1] to 1.
+	EXPECT_EQ(b.data()[1] & ~static_cast<size_t>(1u), static_cast<size_t>(0u));
 }
 
 TEST(hxbitset_test, right_shift_zero_is_identity) {

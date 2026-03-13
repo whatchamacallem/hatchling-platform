@@ -17,8 +17,10 @@ standard library. For those with a low-level mindset, the developer experience
 is better than with the C++ standard library. For example, the template
 instantiation errors are easier to read, and `hxassertmsg` will format your
 assert messages before setting a breakpoint for you. There is nothing
-unnecessary to step through in the debugger. The compiler's budget for
-optimization isn't blown out by layers you don't normally need.
+unnecessary to step through in the debugger. Compile times are shockingly fast
+when using `ccache` without precompiled headers. The compiler's budget for
+optimization isn't blown out by layers you don't normally need. Although
+intrinsics are available for that problem.
 
 A key property of this codebase is its embrace of clang's Undefined Behavior
 Sanitizer (UBSan), which enables developers to write pointer-centric C++ code

@@ -15,7 +15,7 @@ This is a bespoke C17/C++20 alternative to the C++ standard library. Never use
 the `std` namespace. Symbols starting with `hx` that have the same name as
 symbols in the standard library are generally functionally equivalent. E.g. use
 `hxforward` instead of `std::forward`. Standard functionality is often
-available.
+available. Prefer `size_t` to `unsigned long long`.
 
 Do not use C++ exceptions, RTTI or assume asserts are enabled. Check when adding
 includes whether they are redundant and write them as `<stdio.h>` not `<cstido>`.

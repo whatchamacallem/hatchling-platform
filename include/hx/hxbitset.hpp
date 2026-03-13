@@ -14,6 +14,15 @@ public:
 	/// Constructs a zero-initialized hxbitset.
 	hxbitset(void) { this->reset(); }
 
+	/// Constructs a hxbitset from a single `size_t` value. Only valid when
+	/// `bits` equals the number of bits in `size_t`.
+	/// - `val` : The value to initialize the bitset with.
+	explicit hxbitset(size_t val_) {
+		static_assert(bits_ == s_bits_per_word_,
+			"hxbitset(size_t) requires bits_ == sizeof(size_t) * 8.");
+		m_data_[0] = val_;
+	}
+
 	/// Constructs a hxbitset as a copy of `x`.
 	/// - `x` : The hxbitset to copy from.
 	hxbitset(const hxbitset& x_) {
@@ -47,13 +56,14 @@ public:
 	const size_t* data(void) const hxattr_nodiscard { return m_data_; }
 
 	/// Copies `len` bytes from `src` into the hxbitset storage. Asserts that
-	/// `len` does not exceed `bytes()` and that no trailing bits are set.
+	/// `len` does not exceed `bytes()`. Trailing bits beyond `bits` are masked
+	/// to zero after the copy.
 	/// - `src` : Pointer to the source data.
 	/// - `len` : Number of bytes to copy. Must not exceed `bytes()`.
 	void load(const char* src_, size_t len_) {
 		hxassertmsg(len_ <= bytes(), "overflow_load %zu", len_);
 		::memcpy(m_data_, src_, len_); // NOLINT
-		assert_no_trailing_bits_();
+		m_data_[s_words_ - 1u] &= s_trailing_mask_;
 	}
 
 	/// Returns the value of the bit at position `pos`. Asserts that `pos` is in

@@ -15,18 +15,23 @@ template<typename T_, size_t capacity_=hxallocator_dynamic_capacity>
 class hxdeque : public hxallocator<T_, capacity_> {
 public:
 	/// Constructs an empty hxdeque. When using static storage the capacity is
-	/// fixed at compile time. When using dynamic storage `reserve` is called
-	/// with `dynamic_capacity`. Asserts that the capacity is a power of two
+	/// fixed at compile time. Asserts that the capacity is a power of two
 	/// and greater than zero.
-	/// - `dynamic_capacity` : Element capacity for dynamic storage. Ignored for static storage.
+	/// - `dynamic_capacity` : Element capacity for dynamic storage.
 	explicit hxdeque(size_t dynamic_capacity_=0u)
 		: m_mask_(0u)
 		, m_head_(0u)
 		, m_tail_(0u)
 		, m_count_(0u)
 	{
-		hxassertmsg(capacity_ == 0u || capacity_ == dynamic_capacity_, "capacity_mismatch");
-		reserve(dynamic_capacity_);
+		hxassertrelease(dynamic_capacity_ == 0u || (dynamic_capacity_ & (dynamic_capacity_ - 1u)) == 0u,
+			"invalid_capacity capacity must be a power of 2");
+
+		if(dynamic_capacity_ != 0u) {
+			this->reserve_storage_(dynamic_capacity_);
+		}
+
+		m_mask_ = this->capacity() - 1u;
 	}
 
 	/// Destroys all elements in the deque.
@@ -34,17 +39,6 @@ public:
 
 	hxdeque(const hxdeque&) = delete;
 	void operator=(const hxdeque&) = delete;
-
-	/// Allocates dynamic storage for `cap` elements. Asserts if a reallocation
-	/// is requested. Asserts that `cap` is a power of two and greater than zero.
-	/// For static storage asserts that `cap` is zero or matches the static capacity.
-	/// - `dynamic_capacity` : Element capacity for dynamic storage. Must be a power of two.
-	void reserve(size_t dynamic_capacity_) {
-		this->reserve_storage_(dynamic_capacity_);
-		hxassertmsg(this->capacity() > 0u && (this->capacity() & (this->capacity() - 1u)) == 0u,
-			"invalid_capacity capacity must be a power of two");
-		m_mask_ = this->capacity() - 1u;
-	}
 
 	/// Destroys all elements and resets the deque to empty without deallocating.
 	void clear(void) {
@@ -64,8 +58,8 @@ public:
 	T_& emplace_back(args_t_&&... args_) {
 		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
 		hxassertrelease(m_count_ < this->capacity(), "overflow_emplace_back");
-		T_* slot_ = this->data() + (m_tail_ & m_mask_);
-		++m_tail_; ++m_count_;
+		T_* slot_ = this->data() + m_tail_;
+		m_tail_ = (m_tail_ + 1u) & m_mask_; ++m_count_;
 		return *::new(slot_) T_(hxforward<args_t_>(args_)...);
 	}
 
@@ -76,7 +70,8 @@ public:
 	T_& emplace_front(args_t_&&... args_) {
 		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
 		hxassertrelease(m_count_ < this->capacity(), "overflow_emplace_front");
-		T_* slot_ = this->data() + (--m_head_ & m_mask_);
+		m_head_ = (m_head_ + m_mask_) & m_mask_;
+		T_* slot_ = this->data() + m_head_;
 		++m_count_;
 		return *::new(slot_) T_(hxforward<args_t_>(args_)...);
 	}
@@ -87,8 +82,8 @@ public:
 	bool push_back(const T_& v_) hxattr_nodiscard {
 		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
 		if(m_count_ >= this->capacity()) { return false; }
-		::new(this->data() + (m_tail_ & m_mask_)) T_(v_);
-		++m_tail_; ++m_count_;
+		::new(this->data() + m_tail_) T_(v_);
+		m_tail_ = (m_tail_ + 1u) & m_mask_; ++m_count_;
 		return true;
 	}
 
@@ -98,7 +93,8 @@ public:
 	bool push_front(const T_& v_) hxattr_nodiscard {
 		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
 		if(m_count_ >= this->capacity()) { return false; }
-		::new(this->data() + (--m_head_ & m_mask_)) T_(v_);
+		m_head_ = (m_head_ + m_mask_) & m_mask_;
+		::new(this->data() + m_head_) T_(v_);
 		++m_count_;
 		return true;
 	}
@@ -109,7 +105,8 @@ public:
 	bool pop_front(T_& out_) hxattr_nodiscard {
 		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
 		if(m_count_ == 0u) { return false; }
-		T_* slot_ = this->data() + (m_head_++ & m_mask_);
+		T_* slot_ = this->data() + m_head_;
+		m_head_ = (m_head_ + 1u) & m_mask_;
 		out_ = hxmove(*slot_);
 		slot_->~T_();
 		--m_count_;
@@ -122,7 +119,8 @@ public:
 	bool pop_back(T_& out_) hxattr_nodiscard {
 		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
 		if(m_count_ == 0u) { return false; }
-		T_* slot_ = this->data() + (--m_tail_ & m_mask_);
+		m_tail_ = (m_tail_ + m_mask_) & m_mask_;
+		T_* slot_ = this->data() + m_tail_;
 		out_ = hxmove(*slot_);
 		slot_->~T_();
 		--m_count_;
@@ -133,28 +131,28 @@ public:
 	T_& front(void) hxattr_nodiscard {
 		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
 		hxassertmsg(m_count_ > 0u, "empty_deque");
-		return this->data()[m_head_ & m_mask_];
+		return this->data()[m_head_];
 	}
 
 	/// Returns a const reference to the front element.
 	const T_& front(void) const hxattr_nodiscard {
 		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
 		hxassertmsg(m_count_ > 0u, "empty_deque");
-		return this->data()[m_head_ & m_mask_];
+		return this->data()[m_head_];
 	}
 
 	/// Returns a reference to the back element.
 	T_& back(void) hxattr_nodiscard {
 		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
 		hxassertmsg(m_count_ > 0u, "empty_deque");
-		return this->data()[(m_tail_ - 1u) & m_mask_];
+		return this->data()[(m_tail_ + m_mask_) & m_mask_];
 	}
 
 	/// Returns a const reference to the back element.
 	const T_& back(void) const hxattr_nodiscard {
 		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
 		hxassertmsg(m_count_ > 0u, "empty_deque");
-		return this->data()[(m_tail_ - 1u) & m_mask_];
+		return this->data()[(m_tail_ + m_mask_) & m_mask_];
 	}
 
 	/// Returns a reference to the element at logical index `index`. Asserts if

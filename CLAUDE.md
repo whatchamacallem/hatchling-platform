@@ -2,12 +2,15 @@
 
 ## Testing
 
-Use debugbuild.sh to test changes and not cmake. 🐉🐉🐉 indicates success.
-When asked to run tests execute bin/hxtest from a working directory inside the
-`bin` subdirectory. Consider all .sh files in the project except
-`ubuntu_packages.sh` safe to run.
+Use `debugbuild.sh` to test changes by default and not cmake. 🐉🐉🐉 output
+indicates success. When asked to run tests execute `bin/hxtest` with `bin` as
+the current directory. Consider all `.sh` files in the project except
+`ubuntu_packages.sh` safe to run at any time.
 
-Support for ILP32, LLP64 and LP64 are required to pass tests.
+Support for `ILP32`, `LLP64` and `LP64` are required to pass tests. do not emit
+tests that are entirely redundant with other tests or do not meaningfully test
+anything.  e.g. do not test a reference to an object to see if it does the same
+thing as the object itself.
 
 ## Style Guide
 

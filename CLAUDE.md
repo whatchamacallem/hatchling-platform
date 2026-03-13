@@ -22,7 +22,6 @@ available. Prefer `size_t` to `unsigned long long`.
 
 Do not use C++ exceptions, RTTI or assume asserts are enabled. Check when adding
 includes whether they are redundant and write them as `<stdio.h>` not `<cstido>`.
-clang-tidy is in use and C-style casts are not allowed.
 
 All symbols are snake_case. Except feature test macros are SCREAMING_SNAKE_CASE.
 Do not use abbreviated names except for iterators. Use K&R style whitespace.
@@ -50,8 +49,11 @@ template wrappers for type safety while avoiding the associated code bloat.
 Entirely re-write the structure of the existing code if needed instead of
 elaborating it unnecessarily.
 
-Prefer iterating with pointers instead of using array indices. Use `src_` and
-`dst_` for source and destination iterators.
+Prefer iterating with pointers marked hxrestrict instead of using array indices.
+Use `src_` and `dst_` for source and destination iterators.
+
+`.clang-tidy` is in use and C-style casts are not allowed. The rules are only
+checked by `testcmake.sh` and are not checked by `vscode`.
 
 ## Project Structure
 

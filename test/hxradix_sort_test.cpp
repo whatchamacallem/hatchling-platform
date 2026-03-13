@@ -109,7 +109,7 @@ TEST_F(hxradix_sort_test_f, null) {
 	hxradix_sort(rs.begin(), rs.end());
 	EXPECT_EQ(rs.size(), 1u);
 	EXPECT_EQ(rs[0].get_value()[0], 's');
-	EXPECT_TRUE(!rs.empty());
+	EXPECT_FALSE(rs.empty());
 }
 
 TEST_F(hxradix_sort_test_f, null11) {
@@ -127,7 +127,7 @@ TEST_F(hxradix_sort_test_f, null11) {
 	hxradix_sort11(rs.begin(), rs.end());
 	EXPECT_EQ(rs.size(), 1u);
 	EXPECT_EQ(rs[0].get_value()[0], 's');
-	EXPECT_TRUE(!rs.empty());
+	EXPECT_FALSE(rs.empty());
 }
 
 TEST_F(hxradix_sort_test_f, uint32) {

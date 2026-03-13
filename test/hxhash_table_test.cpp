@@ -75,12 +75,12 @@ TEST_F(hxhash_table_test_f, null) {
 		const table_t& const_table = table;
 
 		// "Returns an iterator pointing to the beginning of the hash table." Empty table => begin == end and load factor 0.
-		EXPECT_TRUE(table.begin() == table.end());
-		EXPECT_TRUE(table.cbegin() == table.cend());
-		EXPECT_TRUE(const_table.begin() == const_table.cend());
-		EXPECT_FALSE(table.begin() != table.end());
-		EXPECT_FALSE(table.cbegin() != table.cend());
-		EXPECT_FALSE(const_table.begin() != const_table.cend());
+		EXPECT_EQ(table.begin(), table.end());
+		EXPECT_EQ(table.cbegin(), table.cend());
+		EXPECT_EQ(const_table.begin(), const_table.cend());
+		EXPECT_EQ(table.begin(), table.end());
+		EXPECT_EQ(table.cbegin(), table.cend());
+		EXPECT_EQ(const_table.begin(), const_table.cend());
 
 		// "Removes all nodes and calls deleter_t::operator() on every node." Clearing untouched table keeps load factor { 0.0 }.
 		table.clear();
@@ -104,43 +104,43 @@ const hxsystem_allocator_scope temporary_stack_scope(hxsystem_allocator_temporar
 		table.insert_node(node);
 
 		// "Returns a node containing key if any or allocates and returns a new one." Iterator + count checks confirm single-entry semantics.
-		EXPECT_TRUE(table.begin() != table.end());
-		EXPECT_TRUE(table.cbegin() != table.cend());
-		EXPECT_TRUE(++table.begin() == table.end());
-		EXPECT_TRUE(++table.cbegin() == table.cend());
+		EXPECT_NE(table.begin(), table.end());
+		EXPECT_NE(table.cbegin(), table.cend());
+		EXPECT_EQ(++table.begin(), table.end());
+		EXPECT_EQ(++table.cbegin(), table.cend());
 		EXPECT_EQ(table.size(), 1u);
 		EXPECT_EQ(table.count(k), 1u);
-		EXPECT_TRUE(table[k].key() == k);
-		EXPECT_TRUE(table[k].value.id == node->value.id);
-		EXPECT_TRUE(table.insert_unique(k).value.id == node->value.id);
+		EXPECT_EQ(table[k].key(), k);
+		EXPECT_EQ(table[k].value.id, node->value.id);
+		EXPECT_EQ(table.insert_unique(k).value.id, node->value.id);
 		// Lookup stack: find() returns { node }, subsequent cursor with previous skips duplicates.
-		EXPECT_TRUE(table.find(k) == node);
-		EXPECT_TRUE(table.find(k, node) == hxnull);
-		EXPECT_TRUE(const_table.find(k) == node);
-		EXPECT_TRUE(const_table.find(k, node) == hxnull);
+		EXPECT_EQ(table.find(k), node);
+		EXPECT_EQ(table.find(k, node), hxnull);
+		EXPECT_EQ(const_table.find(k), node);
+		EXPECT_EQ(const_table.find(k, node), hxnull);
 
 		// "Removes and returns the first node_t with the given key." Ensure repeated calls -> { node, hxnull }.
-		EXPECT_TRUE(table.extract(k) == node);
-		EXPECT_TRUE(table.extract(k) == hxnull);
+		EXPECT_EQ(table.extract(k), node);
+		EXPECT_EQ(table.extract(k), hxnull);
 
 		table.insert_node(node);
-		EXPECT_TRUE(table.find(k) == node);
+		EXPECT_EQ(table.find(k), node);
 		// "Clears the hash table without deleting any Nodes." After release_all(), find returns hxnull while node still alive.
 		table.release_all();
-		EXPECT_TRUE(table.find(k) == hxnull);
+		EXPECT_EQ(table.find(k), hxnull);
 		EXPECT_EQ(table.size(), 0u);
 
 		// Operations after the single node was removed.
 		EXPECT_EQ(table.size(), 0u);
 		EXPECT_EQ(table.count(k), 0u);
-		EXPECT_TRUE(table.find(k) == hxnull);
-		EXPECT_TRUE(const_table.find(k) == hxnull);
+		EXPECT_EQ(table.find(k), hxnull);
+		EXPECT_EQ(const_table.find(k), hxnull);
 
 		// MODIFIES TABLE
-		EXPECT_TRUE(table[k].key() == k);
+		EXPECT_EQ(table[k].key(), k);
 
 		// Operations after a different node was allocated.
-		EXPECT_TRUE(table[k].value.id != node->value.id);
+		EXPECT_NE(table[k].value.id, node->value.id);
 		EXPECT_EQ(table.size(), 1u);
 		EXPECT_EQ(table.count(k), 1u);
 
@@ -175,13 +175,13 @@ TEST_F(hxhash_table_test_f, map_node_usage) {
 		EXPECT_EQ(&table[10], &via_subscript);
 		const table_t& const_table = table;
 		const map_node_t* const_lookup = const_table.find(10);
-		EXPECT_TRUE(const_lookup != hxnull);
+		EXPECT_NE(const_lookup, hxnull);
 		if(const_lookup != hxnull) {
 			EXPECT_EQ(const_lookup->value().id, 123);
 		}
 
 		map_node_t* manual_lookup = table.find(20);
-		EXPECT_TRUE(manual_lookup != hxnull);
+		EXPECT_NE(manual_lookup, hxnull);
 		if(manual_lookup != hxnull) {
 			EXPECT_EQ(manual_lookup->value().id, 321);
 		}
@@ -221,21 +221,21 @@ TEST_F(hxhash_table_test_f, multiple) {
 		for(int i = 0; i < size_i; ++i) {
 			hxtest_integer* ti = table.find(i);
 			EXPECT_EQ(ti->value, i);
-			EXPECT_TRUE(table.find(i, ti) == hxnull);
+			EXPECT_EQ(table.find(i, ti), hxnull);
 
 			// Iteration over.
-			EXPECT_TRUE(it != table.end());
-			EXPECT_TRUE(cit != table.cend());
-			EXPECT_TRUE(it == cit);
-			EXPECT_TRUE(static_cast<unsigned int>(it->value.id) < size_u);
+			EXPECT_NE(it, table.end());
+			EXPECT_NE(cit, table.cend());
+			EXPECT_EQ(it, cit);
+			EXPECT_LT(static_cast<unsigned int>(it->value.id), size_u);
 			id_histogram[it->value.id]++;
-			EXPECT_TRUE(static_cast<unsigned int>(cit->value.id) < size_u);
+			EXPECT_LT(static_cast<unsigned int>(cit->value.id), size_u);
 			id_histogram[cit->value.id]++;
 			++cit;
 			it++;
 		}
-		EXPECT_TRUE(table.end() == it);
-		EXPECT_TRUE(table.cend() == cit);
+		EXPECT_EQ(table.end(), it);
+		EXPECT_EQ(table.cend(), cit);
 		for(int i = 0; i < size_i; ++i) {
 			EXPECT_EQ(id_histogram[i], 2);
 		}
@@ -257,31 +257,31 @@ TEST_F(hxhash_table_test_f, multiple) {
 			EXPECT_EQ(ti->key(), i);
 			const hxtest_integer* ti2 = const_table.find(i, ti); // test const version
 			EXPECT_EQ(ti2->key(), i);
-			EXPECT_TRUE(table.find(i, ti2) == hxnull);
+			EXPECT_EQ(table.find(i, ti2), hxnull);
 
 			EXPECT_EQ(table.count(i), 2u);
 
-			EXPECT_TRUE(static_cast<unsigned int>(it->key()) < size_u);
+			EXPECT_LT(static_cast<unsigned int>(it->key()), size_u);
 			key_histogram[it->key()]++;
 			++it;
-			EXPECT_TRUE(static_cast<unsigned int>(it->key()) < size_u);
+			EXPECT_LT(static_cast<unsigned int>(it->key()), size_u);
 			key_histogram[it->key()]++;
 			it++;
-			EXPECT_TRUE(static_cast<unsigned int>(cit->key()) < size_u);
+			EXPECT_LT(static_cast<unsigned int>(cit->key()), size_u);
 			key_histogram[cit->key()]++;
 			++cit;
-			EXPECT_TRUE(static_cast<unsigned int>(cit->key()) < size_u);
+			EXPECT_LT(static_cast<unsigned int>(cit->key()), size_u);
 			key_histogram[cit->key()]++;
 			cit++;
 		}
-		EXPECT_TRUE(table.end() == it);
-		EXPECT_TRUE(table.cend() == cit);
+		EXPECT_EQ(table.end(), it);
+		EXPECT_EQ(table.cend(), cit);
 		for(int i = 0; i < size_i; ++i) {
 			EXPECT_EQ(key_histogram[i], 4);
 		}
 
 		// "Returns the average number of Nodes per bucket." Ensure load_max stays within 2x mean occupancy.
-		EXPECT_TRUE((table.load_factor() * 2.0f) > (float)table.load_max());
+		EXPECT_GT((table.load_factor() * 2.0f), (float)table.load_max());
 
 		// Erase keys [0..size/2), remove 1 of 2 of keys [size/2..size)
 		for(int i = 0; i < (size_i/2); ++i) {
@@ -289,19 +289,19 @@ TEST_F(hxhash_table_test_f, multiple) {
 		}
 		for(int i = (size_i/2); i < size_i; ++i) {
 			hxtest_integer* ti = table.extract(i);
-			EXPECT_TRUE(ti->key() == i);
+			EXPECT_EQ(ti->key(), i);
 			hxdelete(ti);
 		}
 
 		// Check properties of size_i/2 remaining keys.
 		for(int i = 0; i < (size_i/2); ++i) {
 			EXPECT_EQ(table.release_key(i), 0);
-			EXPECT_TRUE(table.find(i) == hxnull);
+			EXPECT_EQ(table.find(i), hxnull);
 		}
 		for(int i = (size_i/2); i < size_i; ++i) {
 			hxtest_integer* ti = table.find(i);
 			EXPECT_EQ(ti->key(), i);
-			EXPECT_TRUE(table.find(i, ti) == hxnull);
+			EXPECT_EQ(table.find(i, ti), hxnull);
 			EXPECT_EQ(table.count(i), 1u);
 		}
 
@@ -311,8 +311,8 @@ TEST_F(hxhash_table_test_f, multiple) {
 			++it;
 			cit++;
 		}
-		EXPECT_TRUE(table.end() == it);
-		EXPECT_TRUE(table.cend() == cit);
+		EXPECT_EQ(table.end(), it);
+		EXPECT_EQ(table.cend(), cit);
 	}
 	EXPECT_EQ(m_constructed, 2*size_i);
 	EXPECT_EQ(m_destructed, 2*size_i);
@@ -335,8 +335,8 @@ TEST_F(hxhash_table_test_f, strings) {
 		for(int i = sz; i-- != 0;) {
 			EXPECT_STREQ(table[colors[i]].key(), colors[i]);
 		}
-		EXPECT_TRUE(table.find("Cyan") != hxnull);
-		EXPECT_TRUE(table.find("Pink") == hxnull);
+		EXPECT_NE(table.find("Cyan"), hxnull);
+		EXPECT_EQ(table.find("Pink"), hxnull);
 
 	}
 	EXPECT_EQ(m_constructed, sz);
@@ -359,13 +359,13 @@ TEST_F(hxhash_table_test_f, string_literal_nodes) {
 		EXPECT_EQ(table.find(literals[i]), &entry);
 		EXPECT_EQ(&table.insert_unique(literals[i]), &entry);
 
-		EXPECT_TRUE(entry.key() == literals[i]);
+		EXPECT_EQ(entry.key(), literals[i]);
 		EXPECT_STREQ(entry.key(), literals[i]);
 		EXPECT_EQ(entry.hash(), hxkey_hash(literals[i]));
 		EXPECT_EQ(table.count(literals[i]), 1u);
 	}
 
 	EXPECT_EQ(table.size(), (size_t)hxsize(literals));
-	EXPECT_FALSE(table.find("Crimson") == hxnull);
-	EXPECT_TRUE(table.find("Cerulean") == hxnull);
+	EXPECT_NE(table.find("Crimson"), hxnull);
+	EXPECT_EQ(table.find("Cerulean"), hxnull);
 }

@@ -75,12 +75,12 @@ TEST_F(hxtask_queue_test_f, multiple) {
 			q.wait_for_all();
 			for(size_t k = 0; k <= j; ++k) {
 				q.enqueue(&tasks1[k]);
-				EXPECT_TRUE(tasks0[k].get_exec_count() == 1);
+				EXPECT_EQ(tasks0[k].get_exec_count(), 1u);
 			}
 			}
 			for(size_t k = 0; k <= j; ++k) {
-				EXPECT_TRUE(tasks0[k].get_exec_count() == 1);
-				EXPECT_TRUE(tasks1[k].get_exec_count() == 1);
+				EXPECT_EQ(tasks0[k].get_exec_count(), 1u);
+				EXPECT_EQ(tasks1[k].get_exec_count(), 1u);
 			}
 
 			hxtask_test_t tasks2[max_tasks];
@@ -91,7 +91,7 @@ TEST_F(hxtask_queue_test_f, multiple) {
 				}
 			}
 			for(size_t k = 0; k <= j; ++k) {
-				EXPECT_TRUE(tasks2[k].get_exec_count() == 1);
+				EXPECT_EQ(tasks2[k].get_exec_count(), 1u);
 			}
 		}
 	}
@@ -120,8 +120,8 @@ TEST_F(hxtask_queue_test_f, multiple_reenqueuing) {
 				}
 			}
 			for(size_t k = 0; k <= j; ++k) {
-				EXPECT_TRUE(tasks0[k].get_exec_count() == (k + 1));
-				EXPECT_TRUE(tasks1[k].get_exec_count() == (k + 1));
+				EXPECT_EQ(tasks0[k].get_exec_count(), (k + 1));
+				EXPECT_EQ(tasks1[k].get_exec_count(), (k + 1));
 			}
 
 			// Tests reenqueuing in the destructor.
@@ -134,7 +134,7 @@ TEST_F(hxtask_queue_test_f, multiple_reenqueuing) {
 				}
 			}
 			for(size_t k = 0; k <= j; ++k) {
-				EXPECT_TRUE(tasks2[k].get_exec_count() == (k + 1));
+				EXPECT_EQ(tasks2[k].get_exec_count(), (k + 1));
 			}
 		}
 	}
@@ -180,11 +180,11 @@ TEST(hxtask_queue_test, priority_ordering_single_threaded) {
 	}
 	q.wait_for_all();
 
-	EXPECT_TRUE(write_index == task_count);
+	EXPECT_EQ(write_index, task_count);
 
 	const int expected[task_count] = { 10, 3, 2, 1, -5 };
 	for(size_t i = 0; i < task_count; ++i) {
-		EXPECT_TRUE(execution_order[i] == expected[i]);
+		EXPECT_EQ(execution_order[i], expected[i]);
 	}
 }
 
@@ -210,8 +210,8 @@ TEST(hxtask_queue_test, predicates_cover_all_any_erase) {
 	q.enqueue(&tasks[1], 10);
 	q.enqueue(&tasks[2], 1);
 
-	EXPECT_TRUE(q.max_size() == 3u);
-	EXPECT_TRUE(q.size() == 3u);
+	EXPECT_EQ(q.max_size(), 3u);
+	EXPECT_EQ(q.size(), 3u);
 	EXPECT_TRUE(q.full());
 	EXPECT_TRUE(!q.empty());
 
@@ -228,7 +228,7 @@ TEST(hxtask_queue_test, predicates_cover_all_any_erase) {
 			visited[2] = true;
 		}
 	});
-	EXPECT_TRUE(visit_count == 3u);
+	EXPECT_EQ(visit_count, 3u);
 	for(size_t i = 0; i < 3; ++i) {
 		EXPECT_TRUE(visited[i]);
 	}
@@ -249,8 +249,8 @@ TEST(hxtask_queue_test, predicates_cover_all_any_erase) {
 	const size_t removed_low_priority = q.erase_if([](const hxtask_queue::record_t& record) {
 		return record.priority < 4;
 	});
-	EXPECT_TRUE(removed_low_priority == 1);
-	EXPECT_TRUE(q.size() == 2u);
+	EXPECT_EQ(removed_low_priority, 1u);
+	EXPECT_EQ(q.size(), 2u);
 	EXPECT_TRUE(!q.full());
 
 	const bool any_remaining_low_priority = q.any_of([](const hxtask_queue::record_t& record) {
@@ -267,11 +267,11 @@ TEST(hxtask_queue_test, predicates_cover_all_any_erase) {
 
 	executed_flags[2] = false;
 	q.enqueue(&tasks[2], 7);
-	EXPECT_TRUE(q.size() == 1u);
-	EXPECT_TRUE(!q.empty());
+	EXPECT_EQ(q.size(), 1u);
+	EXPECT_FALSE(q.empty());
 	// "Removes all queued tasks without executing them."
 	q.clear();
-	EXPECT_TRUE(q.size() == 0u);
+	EXPECT_EQ(q.size(), 0u);
 	EXPECT_TRUE(q.empty());
 	q.wait_for_all();
 	EXPECT_TRUE(!executed_flags[2]);
@@ -327,7 +327,7 @@ TEST(hxtask_queue_test, for_each_reschedules_queue) {
 		record.priority = rescheduled_priorities[index];
 		++mutate_count;
 	});
-	EXPECT_TRUE(mutate_count == task_count);
+	EXPECT_EQ(mutate_count, task_count);
 
 	// Check they are rescheduled.
 	size_t verify_count = 0;
@@ -337,16 +337,16 @@ TEST(hxtask_queue_test, for_each_reschedules_queue) {
 		const hxtask_queue_test_reschedule_task_t* task =
 			static_cast<const hxtask_queue_test_reschedule_task_t*>(record.task);
 			const size_t index = task->get_index();
-		EXPECT_TRUE(record.priority == rescheduled_priorities[index]);
+		EXPECT_EQ(record.priority, rescheduled_priorities[index]);
 		++verify_count;
 	});
-	EXPECT_TRUE(verify_count == task_count);
+	EXPECT_EQ(verify_count, task_count);
 
 	// Run them.
 	q.wait_for_all();
-	EXPECT_TRUE(write_index == task_count);
-	EXPECT_TRUE(execution_order[0] == 2);
-	EXPECT_TRUE(execution_order[1] == 0);
-	EXPECT_TRUE(execution_order[2] == 3);
-	EXPECT_TRUE(execution_order[3] == 1);
+	EXPECT_EQ(write_index, task_count);
+	EXPECT_EQ(execution_order[0], 2);
+	EXPECT_EQ(execution_order[1], 0);
+	EXPECT_EQ(execution_order[2], 3);
+	EXPECT_EQ(execution_order[3], 1);
 }

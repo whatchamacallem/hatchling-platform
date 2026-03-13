@@ -434,7 +434,7 @@ TEST(hxbitset_test, equal_operator_detects_difference) {
 	hxbitset<sizeof(size_t) * 8u + 3u> a;
 	const hxbitset<sizeof(size_t) * 8u + 3u> b;
 	a.set(0u);
-	EXPECT_FALSE(a == b);
+	EXPECT_NE(a, b);
 }
 
 #if HX_CPLUSPLUS < 202002L
@@ -443,9 +443,9 @@ TEST(hxbitset_test, not_equal_operator_defined_before_cpp20) {
 	hxbitset<sizeof(size_t) * 8u> a;
 	hxbitset<sizeof(size_t) * 8u> b;
 	a.set(0u);
-	EXPECT_TRUE(a != b);
+	EXPECT_NE(a, b);
 	hxbitset<sizeof(size_t) * 8u> c(a);
-	EXPECT_FALSE(a != c);
+	EXPECT_EQ(a, c);
 }
 #endif
 
@@ -608,5 +608,5 @@ TEST(hxbitset_test, single_bit_full_coverage) {
 	EXPECT_TRUE(b.none());
 
 	const hxbitset<1u> c(b);
-	EXPECT_TRUE(b == c);
+	EXPECT_EQ(b, c);
 }

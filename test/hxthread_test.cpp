@@ -121,7 +121,7 @@ TEST(hxthread_test_mutex, double_lock_unlock) {
 
 TEST(hxthread_test_mutex, native_handle_notnull) {
 	hxmutex mutex;
-	EXPECT_TRUE(mutex.native_handle() != hxnull);
+	EXPECT_NE(mutex.native_handle(), hxnull);
 }
 
 TEST(hxthread_test_unique_lock, defer_lock) {
@@ -151,7 +151,7 @@ TEST(hxthread_test_unique_lock, mutexreference) {
 	hxmutex mutex;
 	hxunique_lock lock(mutex);
 	hxmutex& reference = lock.mutex();
-	EXPECT_TRUE(&reference == &mutex);
+	EXPECT_EQ(&reference, &mutex);
 }
 
 TEST(hxthread_test_condition_variable, notify_no_waiters) {
@@ -164,7 +164,7 @@ TEST(hxthread_test_condition_variable, notify_no_waiters) {
 
 TEST(hxthread_test_condition_variable, native_handle_not_null) {
 	hxcondition_variable condition_variable;
-	EXPECT_TRUE(condition_variable.native_handle() != hxnull);
+	EXPECT_NE(condition_variable.native_handle(), hxnull);
 }
 
 TEST(hxthread_test_condition_variable, wait_predicate) {

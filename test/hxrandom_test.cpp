@@ -20,8 +20,8 @@ TEST(hxrandom_test, generation) {
 	uint64 = rng.generate_64();
 
 	// None of these should be zero on the second sample.
-	EXPECT_TRUE((static_cast<uint64_t>(uint8) * static_cast<uint64_t>(uint16) *
-		static_cast<uint64_t>(uint32) * static_cast<uint64_t>(uint64)) != 0u);
+	EXPECT_NE((static_cast<uint64_t>(uint8) * static_cast<uint64_t>(uint16) *
+		static_cast<uint64_t>(uint32) * static_cast<uint64_t>(uint64)), 0u);
 
 	for(int s=100; s-- != 0;) {
 		// "Automatically casts to an unsigned integer or floating point value."
@@ -46,10 +46,10 @@ TEST(hxrandom_test, ops) {
 		EXPECT_TRUE(i >= 0 && i < 256);
 
 		unsigned int u = 255; u &= rng;
-		EXPECT_TRUE(u < 256);
+		EXPECT_LT(u, 256);
 
 		char c = 'x'; c &= rng;
-		EXPECT_TRUE((c & ~static_cast<unsigned char>('x')) == 0);
+		EXPECT_EQ((c & ~static_cast<unsigned char>('x')), 0);
 
 		// "Generates a number of type T in the range [0, divisor)." Floating
 		// modulus uses operator% overloads.
@@ -70,13 +70,13 @@ TEST(hxrandom_test, ops) {
 		}
 		{
 			const unsigned short r = static_cast<unsigned short>(255) & rng;
-			EXPECT_TRUE(r < static_cast<unsigned short>(256));
+			EXPECT_LT(r, static_cast<unsigned short>(256));
 
 			const unsigned short l = rng & static_cast<unsigned short>(255);
-			EXPECT_TRUE(l < static_cast<unsigned short>(256));
+			EXPECT_LT(l, static_cast<unsigned short>(256));
 
 			const unsigned short m = rng % static_cast<unsigned short>(255);
-			EXPECT_TRUE(m < static_cast<unsigned short>(255));
+			EXPECT_LT(m, static_cast<unsigned short>(255));
 		}
 		{
 			const int64_t r = 255ll & rng;
@@ -90,24 +90,24 @@ TEST(hxrandom_test, ops) {
 		}
 		{
 			const uint64_t r = 255ull & rng;
-			EXPECT_TRUE(r < 256ull);
+			EXPECT_LT(r, 256ull);
 
 			const uint64_t l = rng & 255ull;
-			EXPECT_TRUE(l < 256ull);
+			EXPECT_LT(l, 256ull);
 
 			const uint64_t m = rng % 255ull;
-			EXPECT_TRUE(m < 255ull);
+			EXPECT_LT(m, 255ull);
 		}
 
 		// Check a different modulo.
 		EXPECT_TRUE((rng%100) >= 0 && (rng%100) < 100);
 		EXPECT_TRUE((rng%100.0f) >= 0.0f && (rng%100.0f) < 100.0f);
 		EXPECT_TRUE((rng%100.0) >= 0.0 && (rng%100.0) < 100.0);
-		EXPECT_TRUE((rng%100u) < 100u);
+		EXPECT_LT((rng%100u), 100u);
 		EXPECT_TRUE((rng%100l) >= 0l && (rng%100l) < 100l);
-		EXPECT_TRUE((rng%100ul) < 100ul);
+		EXPECT_LT((rng%100ul), 100ul);
 		EXPECT_TRUE((rng%100ll) >= 0ll && (rng%100ll) < 100ll);
-		EXPECT_TRUE((rng%100ull) < 100ull);
+		EXPECT_LT((rng%100ull), 100ull);
 
 		// Check that the RNG isn't just spitting out zeros.
 		EXPECT_TRUE(rng() | rng());

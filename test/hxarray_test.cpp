@@ -31,7 +31,7 @@ public:
 			moved_from = false;
 		}
 		explicit hxtest_object(int32_t x) {
-			EXPECT_TRUE(x >= 0); // User supplied IDs are positive.
+			EXPECT_GE(x, 0); // User supplied IDs are positive.
 			++s_hxtest_current->m_constructed;
 			id = x;
 			moved_from = false;

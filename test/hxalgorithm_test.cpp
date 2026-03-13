@@ -292,32 +292,32 @@ void do_sort_int_case(const sort_callback_t& sort_callback) {
 	// and size 1 ranges keep { 2, 1, 0, 4, -5 } untouched.
 	sort_callback(ints, ints, sort_int);
 	const int ints1[5] = { 2, 1, 0, 4, -5 };
-	EXPECT_TRUE(::memcmp(ints, ints1, sizeof ints) == 0); // Nothing changed.
+	EXPECT_EQ(::memcmp(ints, ints1, sizeof ints), 0); // Nothing changed.
 
 	// Sort 1 element.
 	sort_callback(ints, ints + 1, sort_int);
-	EXPECT_TRUE(::memcmp(ints, ints1, sizeof ints) == 0); // Still nothing changed.
+	EXPECT_EQ(::memcmp(ints, ints1, sizeof ints), 0); // Still nothing changed.
 
 	// "Sorts the elements in the range [begin, end) in comparison order using the insertion sort algorithm."
 	// Expect head slice -> { 1, 2 } while tail remains { 0, 4, -5 }.
 	sort_callback(ints, ints + 2, sort_int);
 	const int ints2[5] = { 1, 2, 0, 4, -5 };
-	EXPECT_TRUE(::memcmp(ints, ints2, sizeof ints) == 0);
+	EXPECT_EQ(::memcmp(ints, ints2, sizeof ints), 0);
 
 	// "This version is intended for sorting large numbers of small objects."
 	// Whole array ascends into { -5, 0, 1, 2, 4 }. Sorts all elements.
 	sort_callback(ints, ints + 5, sort_int);
 	const int ints3[5] = { -5, 0, 1, 2, 4 };
-	EXPECT_TRUE(::memcmp(ints, ints3, sizeof ints) == 0);
+	EXPECT_EQ(::memcmp(ints, ints3, sizeof ints), 0);
 
 	// Ensure reversed comparator yields { 4, 2, 1, 0, -5 } before restoring order.
 	sort_callback(ints, ints + 5, sort_int_reverse);
 	const int ints4[5] = { 4, 2, 1, 0, -5 };
-	EXPECT_TRUE(::memcmp(ints, ints4, sizeof ints) == 0);
+	EXPECT_EQ(::memcmp(ints, ints4, sizeof ints), 0);
 
 	// Run one more ascending pass to confirm stability: { -5, 0, 1, 2, 4 }.
 	sort_callback(ints, ints + 5, sort_int);
-	EXPECT_TRUE(::memcmp(ints, ints3, sizeof ints) == 0);
+	EXPECT_EQ(::memcmp(ints, ints3, sizeof ints), 0);
 }
 
 } // namespace {
@@ -476,16 +476,16 @@ TEST(hxbinary_search_test, simple_case) {
 	EXPECT_TRUE(cresult != ints_end && *cresult == 99);
 
 	result = hxbinary_search(ints, ints+5, 0);
-	EXPECT_TRUE(result == ints_end);
+	EXPECT_EQ(result, ints_end);
 	result = hxbinary_search(ints, ints+5, 100);
-	EXPECT_TRUE(result == ints_end);
+	EXPECT_EQ(result, ints_end);
 	result = hxbinary_search(ints, ints+5, 7);
-	EXPECT_TRUE(result == ints_end);
+	EXPECT_EQ(result, ints_end);
 
 	// Size 0 range: begin == end so the return points at the sentinel.
 	// Empty range returns end.
 	result = hxbinary_search(ints, ints, 11, sort_int); // Zero size.
-	EXPECT_TRUE(result == ints);
+	EXPECT_EQ(result, ints);
 }
 
 TEST(hxbinary_search_test, binary_search_grinder) {

@@ -19,10 +19,7 @@ public:
 	/// and greater than zero.
 	/// - `dynamic_capacity` : Element capacity for dynamic storage.
 	explicit hxdeque(size_t dynamic_capacity_=0u)
-		: m_mask_(0u)
-		, m_head_(0u)
-		, m_tail_(0u)
-		, m_count_(0u)
+		: m_mask_(0u), m_head_(0u), m_tail_(0u), m_count_(0u)
 	{
 		hxassertrelease(dynamic_capacity_ == 0u || (dynamic_capacity_ & (dynamic_capacity_ - 1u)) == 0u,
 			"invalid_capacity capacity must be a power of 2");
@@ -30,7 +27,6 @@ public:
 		if(dynamic_capacity_ != 0u) {
 			this->reserve_storage_(dynamic_capacity_);
 		}
-
 		m_mask_ = this->capacity() - 1u;
 	}
 

@@ -15,30 +15,35 @@
 #include <string.h>
 
 // ----------------------------------------------------------------------------
-// Console
 
 namespace {
-
+    
 const char s_palette[] =
     " `.-':_,^=;><+!rc*/z?sLTv)J7(|Fi{C}fI31tlu[neoZ5Yxjya]2ESwqkP6h9d4VpOGbUAKXHm8RD#$Bg0MNWQ%&@";
 
 atomic_int g_hxquit = 0;
 
+static void hxexample_notify_sigint(int) {
+    atomic_store(&g_hxquit, 1);
+}
+
+// ----------------------------------------------------------------------------
+// Console variables and functions. Utilization is intended to be local to each
+// translation unit.  
+
 double s_hxcenter_x = 0.0f;
 double s_hxcenter_y = 0.0f;
 double s_hxzoom = 3.0f;
 
-bool hxexample_profile_dump(void)        { hxprofiler_write_to_chrome_tracing("profile.json"); return true; }
-bool hxexample_quit(void)                { atomic_store(&g_hxquit, 1); return true; }
+bool hxexample_profile_dump(void)    { hxprofiler_write_to_chrome_tracing("profile.json"); return true; }
+bool hxexample_quit(void)            { atomic_store(&g_hxquit, 1); return true; }
 
-bool hxexample_left(double amount_)  { s_hxcenter_x -= amount_ * s_hxzoom; }
-bool hxexample_right(double amount_) { s_hxcenter_x += amount_ * s_hxzoom; }
-bool hxexample_up(double amount_)    { s_hxcenter_y -= amount_ * s_hxzoom; }
-bool hxexample_down(double amount_)  { s_hxcenter_y += amount_ * s_hxzoom; }
-bool hxexample_in(double factor_)    { s_hxzoom /= factor_; }
-bool hxexample_out(double factor_)   { s_hxzoom *= factor_; }
-
-} // namespace
+bool hxexample_left(double amount_)  { s_hxcenter_x -= amount_ * s_hxzoom; return true; }
+bool hxexample_right(double amount_) { s_hxcenter_x += amount_ * s_hxzoom; return true; }
+bool hxexample_up(double amount_)    { s_hxcenter_y -= amount_ * s_hxzoom; return true; }
+bool hxexample_down(double amount_)  { s_hxcenter_y += amount_ * s_hxzoom; return true; }
+bool hxexample_in(double factor_)    { s_hxzoom /= factor_; return true; }
+bool hxexample_out(double factor_)   { s_hxzoom *= factor_; return true; }
 
 hxconsole_variable_named(s_hxcenter_x, center_x);
 hxconsole_variable_named(s_hxcenter_y, center_y);
@@ -54,11 +59,7 @@ hxconsole_command_named(hxexample_down, down);
 hxconsole_command_named(hxexample_in, in);
 hxconsole_command_named(hxexample_out, out);
 
-// ----------------------------------------------------------------------------
-
-static void hxexample_sigint(int) {
-    atomic_store(&g_hxquit, 1);
-}
+} // namespace
 
 // ----------------------------------------------------------------------------
 
@@ -156,7 +157,7 @@ static bool hxexample_render(hxexample_state& state_) {
 int main(void) {
     hxinit();
 
-    ::signal(SIGINT, hxexample_sigint);
+    ::signal(SIGINT, hxexample_notify_sigint);
 
     int exit_code_ = 0;
     {

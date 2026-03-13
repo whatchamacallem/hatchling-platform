@@ -172,7 +172,7 @@ public:
 	}
 
 	void usage_(const char* id_=hxnull) override {
-		hxloghandler(hxloglevel_console, hxloglevel_console, "%s", (id_ != hxnull) ? id_ : "usage:");
+		hxloghandler(hxloglevel_console, "%s", (id_ != hxnull) ? id_ : "usage:");
 		if constexpr (sizeof...(args_t_) == 0) {
 			hxloghandler(hxloglevel_console, "\n");
 		} else {

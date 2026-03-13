@@ -9,15 +9,15 @@
 
 TEST(hxbitset_test, default_ctor_zero_initializes) {
 	// "Constructs a zero-initialized hxbitset."
-	hxbitset<1> b1;
+	const hxbitset<1> b1;
 	EXPECT_FALSE(b1[0]);
 
-	hxbitset<sizeof(size_t) * 8u> bw;
+	const hxbitset<sizeof(size_t) * 8u> bw;
 	for(size_t i = 0u; i < sizeof(size_t) * 8u; ++i) {
 		EXPECT_FALSE(bw[i]);
 	}
 
-	hxbitset<sizeof(size_t) * 8u + 1u> bw1;
+	const hxbitset<sizeof(size_t) * 8u + 1u> bw1;
 	for(size_t i = 0u; i < sizeof(size_t) * 8u + 1u; ++i) {
 		EXPECT_FALSE(bw1[i]);
 	}
@@ -432,7 +432,7 @@ TEST(hxbitset_test, right_shift_off_by_one_at_word_boundary) {
 
 TEST(hxbitset_test, equal_operator_detects_difference) {
 	hxbitset<sizeof(size_t) * 8u + 3u> a;
-	hxbitset<sizeof(size_t) * 8u + 3u> b;
+	const hxbitset<sizeof(size_t) * 8u + 3u> b;
 	a.set(0u);
 	EXPECT_FALSE(a == b);
 }
@@ -607,6 +607,6 @@ TEST(hxbitset_test, single_bit_full_coverage) {
 	b >>= 1u;
 	EXPECT_TRUE(b.none());
 
-	hxbitset<1u> c(b);
+	const hxbitset<1u> c(b);
 	EXPECT_TRUE(b == c);
 }

@@ -22,7 +22,8 @@ includes whether they are redundant and write them as `<stdio.h>` not `<cstido>`
 clang-tidy is in use and C-style casts are not allowed.
 
 All symbols are snake_case. Except feature test macros are SCREAMING_SNAKE_CASE.
-Use K&R style whitespace. Code shouldn't go past 100 columns.
+Do not use abbreviated names except for iterators. Use K&R style whitespace.
+Code shouldn't go past 100 columns.
 
 Classes, structs and functions begin with `hx` and not `hx_`. Functions end with
 `_t`. Template parameters snake_case and end with `_t_`. Use structs only for C

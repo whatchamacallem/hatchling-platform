@@ -22,6 +22,7 @@ includes whether they are redundant and write them as `<stdio.h>` not `<cstido>`
 clang-tidy is in use and C-style casts are not allowed.
 
 All symbols are snake_case. Except feature test macros are SCREAMING_SNAKE_CASE.
+Use K&R style whitespace. Code shouldn't go past 100 columns.
 
 Classes, structs and functions begin with `hx` and not `hx_`. Functions end with
 `_t`. Template parameters snake_case and end with `_t_`. Use structs only for C
@@ -32,9 +33,11 @@ calls to the C standard library with `::` to indicate they are in the global
 namespace. All test symbols that show up in the linker map must contain `hx` and
 `test`.
 
-Remove trailing `_` from doxygen comments and leave them otherwise. Update docs
-and follow existing style. Do not document rationale for making changes, e.g.
-instructions given, issues or bugs fixed.
+Remove trailing `_` from symbols in doxygen comments and leave them in regular
+comments. Update documentation and follow existing style. Do not add
+documentation describing reasons for making changes, e.g. instructions given,
+issues resolved or bugs fixed. Do not put `;` or `-` in english sentences unless
+it is part of a code block.
 
 Prefer code that avoids stepping through unnecessary function calls in the
 debugger or requires unnecessary traversal of data structures in the debugger
@@ -45,7 +48,6 @@ elaborating it unnecessarily.
 
 Prefer iterating with pointers instead of using array indices. Use `src_` and
 `dst_` for source and destination iterators.
-
 
 ## Project Structure
 

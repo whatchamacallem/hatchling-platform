@@ -106,7 +106,7 @@ public:
 	/// statically allocated temporary for efficiency. Only works with
 	/// `hxallocator_dynamic_capacity`.
 	/// - `x` : A temporary `Array<T>`.
-	hxarray(hxarray&& x_);
+	hxarray(hxarray&& x_) noexcept;
 
 	/// Constructs from a C-style array. Usable as an `initializer_list` when the
 	/// `std` namespace is not available. e.g.,
@@ -147,7 +147,7 @@ public:
 	/// `hxallocator_dynamic_capacity`. Dynamically allocated arrays are swapped
 	/// with very little overhead.
 	/// - `x` : A temporary Array<T>.
-	void operator=(hxarray&& x_);
+	void operator=(hxarray&& x_) noexcept;
 
 	/// Assign from a C-style array. Usable as an `initializer_list` when the
 	/// `std` namespace is not available. e.g.,
@@ -535,7 +535,7 @@ public:
 	/// `hxallocator_dynamic_capacity`. Dynamically allocated arrays are swapped
 	/// with very little overhead.
 	/// - `x` : The array to swap with.
-	void swap(hxarray& x_);
+	void swap(hxarray& x_) noexcept;
 
 private:
 	// Returns a pointer for use with placement new.
@@ -574,7 +574,7 @@ bool hxkey_less(const hxarray<T_, capacity_x_>& x_, const hxarray<T_, capacity_y
 /// arrays are swapped with very little overhead.
 template<typename T_>
 void hxswap(hxarray<T_, hxallocator_dynamic_capacity>& x_,
-			hxarray<T_, hxallocator_dynamic_capacity>& y_) {
+			hxarray<T_, hxallocator_dynamic_capacity>& y_) noexcept {
 	x_.swap(y_);
 }
 
@@ -605,7 +605,7 @@ hxarray<T_, capacity_>::hxarray(const hxarray<T_, capacity_x_>& x_) : hxarray() 
 }
 
 template<hxarray_concept_ T_, size_t capacity_>
-hxarray<T_, capacity_>::hxarray(hxarray&& x_) : hxarray() {
+hxarray<T_, capacity_>::hxarray(hxarray&& x_) noexcept : hxarray() {
 	static_assert(capacity_ == hxallocator_dynamic_capacity,
 		"Capacity hxallocator_dynamic_capacity required for temporaries.");
 	::memcpy((void*)this, &x_, sizeof x_); // NOLINT
@@ -645,7 +645,7 @@ void hxarray<T_, capacity_>::operator=(const hxarray<T_, capacity_x_>& x_) {
 }
 
 template<hxarray_concept_ T_, size_t capacity_>
-void hxarray<T_, capacity_>::operator=(hxarray&& x_) {
+void hxarray<T_, capacity_>::operator=(hxarray&& x_) noexcept {
 	hxassertmsg((const void*)this != (const void*)&x_, "invalid_reference Assignment to self.");
 	this->swap(x_);
 }
@@ -1142,7 +1142,7 @@ void hxarray<T_, capacity_>::sort(void) {
 }
 
 template<hxarray_concept_ T_, size_t capacity_>
-void hxarray<T_, capacity_>::swap(hxarray& x_) {
+void hxarray<T_, capacity_>::swap(hxarray& x_) noexcept {
 	static_assert(capacity_ == hxallocator_dynamic_capacity,
 		"Dynamic capacity required for hxarray::swap");
 

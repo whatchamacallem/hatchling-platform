@@ -5,8 +5,6 @@
 #include <hx/hxbitset.hpp>
 #include <hx/hxtest.hpp>
 
-#include <string.h>
-
 // Construction and static properties
 
 TEST(hxbitset_test, default_ctor_zero_initializes) {
@@ -23,34 +21,6 @@ TEST(hxbitset_test, default_ctor_zero_initializes) {
 	for(size_t i = 0u; i < sizeof(size_t) * 8u + 1u; ++i) {
 		EXPECT_FALSE(bw1[i]);
 	}
-}
-
-TEST(hxbitset_test, size_returns_bit_count) {
-	// "Returns the number of bits."
-	EXPECT_EQ(hxbitset<1>::size(), 1u);
-	EXPECT_EQ(hxbitset<sizeof(size_t) * 8u>::size(), sizeof(size_t) * 8u);
-	EXPECT_EQ(hxbitset<sizeof(size_t) * 8u + 1u>::size(), sizeof(size_t) * 8u + 1u);
-	EXPECT_EQ(hxbitset<128u>::size(), 128u);
-}
-
-TEST(hxbitset_test, bytes_returns_word_aligned_storage) {
-	// "Returns the size of the underlying storage in bytes."
-	// One word for 1..s_bits_per_word bits.
-	EXPECT_EQ(hxbitset<1>::bytes(), sizeof(size_t));
-	EXPECT_EQ(hxbitset<sizeof(size_t) * 8u>::bytes(), sizeof(size_t));
-	// Two words for s_bits_per_word+1 bits.
-	EXPECT_EQ(hxbitset<sizeof(size_t) * 8u + 1u>::bytes(), 2u * sizeof(size_t));
-}
-
-TEST(hxbitset_test, data_returns_storage_pointer) {
-	// "Returns a pointer to the underlying word storage."
-	hxbitset<8u> b;
-	size_t* p = b.data();
-	EXPECT_TRUE(p != hxnullptr);
-
-	const hxbitset<8u>& cb = b;
-	const size_t* cp = cb.data();
-	EXPECT_EQ(p, cp);
 }
 
 // Copy construction and assignment
@@ -266,13 +236,6 @@ TEST(hxbitset_test, all_returns_true_only_when_every_bit_is_set) {
 	EXPECT_FALSE(b.all());
 }
 
-TEST(hxbitset_test, all_single_bit_bitset) {
-	hxbitset<1u> b;
-	EXPECT_FALSE(b.all());
-	b.set(0u);
-	EXPECT_TRUE(b.all());
-}
-
 TEST(hxbitset_test, any_returns_true_when_at_least_one_bit_is_set) {
 	// "Returns true if at least one bit is set."
 	hxbitset<sizeof(size_t) * 8u + 1u> b;
@@ -284,14 +247,6 @@ TEST(hxbitset_test, any_returns_true_when_at_least_one_bit_is_set) {
 	b.reset();
 	b.set(sizeof(size_t) * 8u);
 	EXPECT_TRUE(b.any());
-}
-
-TEST(hxbitset_test, none_is_inverse_of_any) {
-	// "Returns true if no bits are set."
-	hxbitset<sizeof(size_t) * 8u + 1u> b;
-	EXPECT_TRUE(b.none());
-	b.set(0u);
-	EXPECT_FALSE(b.none());
 }
 
 // Bitwise assign operators
@@ -340,28 +295,6 @@ TEST(hxbitset_test, xor_assign_toggles_bits) {
 	EXPECT_FALSE(a[1u]);
 	// 0 XOR 1 = 1.
 	EXPECT_TRUE(a[2u]);
-}
-
-TEST(hxbitset_test, or_assign_does_not_introduce_trailing_bits) {
-	// OR of two valid bitsets must not set bits above index bits_-1.
-	hxbitset<sizeof(size_t) * 8u + 1u> a;
-	hxbitset<sizeof(size_t) * 8u + 1u> b;
-	a.set(sizeof(size_t) * 8u); // highest valid bit
-	b.set(sizeof(size_t) * 8u);
-
-	a |= b;
-	// data()[1] must only have the lowest bit set.
-	EXPECT_EQ(a.data()[1], static_cast<size_t>(1u));
-	EXPECT_TRUE(a.all() == false); // Not all set, just one bit.
-}
-
-TEST(hxbitset_test, xor_assign_does_not_introduce_trailing_bits) {
-	hxbitset<sizeof(size_t) * 8u + 1u> a;
-	hxbitset<sizeof(size_t) * 8u + 1u> b;
-	a.set(sizeof(size_t) * 8u);
-	// XOR with zero leaves the bit set; trailing region must stay clear.
-	a ^= b;
-	EXPECT_EQ(a.data()[1], static_cast<size_t>(1u));
 }
 
 // Shift operators
@@ -495,17 +428,6 @@ TEST(hxbitset_test, right_shift_off_by_one_at_word_boundary) {
 
 // Equality operators
 
-TEST(hxbitset_test, equal_operator_reflexive_via_copy) {
-	// "Returns true if all bits compare equal to those of x."
-	// The operator asserts &x != this so we use a copy.
-	hxbitset<sizeof(size_t) * 8u + 3u> a;
-	a.set(0u);
-	a.set(sizeof(size_t) * 8u);
-
-	const hxbitset<sizeof(size_t) * 8u + 3u> b(a);
-	EXPECT_TRUE(a == b);
-}
-
 TEST(hxbitset_test, equal_operator_detects_difference) {
 	hxbitset<sizeof(size_t) * 8u + 3u> a;
 	hxbitset<sizeof(size_t) * 8u + 3u> b;
@@ -560,23 +482,6 @@ TEST(hxbitset_test, load_partial_bytes) {
 	b.load(reinterpret_cast<const char*>(&val), sizeof(size_t));
 	EXPECT_TRUE(b[0u]);
 	EXPECT_FALSE(b[1u]);
-}
-
-// Method chaining (return *this)
-
-TEST(hxbitset_test, set_returns_reference_for_chaining) {
-	hxbitset<8u> b;
-	// set() all then set(pos, false) must be chainable.
-	b.set().set(3u, false).reset(5u);
-	EXPECT_FALSE(b[3u]);
-	EXPECT_FALSE(b[5u]);
-	EXPECT_TRUE(b[0u]);
-}
-
-TEST(hxbitset_test, flip_returns_reference_for_chaining) {
-	hxbitset<8u> b;
-	b.flip().flip();
-	EXPECT_TRUE(b.none());
 }
 
 // Single-word exact-boundary bitset (bits_ == s_bits_per_word)

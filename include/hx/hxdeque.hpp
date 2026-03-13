@@ -32,10 +32,10 @@ public:
 	/// Allocates dynamic storage for `cap` elements. Asserts if a reallocation
 	/// is requested. Asserts that `cap` is a power of two and greater than zero.
 	/// - `cap` : Element capacity. Must be a power of two.
-	void reserve(size_t cap_) {
+	void reserve(size_t dynamic_capacity_) {
 		size_t current_ = this->capacity();
 		if(current_ == 0u) {
-			this->reserve_storage_(cap_);
+			this->reserve_storage_(dynamic_capacity_);
 			current_ = this->capacity();
 		}
 		hxassertmsg(current_ > 0u && (current_ & (current_ - 1u)) == 0u,
@@ -45,9 +45,8 @@ public:
 
 	/// Inserts `v` at the back. Asserts if the deque is full or unallocated.
 	/// - `v` : Value to insert.
-	bool push_back(const T_& v_) {
+	bool push_back(const T_& v_) hxattr_nodiscard {
 		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
-		hxassertmsg(m_count_ < this->capacity(), "overflow_push_back");
 		if(m_count_ >= this->capacity()) { return false; }
 		this->data()[m_tail_ & m_mask_] = v_;
 		++m_tail_; ++m_count_;
@@ -56,9 +55,8 @@ public:
 
 	/// Inserts `v` at the front. Asserts if the deque is full or unallocated.
 	/// - `v` : Value to insert.
-	bool push_front(const T_& v_) {
+	bool push_front(const T_& v_) hxattr_nodiscard {
 		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
-		hxassertmsg(m_count_ < this->capacity(), "overflow_push_front");
 		if(m_count_ >= this->capacity()) { return false; }
 		this->data()[--m_head_ & m_mask_] = v_;
 		++m_count_;
@@ -67,7 +65,7 @@ public:
 
 	/// Removes and returns the front element in `out`. Returns `false` if empty.
 	/// - `out` : Receives the removed element.
-	bool pop_front(T_& out_) {
+	bool pop_front(T_& out_) hxattr_nodiscard {
 		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
 		if(m_count_ == 0u) { return false; }
 		out_ = this->data()[m_head_++ & m_mask_];
@@ -77,7 +75,7 @@ public:
 
 	/// Removes and returns the back element in `out`. Returns `false` if empty.
 	/// - `out` : Receives the removed element.
-	bool pop_back(T_& out_) {
+	bool pop_back(T_& out_) hxattr_nodiscard {
 		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
 		if(m_count_ == 0u) { return false; }
 		out_ = this->data()[--m_tail_ & m_mask_];
@@ -88,7 +86,7 @@ public:
 	/// Copies the front element into `out` without removing it. Returns `false`
 	/// if empty.
 	/// - `out` : Receives the front element.
-	bool peek_front(T_& out_) const {
+	bool peek_front(T_& out_) const hxattr_nodiscard {
 		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
 		if(m_count_ == 0u) { return false; }
 		out_ = this->data()[m_head_ & m_mask_];
@@ -98,7 +96,7 @@ public:
 	/// Copies the back element into `out` without removing it. Returns `false`
 	/// if empty.
 	/// - `out` : Receives the back element.
-	bool peek_back(T_& out_) const {
+	bool peek_back(T_& out_) const hxattr_nodiscard {
 		hxassertmsg(this->capacity() > 0u, "unallocated_deque");
 		if(m_count_ == 0u) { return false; }
 		out_ = this->data()[(m_tail_ - 1u) & m_mask_];

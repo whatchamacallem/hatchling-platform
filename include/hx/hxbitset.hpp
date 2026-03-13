@@ -5,106 +5,96 @@
 
 #include "hxallocator.hpp"
 
-
-template<size_t bits_=hxallocator_dynamic_capacity>
-class hxbitset : TODO {
+template<size_t bits_>
+class hxbitset : public hxallocator<size_t, (bits_ + sizeof(size_t) * 8u - 1u) / (sizeof(size_t) * 8u)> {
 public:
-	explicit hxbitset(void) {
-		if(bits_ != hxallocator_dynamic_capacity) {
-			this->zero_();
-		}
-	}
+	static_assert(bits_ > 0u, "hxbitset requires bits_ > 0.");
+	static constexpr size_t s_bits_per_word_ = sizeof(size_t) * 8u;
+	static constexpr size_t s_words_ = (bits_ + s_bits_per_word_ - 1u) / s_bits_per_word_;
 
-	/// Constructing from an integer 
-	explicit hxbitset(size_t bit_count_,
-			hxsystem_allocator_t allocator_=hxsystem_allocator_current,
-			hxalignment_t alignment_=HX_ALIGNMENT) {
-		static_assert(bits_ == hxallocator_dynamic_capacity,
-			"Dynamic capacity required for this constructor.");
-		this->reserve(bit_count_, allocator_, alignment_);
-		this->zero_();
+	hxbitset(void) {
+		size_t* d_ = this->data();
+		for(size_t i_ = s_words_; i_-- != 0u; ) { d_[i_] = 0u; }
 	}
 
 	hxbitset(const hxbitset& x_) {
-		this->reserve_storage_(words_for_bits_(x_.m_bits_));
-		for(size_t i_ = this->num_words_(); i_-- != 0u; ) {
-			this->data()[i_] = x_.data()[i_];
-		}
-	}
-
-	template<size_t bits_x_>
-	hxbitset(const hxbitset<bits_x_>& x_) {
-	}
-
-	hxbitset(hxbitset&& x_) {
-		static_assert(bits_ == hxallocator_dynamic_capacity,
-			"Dynamic capacity required for move construction.");
-		::memcpy(static_cast<void*>(this), &x_, sizeof x_); // NOLINT
-		::memset(static_cast<void*>(&x_), 0x00, sizeof x_); // NOLINT
+		const size_t* s_ = x_.data();
+		size_t* d_ = this->data();
+		for(size_t i_ = s_words_; i_-- != 0u; ) { d_[i_] = s_[i_]; }
 	}
 
 	void operator=(const hxbitset& x_) {
 		hxassertmsg(static_cast<const void*>(this) != static_cast<const void*>(&x_),
 			"invalid_reference Assignment to self.");
-		this->reserve_storage_(words_for_bits_(x_.m_bits_));
-		for(size_t i_ = this->num_words_(); i_-- != 0u; ) {
-			this->data()[i_] = x_.data()[i_];
-		}
+		const size_t* s_ = x_.data();
+		size_t* d_ = this->data();
+		for(size_t i_ = s_words_; i_-- != 0u; ) { d_[i_] = s_[i_]; }
 	}
 
-	void operator=(hxbitset&& x_) {
-		hxassertmsg(static_cast<const void*>(this) != static_cast<const void*>(&x_),
-			"invalid_reference Assignment to self.");
-		this->swap(x_);
-	}
+	static constexpr size_t size(void) { return bits_; }
 
 	bool operator[](size_t pos_) const {
-		hxassertmsg(pos_ < this->size(), "invalid_index %zu", pos_);
+		hxassertmsg(pos_ < bits_, "invalid_index %zu", pos_);
 		return (this->data()[pos_ / s_bits_per_word_] & (static_cast<size_t>(1u) << (pos_ % s_bits_per_word_))) != 0u;
 	}
 
+	bool test(size_t pos_) const hxattr_nodiscard {
+		hxassertmsg(pos_ < bits_, "invalid_index %zu", pos_);
+		return (this->data()[pos_ / s_bits_per_word_] & (static_cast<size_t>(1u) << (pos_ % s_bits_per_word_))) != 0u;
+	}
 
-	hxbitset& operator&=(const hxbitset& x_) {
-		hxassertmsg(this->num_words_() == x_.num_words_(), "size_mismatch");
-		for(size_t i_ = this->num_words_(); i_-- != 0u; ) {
-			this->data()[i_] &= x_.data()[i_];
+	hxbitset& set(void) {
+		size_t* d_ = this->data();
+		for(size_t i_ = s_words_; i_-- != 0u; ) { d_[i_] = ~static_cast<size_t>(0u); }
+		return *this;
+	}
+
+	hxbitset& set(size_t pos_, bool value_=true) {
+		hxassertmsg(pos_ < bits_, "invalid_index %zu", pos_);
+		const size_t mask_ = static_cast<size_t>(1u) << (pos_ % s_bits_per_word_);
+		if(value_) {
+			this->data()[pos_ / s_bits_per_word_] |= mask_;
+		} else {
+			this->data()[pos_ / s_bits_per_word_] &= ~mask_;
 		}
 		return *this;
 	}
 
-	hxbitset& operator|=(const hxbitset& x_) {
-		hxassertmsg(this->num_words_() == x_.num_words_(), "size_mismatch");
-		for(size_t i_ = this->num_words_(); i_-- != 0u; ) {
-			this->data()[i_] |= x_.data()[i_];
-		}
+	hxbitset& reset(void) {
+		size_t* d_ = this->data();
+		for(size_t i_ = s_words_; i_-- != 0u; ) { d_[i_] = 0u; }
 		return *this;
 	}
 
-	hxbitset& operator^=(const hxbitset& x_) {
-		hxassertmsg(this->num_words_() == x_.num_words_(), "size_mismatch");
-		for(size_t i_ = this->num_words_(); i_-- != 0u; ) {
-			this->data()[i_] ^= x_.data()[i_];
-		}
+	hxbitset& reset(size_t pos_) {
+		hxassertmsg(pos_ < bits_, "invalid_index %zu", pos_);
+		this->data()[pos_ / s_bits_per_word_] &= ~(static_cast<size_t>(1u) << (pos_ % s_bits_per_word_));
 		return *this;
 	}
 
-	hxbitset& operator<<=(size_t count_) {
+	hxbitset& flip(void) {
+		size_t* d_ = this->data();
+		for(size_t i_ = s_words_; i_-- != 0u; ) { d_[i_] ^= ~static_cast<size_t>(0u); }
+		return *this;
 	}
 
-	hxbitset& operator>>=(size_t count_) {
+	hxbitset& flip(size_t pos_) {
+		hxassertmsg(pos_ < bits_, "invalid_index %zu", pos_);
+		this->data()[pos_ / s_bits_per_word_] ^= (static_cast<size_t>(1u) << (pos_ % s_bits_per_word_));
+		return *this;
 	}
 
 	bool all(void) const hxattr_nodiscard {
 		const size_t* d_ = this->data();
-		for(size_t i_ = this->num_words_(); i_-- != 0u; ) {
-			if(d_[i_] != ~static_cast<size_t>(0u)) { return true; }
+		for(size_t i_ = s_words_; i_-- != 0u; ) {
+			if(d_[i_] != ~static_cast<size_t>(0u)) { return false; }
 		}
-		return false;
+		return true;
 	}
 
 	bool any(void) const hxattr_nodiscard {
 		const size_t* d_ = this->data();
-		for(size_t i_ = this->num_words_(); i_-- != 0u; ) {
+		for(size_t i_ = s_words_; i_-- != 0u; ) {
 			if(d_[i_] != 0u) { return true; }
 		}
 		return false;
@@ -112,108 +102,79 @@ public:
 
 	bool none(void) const hxattr_nodiscard { return !this->any(); }
 
-
-	bool test(size_t pos_) const hxattr_nodiscard {
-		hxassertmsg(pos_ < this->size(), "invalid_index %zu", pos_);
-		return (this->data()[pos_ / s_bits_per_word_] & (static_cast<size_t>(1u) << (pos_ % s_bits_per_word_))) != 0u;
-	}
-
-	size_t size(void) const hxattr_nodiscard { return this->size_(); }
-
-	hxbitset& set(void) {
+	hxbitset& operator&=(const hxbitset& x_) {
 		size_t* d_ = this->data();
-		for(size_t i_ = this->num_words_(); i_-- != 0u; ) {
-			d_[i_] = ~static_cast<size_t>(0u);
-		}
+		const size_t* s_ = x_.data();
+		for(size_t i_ = s_words_; i_-- != 0u; ) { d_[i_] &= s_[i_]; }
 		return *this;
 	}
 
-	hxbitset& set(size_t pos_, bool value_=true) {
-		hxassertmsg(pos_ < this->size(), "invalid_index %zu", pos_);
-		const size_t mask_ = static_cast<size_t>(1u) << (pos_ % s_bits_per_word_);
-		if(value_) {
-			this->data()[pos_ / s_bits_per_word_] |= mask_;
-		}
-		else {
-			this->data()[pos_ / s_bits_per_word_] &= ~mask_;
-		}
-		return *this;
-	}
-
-	hxbitset& reset(void) {
-		this->zero_();
-		return *this;
-	}
-
-	hxbitset& reset(size_t pos_) {
-		hxassertmsg(pos_ < this->size(), "invalid_index %zu", pos_);
-		this->data()[pos_ / s_bits_per_word_] &= ~(static_cast<size_t>(1u) << (pos_ % s_bits_per_word_));
-		return *this;
-	}
-
-	hxbitset& flip(void) {
+	hxbitset& operator|=(const hxbitset& x_) {
 		size_t* d_ = this->data();
-		for(size_t i_ = this->num_words_(); i_-- != 0u; ) {
-			d_[i_] ^= ~static_cast<size_t>(0u);
+		const size_t* s_ = x_.data();
+		for(size_t i_ = s_words_; i_-- != 0u; ) { d_[i_] |= s_[i_]; }
+		return *this;
+	}
+
+	hxbitset& operator^=(const hxbitset& x_) {
+		size_t* d_ = this->data();
+		const size_t* s_ = x_.data();
+		for(size_t i_ = s_words_; i_-- != 0u; ) { d_[i_] ^= s_[i_]; }
+		return *this;
+	}
+
+	hxbitset& operator<<=(size_t count_) {
+		if(count_ == 0u) { return *this; }
+		const size_t word_shift_ = count_ / s_bits_per_word_;
+		const size_t bit_shift_ = count_ % s_bits_per_word_;
+		size_t* d_ = this->data();
+		if(bit_shift_ == 0u) {
+			for(size_t i_ = s_words_; i_-- != 0u; ) {
+				d_[i_] = (i_ >= word_shift_) ? d_[i_ - word_shift_] : 0u;
+			}
+		} else {
+			for(size_t i_ = s_words_; i_-- != 0u; ) {
+				const size_t lo_ = (i_ >= word_shift_) ? (d_[i_ - word_shift_] << bit_shift_) : 0u;
+				const size_t hi_ = (i_ > word_shift_) ? (d_[i_ - word_shift_ - 1u] >> (s_bits_per_word_ - bit_shift_)) : 0u;
+				d_[i_] = lo_ | hi_;
+			}
 		}
 		return *this;
 	}
 
-	hxbitset& flip(size_t pos_) {
-		hxassertmsg(pos_ < this->size(), "invalid_index %zu", pos_);
-		this->data()[pos_ / s_bits_per_word_] ^= (static_cast<size_t>(1u) << (pos_ % s_bits_per_word_));
+	hxbitset& operator>>=(size_t count_) {
+		if(count_ == 0u) { return *this; }
+		const size_t word_shift_ = count_ / s_bits_per_word_;
+		const size_t bit_shift_ = count_ % s_bits_per_word_;
+		size_t* d_ = this->data();
+		if(bit_shift_ == 0u) {
+			for(size_t i_ = 0u; i_ < s_words_; ++i_) {
+				d_[i_] = ((i_ + word_shift_) < s_words_) ? d_[i_ + word_shift_] : 0u;
+			}
+		} else {
+			for(size_t i_ = 0u; i_ < s_words_; ++i_) {
+				const size_t lo_ = ((i_ + word_shift_) < s_words_) ? (d_[i_ + word_shift_] >> bit_shift_) : 0u;
+				const size_t hi_ = ((i_ + word_shift_ + 1u) < s_words_) ? (d_[i_ + word_shift_ + 1u] << (s_bits_per_word_ - bit_shift_)) : 0u;
+				d_[i_] = lo_ | hi_;
+			}
+		}
 		return *this;
 	}
 
 	bool operator==(const hxbitset& x_) const hxattr_nodiscard {
-		hxassertmsg(this->num_words_() == x_.num_words_(), "size_mismatch");
 		const size_t* d0_ = this->data();
 		const size_t* d1_ = x_.data();
-		for(size_t i_ = this->num_words_(); i_-- != 0u; ) {
+		for(size_t i_ = s_words_; i_-- != 0u; ) {
 			if(d0_[i_] != d1_[i_]) { return false; }
 		}
 		return true;
 	}
 
-	// In C++20 the compiler automatically generates operator!= from operator==.
 #if HX_CPLUSPLUS < 202002L
 	bool operator!=(const hxbitset& x_) const hxattr_nodiscard {
 		return !(*this == x_);
 	}
 #endif
-
-	void reserve(size_t bit_count_,
-			hxsystem_allocator_t allocator_=hxsystem_allocator_current,
-			hxalignment_t alignment_=HX_ALIGNMENT) {
-		static_assert(bits_ == hxallocator_dynamic_capacity,
-			"Dynamic capacity required for reserve.");
-		this->reserve_storage_(words_for_bits_(bit_count_), allocator_, alignment_);
-		this->m_bits_ = bit_count_;
-	}
-
-	void swap(hxbitset& x_) {
-		static_assert(bits_ == hxallocator_dynamic_capacity,
-			"Dynamic capacity required for hxbitset::swap.");
-		hxswap_memcpy(*this, x_);
-	}
-
-private:
-	static constexpr size_t s_bits_per_word_ = sizeof(size_t) * 8u;
-
-	static constexpr size_t words_for_bits_(size_t n_) {
-		return (n_ + s_bits_per_word_ - 1u) / s_bits_per_word_;
-	}
-
-	size_t num_words_(void) const {
-		return words_for_bits_(this->size());
-	}
-
-	void zero_(void) {
-		size_t* d_ = this->data();
-		for(size_t i_ = this->num_words_(); i_-- != 0u; ) {
-			d_[i_] = 0u;
-		}
-	}
 };
 
 template<size_t bits_>

@@ -44,16 +44,16 @@ public:
 	}
 
 	/// Returns the number of bits.
-	static constexpr size_t size(void) hxattr_nodiscard { return bits_; }
+	hxattr_nodiscard static constexpr size_t size(void) { return bits_; }
 
 	/// Returns the size of the underlying storage in bytes.
-	static constexpr size_t bytes(void) hxattr_nodiscard { return s_words_ * sizeof(size_t); }
+	hxattr_nodiscard static constexpr size_t bytes(void) { return s_words_ * sizeof(size_t); }
 
 	/// Returns a pointer to the underlying word storage.
-	size_t* data(void) hxattr_nodiscard { return m_data_; }
+	hxattr_nodiscard size_t* data(void) { return m_data_; }
 
 	/// Returns a const pointer to the underlying word storage.
-	const size_t* data(void) const hxattr_nodiscard { return m_data_; }
+	hxattr_nodiscard const size_t* data(void) const { return m_data_; }
 
 	/// Copies `len` bytes from `src` into the hxbitset storage. Asserts that
 	/// `len` does not exceed `bytes()`. Trailing bits beyond `bits` are masked
@@ -69,7 +69,7 @@ public:
 	/// Returns the value of the bit at position `pos`. Asserts that `pos` is in
 	/// range.
 	/// - `pos` : Bit index. Must be less than `bits`.
-	bool operator[](size_t pos_) const hxattr_nodiscard {
+	hxattr_nodiscard bool operator[](size_t pos_) const {
 		hxassertmsg(pos_ < bits_, "invalid_index %zu", pos_);
 		return (m_data_[pos_ / s_bits_per_word_]
 			& (static_cast<size_t>(1u) << (pos_ % s_bits_per_word_))) != 0u;
@@ -78,7 +78,7 @@ public:
 	/// Returns the value of the bit at position `pos`. Asserts that `pos` is in
 	/// range.
 	/// - `pos` : Bit index must be less than `bits`.
-	bool test(size_t pos_) const hxattr_nodiscard {
+	hxattr_nodiscard bool test(size_t pos_) const {
 		hxassertmsg(pos_ < bits_, "invalid_index %zu", pos_);
 		return (m_data_[pos_ / s_bits_per_word_]
 			& (static_cast<size_t>(1u) << (pos_ % s_bits_per_word_))) != 0u;
@@ -142,7 +142,7 @@ public:
 	}
 
 	/// Returns `true` if all bits are set.
-	bool all(void) const hxattr_nodiscard {
+	hxattr_nodiscard bool all(void) const {
 		assert_no_trailing_bits_();
 		const size_t* hxrestrict dst_ = m_data_;
 		const size_t* const end_ = dst_ + (s_words_ - 1u);
@@ -153,7 +153,7 @@ public:
 	}
 
 	/// Returns `true` if at least one bit is set.
-	bool any(void) const hxattr_nodiscard {
+	hxattr_nodiscard bool any(void) const {
 		assert_no_trailing_bits_();
 		const size_t* hxrestrict dst_ = m_data_;
 		const size_t* const end_ = dst_ + s_words_;
@@ -164,7 +164,7 @@ public:
 	}
 
 	/// Returns `true` if no bits are set.
-	bool none(void) const hxattr_nodiscard { return !this->any(); }
+	hxattr_nodiscard bool none(void) const { return !this->any(); }
 
 	/// Applies bitwise AND with `x` in place. Asserts that `&x` is not `this`.
 	/// - `x` : The hxbitset to AND with.
@@ -254,7 +254,7 @@ public:
 	/// Returns `true` if all bits compare equal to those of `x`. Asserts that
 	/// `&x` is not `this`.
 	/// - `x` : The hxbitset to compare with.
-	bool operator==(const hxbitset& x_) const hxattr_nodiscard {
+	hxattr_nodiscard bool operator==(const hxbitset& x_) const {
 		hxassertmsg(static_cast<const void*>(this) != static_cast<const void*>(&x_),
 			"invalid_reference Operation with self.");
 		const size_t* hxrestrict dst_ = m_data_;
@@ -268,7 +268,7 @@ public:
 	/// Returns `true` if any bits differ from those of `x`. Only defined when
 	/// `HX_CPLUSPLUS < 202002L`.
 	/// - `x` : The hxbitset to compare with.
-	bool operator!=(const hxbitset& x_) const hxattr_nodiscard {
+	hxattr_nodiscard bool operator!=(const hxbitset& x_) const {
 		return !(*this == x_);
 	}
 #endif

@@ -504,6 +504,53 @@ TEST(hxdeque_test, dynamic_capacity_ring_wraparound) {
 }
 
 // ---------------------------------------------------------------------------
+// reserve(): deferred dynamic allocation
+// ---------------------------------------------------------------------------
+
+TEST(hxdeque_test, reserve_sets_capacity_and_mask) {
+	const hxsystem_allocator_scope temporary_stack_scope(hxsystem_allocator_temporary_stack);
+	hxdeque<int> d;
+	EXPECT_EQ(d.capacity(), 0u);
+	d.reserve(8u);
+	EXPECT_EQ(d.capacity(), 8u);
+	EXPECT_TRUE(d.empty());
+	EXPECT_FALSE(d.full());
+}
+
+TEST(hxdeque_test, reserve_allows_push_and_pop) {
+	const hxsystem_allocator_scope temporary_stack_scope(hxsystem_allocator_temporary_stack);
+	hxdeque<int> d;
+	d.reserve(4u);
+	for(int i = 0; i < 4; ++i) {
+		EXPECT_TRUE(d.push_back(i));
+	}
+	EXPECT_TRUE(d.full());
+	for(int i = 0; i < 4; ++i) {
+		int v = 0;
+		EXPECT_TRUE(d.pop_front(v));
+		EXPECT_EQ(v, i);
+	}
+	EXPECT_TRUE(d.empty());
+}
+
+TEST(hxdeque_test, reserve_ring_wraparound) {
+	const hxsystem_allocator_scope temporary_stack_scope(hxsystem_allocator_temporary_stack);
+	hxdeque<int> d;
+	d.reserve(4u);
+	EXPECT_TRUE(d.push_back(1)); EXPECT_TRUE(d.push_back(2));
+	EXPECT_TRUE(d.push_back(3)); EXPECT_TRUE(d.push_back(4));
+	int v = 0;
+	EXPECT_TRUE(d.pop_front(v)); EXPECT_EQ(v, 1);
+	EXPECT_TRUE(d.pop_front(v)); EXPECT_EQ(v, 2);
+	EXPECT_TRUE(d.push_back(5)); EXPECT_TRUE(d.push_back(6));
+	// Logical: [3, 4, 5, 6]
+	EXPECT_EQ(d[0], 3);
+	EXPECT_EQ(d[1], 4);
+	EXPECT_EQ(d[2], 5);
+	EXPECT_EQ(d[3], 6);
+}
+
+// ---------------------------------------------------------------------------
 // Mixed push_back / push_front interleaving
 // ---------------------------------------------------------------------------
 

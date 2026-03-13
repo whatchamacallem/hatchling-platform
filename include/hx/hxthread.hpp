@@ -179,7 +179,7 @@ public:
 	/// Locks the mutex. Returns true on success, asserts on invalid arguments,
 	/// and returns false on failure. Callers must check the return value and
 	/// avoid ignoring lock failures.
-	bool lock(void) hxattr_nodiscard {
+	hxattr_nodiscard bool lock(void) {
 #if (HX_USE_THREADS) == 11
 		const int code_ = ::mtx_lock(&m_mutex_);
 		hxassertmsg(code_ == thrd_success, "mtx_lock %d", code_);
@@ -303,7 +303,7 @@ public:
 	/// false otherwise. Callers must check the return value to confirm the wait
 	/// succeeded.
 	/// - `mutex` : The mutex to use for waiting.
-	bool wait(hxmutex& mutex_) hxattr_nodiscard {
+	hxattr_nodiscard bool wait(hxmutex& mutex_) {
 #if (HX_USE_THREADS) == 11
 		const int code_ = ::cnd_wait(&m_cond_, mutex_.native_handle());
 		hxassertmsg(code_ == thrd_success, "cnd_wait %d", code_);
@@ -319,7 +319,7 @@ public:
 	/// otherwise. Callers must check the return value to confirm the wait
 	/// succeeded.
 	/// - `lock` : The unique lock to use for waiting.
-	bool wait(hxunique_lock& lock_) hxattr_nodiscard {
+	hxattr_nodiscard bool wait(hxunique_lock& lock_) {
 		return this->wait(lock_.mutex());
 	}
 
@@ -446,7 +446,7 @@ public:
 
 	/// Returns true if the thread has been started and not yet joined. Callers
 	/// must check the return value before acting on the thread state.
-	bool joinable(void) const hxattr_nodiscard { return m_started_ && !m_joined_; }
+	hxattr_nodiscard bool joinable(void) const { return m_started_ && !m_joined_; }
 
 	/// Joins the thread. Blocks until the thread finishes.
 	void join(void) {

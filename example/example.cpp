@@ -9,6 +9,7 @@
 // formally defined as the set of all complex numbers C for which the sequence
 // Z(n+1) = Z(n)² + C, with Z(0) = 0, remains bounded as n tends to infinity.
 
+#include <stdio.h>
 #include <hx/hatchling.h>
 #include <hx/hxarray.hpp>
 #include <hx/hxconsole.hpp>
@@ -93,7 +94,7 @@ public:
 
         // Terminal chars are ~2x taller than wide; halve the y-step for square pixels.
         const double row_scale = col_scale * 0.5;
-        const double imaginary_origin = m_center_y + ((double)m_row - 39.5) * row_scale;
+        const double imaginary_origin = m_center_y + ((double)m_row - 19.5) * row_scale;
         char* dst = m_row_buffer;
 
         for(int col = 0; col < 80; ++col) {
@@ -111,7 +112,9 @@ public:
                 real = real_squared - imaginary_squared + real_origin;
                 ++iter;
             }
-            dst[col] = (iter == m_max_iter) ? '@' : s_hxexample_palette[iter * 95 / m_max_iter];
+            const size_t palette_size = sizeof s_hxexample_palette - 1u;
+            const size_t palette_index = hxmin((size_t)(iter * 91 / m_max_iter), palette_size - 1u);
+            dst[col] = (iter == m_max_iter) ? '@' : s_hxexample_palette[palette_index];
         }
         dst[80] = '\n';
         dst[81] = '\0';
@@ -138,9 +141,9 @@ static bool hxexample_render(hxtask_queue& queue, hxexample_row_task* tasks,
 
     hxprofiler_start();
 
-    for(int row = 0; row < 80; ++row) {
+    for(int row = 0; row < 40; ++row) {
         tasks[row].set(row, s_hxexample_center_x, s_hxexample_center_y, s_hxexample_zoom,
-            max_iter, row_storage[row].data());
+            max_iter, row_storage[(size_t)row].data());
         queue.enqueue(&tasks[row]);
     }
     queue.wait_for_all();
@@ -152,7 +155,7 @@ static bool hxexample_render(hxtask_queue& queue, hxexample_row_task* tasks,
         (double)s_hxexample_center_x, (double)s_hxexample_center_y, (double)s_hxexample_zoom);
 
     for(int row = 0; row < 80; ++row) {
-        hxout.print("%s", row_storage[row].data());
+        hxout.print("%s", row_storage[(size_t)row].data());
     }
     return true;
 }
@@ -165,9 +168,12 @@ int main(void) {
     int exit_code = 0;
     {
         // Allocate the task queue, row task array and row storage once at startup; freed before shutdown.
-        hxtask_queue queue(80u, 8u);
-        hxarray<hxexample_row_task, 80> tasks(80u);
-        hxarray<hxarray<char, 82>, 80> row_storage(80u);
+        hxtask_queue queue(40u, 8u);
+        hxarray<hxexample_row_task, 40> tasks(40u);
+        hxarray<hxarray<char, 82>, 40> row_storage(40u);
+        for(auto& row : row_storage) {
+            row.resize(82u);
+        }
 
         if(!hxconsole_exec_filename("example.cfg")) {
             hxout << "error: example.cfg not found or failed to execute\n";

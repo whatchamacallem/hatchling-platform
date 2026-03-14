@@ -254,9 +254,6 @@ public:
 	/// Returns a const iterator pointing to the beginning of the hash table.
 	const_iterator cbegin(void) const { return const_iterator(this); }
 
-	/// Returns a const iterator pointing to the beginning of the hash table.
-	const_iterator cbegin(void) { return const_iterator(this); }
-
 	/// Returns a const iterator pointing to the end of the hash table.
 	const_iterator end(void) const { return const_iterator(); }
 
@@ -265,9 +262,6 @@ public:
 
 	/// Returns a const iterator pointing to the end of the hash table.
 	const_iterator cend(void) const { return const_iterator(); }
-
-	/// Returns a const iterator pointing to the end of the hash table.
-	const_iterator cend(void) { return const_iterator(); }
 
 	/// Returns the number of elements in the hash table.
 	size_t size(void) const { return m_size_; }
@@ -366,6 +360,9 @@ public:
 
 private:
 	static_assert(table_size_bits_ < hxhash_bits, "Hash bits must be [0..hxhash_bits].");
+	// hash_next() returns void*& so the node interface is type-erased. In
+	// theory this is actually UB but is supported everywhere.
+	static_assert(sizeof(void*) == sizeof(node_t_*), "pointer size mismatch");
 
 	// Not ideal.
 	hxhash_table(const hxhash_table&) = delete;
@@ -519,7 +516,7 @@ template<hxhash_table_concept_ node_t_, hxhash_t table_size_bits_, typename dele
 inline void hxhash_table<node_t_, table_size_bits_, deleter_t_>::release_all(void)
 {
 	if(m_size_ != 0u) {
-		::memset(m_table_.data(), 0x00, sizeof(node_t*) * m_table_.capacity());
+		::memset(m_table_.data(), 0x00, sizeof(node_t_*) * m_table_.capacity());
 		m_size_ = 0u;
 	}
 }

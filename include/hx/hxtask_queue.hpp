@@ -3,6 +3,13 @@
 // SPDX-License-Identifier: MIT
 // This file is licensed under the MIT license found in the LICENSE.md file.
 
+// A few things are missing: No task dependency / ordering mechanism is
+// provided. For efficiency this would make more sense as a second layer on top
+// of hxtask_queue. Thread affinity has not been added for no other reason than
+// it is not portable.
+
+// TODO: Consider adding try_enqueue. Is this a good problem to have?
+
 #include "hatchling.h"
 #include "hxarray.hpp"
 #include "hxtask.hpp"
@@ -55,6 +62,12 @@ public:
 	/// - `fn` : A functor returning boolean. `!any_of(x)` -> `none_of(x)`.
 	template<typename functor_t_>
 	bool any_of(functor_t_&& fn_) const;
+
+	/// Removes a specific queued task without executing it. Returns true if the
+	/// task was found and removed. Thread-safe. Returns false if the task is
+	/// already executing or was not queued.
+	/// - `task` : Non-null pointer to the task to cancel.
+	bool cancel(const hxtask* task_) hxattr_nonnull(2);
 
 	/// Removes all queued tasks without executing them. Thread-safe. Does not
 	/// affect tasks that are already executing. Subtasks enqueued by executing
@@ -164,6 +177,18 @@ bool hxtask_queue::any_of(functor_t_&& fn_) const {
 	const hxunique_lock lock_(m_mutex_);
 #endif
 	return m_tasks_.any_of(hxforward<functor_t_>(fn_));
+}
+
+inline bool hxtask_queue::cancel(const hxtask* task_) {
+#if HX_USE_THREADS
+	const hxunique_lock lock_(m_mutex_);
+#endif
+	const size_t erased_ = m_tasks_.erase_if([task_](const record_t& r_) { return r_.task == task_; });
+	if(erased_ != 0u) {
+		hxmake_heap_(m_tasks_.begin(), m_tasks_.end(), hxkey_less_function<record_t>());
+		return true;
+	}
+	return false;
 }
 
 inline void hxtask_queue::clear(void) {

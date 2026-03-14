@@ -111,7 +111,7 @@ void hxtask_queue::wait_for_all(void) {
 			// This is the last time this object is touched. It may delete or
 			// re-enqueue itself; we don't care.
 			hxprofile_scope(task->get_label());
-			task->execute(this);
+			task->process(this);
 		}
 	}
 }
@@ -179,7 +179,7 @@ void hxtask_queue::thread_task_loop_(hxtask_queue* q_, thread_mode_t_ mode_) {
 		// This is actually the last time this object is touched. It may delete or
 		// re-enqueue itself. The queue is not locked and completion is not reported
 		// until after the task is done.
-		task->execute(q_);
+		task->process(q_);
 	}
 }
 #endif

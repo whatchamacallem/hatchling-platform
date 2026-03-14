@@ -30,7 +30,7 @@ Do not use abbreviated names except for iterators. Use K&R style whitespace.
 Code shouldn't go past 100 columns.
 
 Classes, structs and functions begin with `hx` and not `hx_`. Functions end with
-`_t`. Template parameters snake_case and end with `_t_`. Use structs only for C
+`_t`. Template parameters snake_case and end with `_t_`. Use `struct` only in C
 code. Function parameters and private fields do not begin with `hx` and end with
 an underscore. Private fields begin with `m_`. Global variables start with
 `g_hx` and static or anonymous namespace variables start with `s_hx`. Prefix
@@ -47,13 +47,15 @@ it is part of a code block. Documentation will be explicitly requested.
 Prefer code that avoids stepping through unnecessary function calls in the
 debugger or requires unnecessary traversal of data structures in the debugger
 watch window. Prefer C-style implementation details that are cache coherent.
-Wrap those C-style implementation details in C++ classes with normal operators
-so that C++ object models are used for interfaces. Prefer c++ constructor
+However, use hxarray with a static capacity instead of large C-style arrays. Wrap
+those C-style implementation details in C++ classes with normal operators so
+that C++ object models are used for interfaces. Prefer c++ constructor
 initialization lists. Use references instead of pointers when a pointer would
 never be null. Use template wrappers for type safety while avoiding the
 associated code bloat. Entirely re-write the structure of the existing code if
 needed instead of elaborating it unnecessarily. Separate code onto individual
 lines when it helps steps through expressions individually in the debugger.
+Never implement hypothetical safety guarantees.
 
 Prefer iterating with pointers marked hxrestrict instead of using array indices.
 Use `src_` and `dst_` for source and destination iterators.

@@ -229,12 +229,12 @@ TEST_F(hxdeque_test_f, emplace_front_constructs_in_place) {
 
 // emplace_back with multiple forwarded args (uses variadic path)
 TEST_F(hxdeque_test_f, emplace_back_forward_multiple_args) {
-	// Use a struct with a two-arg constructor to exercise variadic forwarding.
-	struct hxpair {
-		hxpair(int a, int b) : x(a), y(b) {}
+	// Use hxtest_pair with a two-arg constructor to exercise variadic forwarding.
+	struct hxtest_pair {
+		hxtest_pair(int a, int b) : x(a), y(b) {}
 		int x, y;
 	};
-	hxdeque<hxpair, 2u> d;
+	hxdeque<hxtest_pair, 2u> d;
 	EXPECT_TRUE(d.emplace_back(3, 7));
 	EXPECT_EQ(d.back().x, 3);
 	EXPECT_EQ(d.back().y, 7);
@@ -328,7 +328,7 @@ TEST_F(hxdeque_test_f, clear_empty_deque_is_noop) {
 	EXPECT_EQ(m_destructed, 0u);
 }
 
-// clear() iterates using (m_head_ + i_) & m_mask_ so a wrapped buffer must
+// clear() iterates using (m_head + i) & m_mask so a wrapped buffer must
 // be destroyed correctly.
 TEST_F(hxdeque_test_f, clear_after_ring_wraparound_destroys_all) {
 	hxdeque<hxtest_object, 4u> d;

@@ -94,7 +94,7 @@ TEST(hxbitset_test, set_all_then_reset_all) {
 
 TEST(hxbitset_test, set_all_exact_word_boundary) {
 	// set() on a bitset whose size is exactly one word must not leave
-	// trailing bits set (s_trailing_mask_ == ~0u in this case).
+	// trailing bits set (s_trailing_mask == ~0u in this case).
 	hxbitset<sizeof(size_t) * 8u> b;
 	b.set();
 	EXPECT_TRUE(b.all());
@@ -329,7 +329,7 @@ TEST(hxbitset_test, left_shift_crosses_word_boundary) {
 }
 
 TEST(hxbitset_test, left_shift_by_word_multiple) {
-	// Shift by exactly s_bits_per_word (bit_shift_ == 0 branch).
+	// Shift by exactly s_bits_per_word (bit_shift == 0 branch).
 	hxbitset<sizeof(size_t) * 8u * 2u> b;
 	b.set(0u);
 	b.set(1u);
@@ -341,7 +341,7 @@ TEST(hxbitset_test, left_shift_by_word_multiple) {
 }
 
 TEST(hxbitset_test, left_shift_by_more_than_bits_zeros_all) {
-	// Shifting by >= bits_ must produce all zeros.
+	// Shifting by >= bits must produce all zeros.
 	hxbitset<sizeof(size_t) * 8u + 3u> b;
 	b.set();
 	b <<= hxbitset<sizeof(size_t) * 8u + 3u>::size();
@@ -359,7 +359,7 @@ TEST(hxbitset_test, left_shift_off_by_one_at_word_boundary) {
 }
 
 TEST(hxbitset_test, left_shift_trailing_bits_masked_off) {
-	// After shifting, bits beyond bits_-1 must be masked to 0.
+	// After shifting, bits beyond bits-1 must be masked to 0.
 	hxbitset<sizeof(size_t) * 8u + 1u> b;
 	b.set();
 	// Shift by 1: bit s_bits_per_word shifts out of range, bit s_bits_per_word-1
@@ -400,7 +400,7 @@ TEST(hxbitset_test, right_shift_crosses_word_boundary) {
 }
 
 TEST(hxbitset_test, right_shift_by_word_multiple) {
-	// Shift by exactly s_bits_per_word (bit_shift_ == 0 branch).
+	// Shift by exactly s_bits_per_word (bit_shift == 0 branch).
 	hxbitset<sizeof(size_t) * 8u * 2u> b;
 	b.set(sizeof(size_t) * 8u);
 	b.set(sizeof(size_t) * 8u + 1u);
@@ -464,9 +464,9 @@ TEST(hxbitset_test, load_copies_bytes_into_storage) {
 
 TEST(hxbitset_test, load_masks_trailing_bits) {
 	// load() must mask trailing bits rather than asserting when the source
-	// byte has bits set above bits_-1.
+	// byte has bits set above bits-1.
 	hxbitset<3u> b;
-	// 0xff has bits 3-7 set which are beyond bits_-1 == 2.
+	// 0xff has bits 3-7 set which are beyond bits-1 == 2.
 	const unsigned char src = static_cast<unsigned char>(0xffu);
 	b.load(reinterpret_cast<const char*>(&src), sizeof src);
 	// Only the lowest 3 bits must survive.
@@ -486,10 +486,10 @@ TEST(hxbitset_test, load_partial_bytes) {
 	EXPECT_FALSE(b[1u]);
 }
 
-// Single-word exact-boundary bitset (bits_ == s_bits_per_word)
+// Single-word exact-boundary bitset (bits == s_bits_per_word)
 
 TEST(hxbitset_test, exact_word_bitset_all_any_none) {
-	// s_trailing_mask_ == ~0u when bits_ is a multiple of s_bits_per_word.
+	// s_trailing_mask == ~0u when bits is a multiple of s_bits_per_word.
 	hxbitset<sizeof(size_t) * 8u> b;
 	EXPECT_TRUE(b.none());
 	EXPECT_FALSE(b.any());
@@ -518,7 +518,7 @@ TEST(hxbitset_test, exact_word_bitset_flip_round_trip) {
 // Multi-word bitset with non-zero trailing bits
 
 TEST(hxbitset_test, multi_word_set_clears_trailing_bits_in_last_word) {
-	// After set() the raw word beyond bits_-1 must be masked to 0.
+	// After set() the raw word beyond bits-1 must be masked to 0.
 	hxbitset<sizeof(size_t) * 8u + 1u> b;
 	b.set();
 	// Only the lowest bit of word[1] should be set (bit s_bits_per_word).
@@ -533,7 +533,7 @@ TEST(hxbitset_test, multi_word_flip_masks_trailing_bits) {
 	EXPECT_EQ(b.data()[1], static_cast<size_t>(1u));
 }
 
-// Two-word bitset with odd trailing bits (bits_ == s_bits_per_word * 2 - 1)
+// Two-word bitset with odd trailing bits (bits == s_bits_per_word * 2 - 1)
 
 TEST(hxbitset_test, penultimate_word_boundary_bitset) {
 	const size_t bits = sizeof(size_t) * 8u * 2u - 1u;

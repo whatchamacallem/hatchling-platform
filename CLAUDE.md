@@ -47,7 +47,8 @@ debugger or requires unnecessary traversal of data structures in the debugger
 watch window. Prefer C-style implementation details that are cache coherent. Use
 template wrappers for type safety while avoiding the associated code bloat.
 Entirely re-write the structure of the existing code if needed instead of
-elaborating it unnecessarily.
+elaborating it unnecessarily. Separate code onto individual lines when it helps
+steps through expressions individually in the debugger.
 
 Prefer iterating with pointers marked hxrestrict instead of using array indices.
 Use `src_` and `dst_` for source and destination iterators.

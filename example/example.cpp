@@ -2,26 +2,32 @@
 // SPDX-License-Identifier: MIT
 // This file is licensed under the MIT license found in the LICENSE.md file.
 
+// All symbols declared in this file must contain with hxexample_.
+
 #include <hx/hatchling.h>
 #include <hx/hxconsole.hpp>
 #include <hx/hxfile.hpp>
 #include <hx/hxmemory_manager.h>
 #include <hx/hxprofiler.hpp>
+#include <hx/hxthread.hpp>
 #include <hx/hxtask_queue.hpp>
 
 #include <math.h>
 
-// ----------------------------------------------------------------------------
-
 namespace {
-    
-const char s_palette[] =
+
+const char s_hxexample_palette[] =
     " `.-':_,^=;><+!rc*/z?sLTv)J7(|Fi{C}fI31tlu[neoZ5Yxjya]2ESwqkP6h9d4VpOGbUAKXHm8RD#$Bg0MNWQ%&@";
 
-atomic_int g_hxquit = 0;
+// ----------------------------------------------------------------------------
+// Example RAII mutex. Of course a C atomic would be simpler.
+
+hxmutex g_hxexample_quit_mutex;
+bool g_hxexample_quit = false;
 
 static void hxexample_notify_sigint(int) {
-    atomic_store(&g_hxquit, 1);
+    hxunique_lock lock_(g_hxexample_quit_mutex);
+    g_hxexample_quit = true;
 }
 
 // ----------------------------------------------------------------------------
@@ -33,14 +39,18 @@ double s_hxexample_center_y = 0.0f;
 double s_hxexample_zoom = 3.0f;
 
 bool hxexample_profile_dump(void)    { hxprofiler_write_to_chrome_tracing("profile.json"); return true; }
-bool hxexample_quit(void)            { atomic_store(&g_hxquit, 1); return true; }
+bool hxexample_quit(void) {
+    hxunique_lock lock_(g_hxexample_quit_mutex);
+    g_hxexample_quit = true;
+    return true;
+}
 
-bool hxexample_left(double amount)  { s_hxexample_center_x -= amount * s_hxexample_zoom; return true; }
-bool hxexample_right(double amount) { s_hxexample_center_x += amount * s_hxexample_zoom; return true; }
-bool hxexample_up(double amount)    { s_hxexample_center_y -= amount * s_hxexample_zoom; return true; }
-bool hxexample_down(double amount)  { s_hxexample_center_y += amount * s_hxexample_zoom; return true; }
-bool hxexample_in(double factor)    { s_hxexample_zoom /= factor; return true; }
-bool hxexample_out(double factor)   { s_hxexample_zoom *= factor; return true; }
+bool hxexample_left(double amount)  { s_hxexample_center_x -= amount * s_hxexample_zoom;  return true; }
+bool hxexample_right(double amount) { s_hxexample_center_x += amount * s_hxexample_zoom;  return true; }
+bool hxexample_up(double amount)    { s_hxexample_center_y -= amount * s_hxexample_zoom;  return true; }
+bool hxexample_down(double amount)  { s_hxexample_center_y += amount * s_hxexample_zoom;  return true; }
+bool hxexample_in(double factor)    { s_hxexample_zoom /= factor;                         return true; }
+bool hxexample_out(double factor)   { s_hxexample_zoom *= factor;                         return true; }
 
 hxconsole_variable_named(s_hxexample_center_x, center_x);
 hxconsole_variable_named(s_hxexample_center_y, center_y);
@@ -100,7 +110,7 @@ public:
                 re = re2 - im2 + re0;
                 ++iter;
             }
-            dst_[col] = (iter == max_iter) ? '@' : s_palette[iter * 95 / max_iter];
+            dst_[col] = (iter == max_iter) ? '@' : s_hxexample_palette[iter * 95 / max_iter];
         }
         dst_[80] = '\0';
     }
@@ -133,10 +143,10 @@ static bool hxexample_render(hxexample_state& state) {
     hxprofiler_stop();
     hxprofiler_write_to_chrome_tracing("profile.json");
 
-    hxlogconsole("center (%.6g, %.6g)  zoom %.6g\n",
+    hxout.print("center (%.6g, %.6g)  zoom %.6g\n",
         (double)s_hxexample_center_x, (double)s_hxexample_center_y, (double)s_hxexample_zoom);
     for(int row = 0; row < 80; ++row) {
-        hxlogconsole("%s\n", rows[row]);
+        hxout.print("%s\n", rows[row]);
     }
     hxfree(rows);
     return true;
@@ -161,12 +171,16 @@ int main(void) {
         s_hxstate = &state;
 
         if(!hxconsole_exec_filename("example.cfg")) {
-            hxlogconsole("error: example.cfg not found or failed to execute\n");
+            hxout.print("error: example.cfg not found or failed to execute\n");
             exit_code = 1;
         } else {
             char line[256];
-            while(!atomic_load(&g_hxquit)) {
-                hxlogconsole("> ");
+            for(;;) {
+                {
+                    hxunique_lock lock_(g_hxexample_quit_mutex);
+                    if(g_hxexample_quit) { break; }
+                }
+                hxout.print("> ");
                 if(::fgets(line, (int)sizeof line, stdin) == hxnull) {
                     break;
                 }

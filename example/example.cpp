@@ -32,12 +32,13 @@ static void hxexample_notify_sigint(int) {
 
 // ----------------------------------------------------------------------------
 // Console variables and functions. Console utilization is intended to be local
-// to each translation unit.  
+// to each translation unit.
 
-double s_hxexample_center_x = 0.0f;
-double s_hxexample_center_y = 0.0f;
-double s_hxexample_zoom = 3.0f;
+double s_hxexample_center_x = 0.0;
+double s_hxexample_center_y = 0.0;
+double s_hxexample_zoom = 3.0;
 
+bool hxexample_render_cmd(void);
 bool hxexample_profile_dump(void)    { hxprofiler_write_to_chrome_tracing("profile.json"); return true; }
 bool hxexample_quit(void) {
     hxunique_lock lock_(g_hxexample_quit_mutex);
@@ -70,55 +71,60 @@ hxconsole_command_named(hxexample_out, out);
 
 // ----------------------------------------------------------------------------
 
-struct hxexample_state {
-    hxtask_queue& queue_;
-    hxexample_row_task* tasks;
-};
-
 class hxexample_row_task : public hxtask {
 public:
-    int row;
-    const double* center_x;
-    const double* center_y;
-    const double* zoom;
-    int max_iter;
-    char (*rows)[81];
+    hxexample_row_task(void) : m_rows_(hxnull) { }
+
+    void reset(int row_, double center_x_, double center_y_, double zoom_, int max_iter_, char (*rows_)[81]) {
+        m_row_      = row_;
+        m_center_x_ = center_x_;
+        m_center_y_ = center_y_;
+        m_zoom_     = zoom_;
+        m_max_iter_ = max_iter_;
+        m_rows_     = rows_;
+    }
 
     void execute(hxtask_queue*) override {
         hxprofile_scope("row");
-        const int max_iter = max_iter;
-        const double cx = *center_x;
-        const double cy = *center_y;
-        const double zoom = *zoom;
-        const double col_scale = zoom / 80.0f;
+        const double col_scale = m_zoom_ / 80.0;
         // Terminal chars are ~2x taller than wide; halve the y-step for square pixels.
-        const double row_scale = col_scale * 0.5f;
-        const double im0 = cy + ((double)row - 39.5f) * row_scale;
-        char* dst_ = rows[row];
+        const double row_scale = col_scale * 0.5;
+        const double im0 = m_center_y_ + ((double)m_row_ - 39.5) * row_scale;
+        char* dst_ = m_rows_[m_row_];
         for(int col = 0; col < 80; ++col) {
-            const double re0 = cx + ((double)col - 39.5f) * col_scale;
-            double re = 0.0f;
-            double im = 0.0f;
+            const double re0 = m_center_x_ + ((double)col - 39.5) * col_scale;
+            double re = 0.0;
+            double im = 0.0;
             int iter = 0;
-            while(iter < max_iter) {
+            while(iter < m_max_iter_) {
                 const double re2 = re * re;
                 const double im2 = im * im;
-                if(re2 + im2 > 4.0f) {
+                if(re2 + im2 > 4.0) {
                     break;
                 }
-                im = 2.0f * re * im + im0;
+                im = 2.0 * re * im + im0;
                 re = re2 - im2 + re0;
                 ++iter;
             }
-            dst_[col] = (iter == max_iter) ? '@' : s_hxexample_palette[iter * 95 / max_iter];
+            dst_[col] = (iter == m_max_iter_) ? '@' : s_hxexample_palette[iter * 95 / m_max_iter_];
         }
         dst_[80] = '\0';
     }
 
     const char* get_label(void) const override { return "row"; }
+
+private:
+    int    m_row_;
+    double m_center_x_;
+    double m_center_y_;
+    double m_zoom_;
+    int    m_max_iter_;
+    char (*m_rows_)[81];
 };
 
-static bool hxexample_render(hxexample_state& state) {
+// ----------------------------------------------------------------------------
+
+static bool hxexample_render(hxtask_queue& queue_, hxexample_row_task* tasks_) {
     int max_iter = (int)(50.0 * ::sqrt(::sqrt(1.0 / (double)s_hxexample_zoom))) + 20;
     if(max_iter < 64)   { max_iter = 64; }
     if(max_iter > 4096) { max_iter = 4096; }
@@ -129,16 +135,10 @@ static bool hxexample_render(hxexample_state& state) {
     hxprofiler_start();
 
     for(int row = 0; row < 80; ++row) {
-        hxexample_row_task* t_ = &state.tasks[row];
-        t_->row      = row;
-        t_->center_x = &s_hxexample_center_x;
-        t_->center_y = &s_hxexample_center_y;
-        t_->zoom     = &s_hxexample_zoom;
-        t_->max_iter = max_iter;
-        t_->rows     = rows;
-        state.queue_.enqueue(t_);
+        tasks_[row].reset(row, s_hxexample_center_x, s_hxexample_center_y, s_hxexample_zoom, max_iter, rows);
+        queue_.enqueue(&tasks_[row]);
     }
-    state.queue_.wait_for_all();
+    queue_.wait_for_all();
 
     hxprofiler_stop();
     hxprofiler_write_to_chrome_tracing("profile.json");
@@ -161,14 +161,11 @@ int main(void) {
     {
         // Allocate the task queue and row task array once at startup; freed before shutdown.
         hxtask_queue queue_(89u, 9u);
-        hxexample_row_task* tasks = (hxexample_row_task*)hxmalloc(80 * sizeof(hxexample_row_task));
+        hxexample_row_task* tasks_ = (hxexample_row_task*)hxmalloc(80 * sizeof(hxexample_row_task));
 
         for(int i = 0; i < 80; ++i) {
-            ::new(&tasks[i]) hxexample_row_task();
+            ::new(&tasks_[i]) hxexample_row_task();
         }
-
-        hxexample_state state = { queue_, tasks };
-        s_hxstate = &state;
 
         if(!hxconsole_exec_filename("example.cfg")) {
             hxout.print("error: example.cfg not found or failed to execute\n");
@@ -185,16 +182,17 @@ int main(void) {
                     break;
                 }
                 hxconsole_exec_line(line);
-                hxexample_render(*s_hxstate);
+                hxexample_render(queue_, tasks_);
             }
             queue_.wait_for_all();
         }
 
-        s_hxstate = hxnull;
-        for(int i = 0; i < 80; ++i) { tasks[i].~hxexample_row_task(); }
-        hxfree(tasks);
-    } 
-    
+        for(int i = 0; i < 80; ++i) {
+            tasks_[i].~hxexample_row_task();
+        }
+        hxfree(tasks_);
+    }
+
     hxshutdown();
     return exit_code;
 }

@@ -12,6 +12,8 @@ tests that are entirely redundant with other tests or do not meaningfully test
 anything.  e.g. do not test a reference to an object to see if it does the same
 thing as the object itself.
 
+Ignore spell checker errors instead of generating hex.
+
 ## Style Guide
 
 This is a bespoke C17/C++20 alternative to the C++ standard library. Never use
@@ -37,24 +39,33 @@ namespace. All test symbols that show up in the linker map must contain `hx` and
 `test`.
 
 Remove trailing `_` from symbols in doxygen comments and leave them in regular
-comments. Update documentation and follow existing style. Do not add
+comments. Update documentation only when obsolete and follow existing style. Do not add
 documentation describing reasons for making changes, e.g. instructions given,
 issues resolved or bugs fixed. Do not put `;` or `-` in english sentences unless
-it is part of a code block.
+it is part of a code block. Documentation will be explicitly requested.
 
 Prefer code that avoids stepping through unnecessary function calls in the
 debugger or requires unnecessary traversal of data structures in the debugger
-watch window. Prefer C-style implementation details that are cache coherent. Use
-template wrappers for type safety while avoiding the associated code bloat.
-Entirely re-write the structure of the existing code if needed instead of
-elaborating it unnecessarily. Separate code onto individual lines when it helps
-steps through expressions individually in the debugger.
+watch window. Prefer C-style implementation details that are cache coherent.
+Wrap those C-style implementation details in C++ classes with normal operators
+so that C++ object models are used for interfaces. Prefer c++ constructor
+initialization lists. Use references instead of pointers when a pointer would
+never be null. Use template wrappers for type safety while avoiding the
+associated code bloat. Entirely re-write the structure of the existing code if
+needed instead of elaborating it unnecessarily. Separate code onto individual
+lines when it helps steps through expressions individually in the debugger.
 
 Prefer iterating with pointers marked hxrestrict instead of using array indices.
 Use `src_` and `dst_` for source and destination iterators.
 
 `.clang-tidy` is in use and C-style casts are not allowed. The rules are only
 checked by `testcmake.sh` and are not checked by `vscode`.
+
+Do not reorder major sections of code unless asked. This codebase does not put
+translation unit local declarations and definitions close to where they are used
+but instead places them near the top of the file to be immediately visible to
+reviewers. E.g. at most one anonymous namespace at the top of a translation unit
+should normally be needed.
 
 ## Project Structure
 
@@ -65,8 +76,6 @@ additional `_` if not already present.
 All tests go in the `test` directory. Symbols in the `test` and `example`
 directory never end with an `_` and this rule overrides the rules above in order
 to show that internal symbols are not used when testing the APIs.
-
-Place temporary planning documents at the top level prefixed with `plan`.
 
 ## ctags
 

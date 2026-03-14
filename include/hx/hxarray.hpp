@@ -319,7 +319,7 @@ public:
 	/// Erases the element indicated. Should not compile with hxnull. Support
 	/// for erasing ranges has not been added yet.
 	/// - `pos` : Non-null pointer to an element currently stored in the array.
-	void erase(const T_* pos_) hxattr_nonnull(2);
+	void erase(T_* pos_) hxattr_nonnull(2);
 
 	/// Erases the element indicated. Use `(size_t)0` to write the integer
 	/// literal 0.
@@ -605,7 +605,7 @@ hxarray<T_, capacity_>::hxarray(const hxarray<T_, capacity_x_>& x_) : hxarray() 
 }
 
 template<hxarray_concept_ T_, size_t capacity_>
-hxarray<T_, capacity_>::hxarray(hxarray&& x_) noexcept : hxarray() {
+hxarray<T_, capacity_>::hxarray(hxarray&& x_) noexcept {
 	static_assert(capacity_ == hxallocator_dynamic_capacity,
 		"Capacity hxallocator_dynamic_capacity required for temporaries.");
 	::memcpy((void*)this, &x_, sizeof x_); // NOLINT
@@ -830,11 +830,10 @@ bool hxarray<T_, capacity_>::equal(const hxarray<T_, capacity_x_>& x_) const {
 }
 
 template<hxarray_concept_ T_, size_t capacity_>
-void hxarray<T_, capacity_>::erase(const T_* pos_) {
+void hxarray<T_, capacity_>::erase(T_* pos_) {
 	hxassertmsg(pos_ >= this->data() && pos_ < m_end_, "invalid_iterator");
 	while((pos_ + 1) != m_end_) {
-		// Having a non-const this pointer provides valid write access.
-		*const_cast<T_*>(pos_) = hxmove(*(pos_ + 1));
+		*pos_ = hxmove(*(pos_ + 1));
 		++pos_;
 	}
 	(--m_end_)->~T_();
@@ -1000,10 +999,10 @@ void hxarray<T_, capacity_>::insert(const T_* pos_, ref_t_&& x_) {
 		::new(this->push_back_unconstructed_()) T_(hxforward<ref_t_>(x_));
 	}
 	else {
-		// A copy constructor for a new end element followed by a series of
+		// A move constructor for a new end element followed by a series of
 		// assignment operations.
 		T_* it_ = static_cast<T_*>(this->push_back_unconstructed_());
-		::new(it_) T_(it_[-1]);
+		::new(it_) T_(hxmove(it_[-1]));
 		while(pos_ < --it_) {
 			*it_ = it_[-1];
 		}

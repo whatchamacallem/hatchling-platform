@@ -407,7 +407,7 @@ TEST(hxset_algorithms_test, hxarray_output_iterator_support) {
 	merge_output.push_back(tracker_t(0));
 	// "Passing a hxarray as an output iterator ... will append to the array."
 	//   seed { 0 } then merge -> { 0, 1, 2, 2, 4, 4, 5 }
-	hxmerge(left+0, left + hxsize(left),
+	(void)hxmerge(left+0, left + hxsize(left),
 		right+0, right + hxsize(right), merge_output);
 	const int expected_merge[] = { 0, 1, 2, 2, 4, 4, 5 };
 	expect_hxarray(merge_output, expected_merge, hxsize(expected_merge));
@@ -418,7 +418,7 @@ TEST(hxset_algorithms_test, hxarray_output_iterator_support) {
 	union_output.push_back(tracker_t(0));
 	// "Passing a hxarray as an output iterator ... will append to the array."
 	//   union payload extends { 0 } => { 0, 1, 2, 4, 5 }
-	hxset_union(left+0, left + hxsize(left),
+	(void)hxset_union(left+0, left + hxsize(left),
 		right+0, right + hxsize(right), union_output);
 	const int expected_union[] = { 0, 1, 2, 4, 5 };
 	expect_hxarray(union_output, expected_union, hxsize(expected_union));
@@ -429,7 +429,7 @@ TEST(hxset_algorithms_test, hxarray_output_iterator_support) {
 	intersection_output.push_back(tracker_t(0));
 	// "Only keys present in both ranges appear in the output."
 	//   sentinel { 0 } + overlap { 2, 4 } => { 0, 2, 4 }
-	hxset_intersection(left+0, left + hxsize(left),
+	(void)hxset_intersection(left+0, left + hxsize(left),
 		right+0, right + hxsize(right), intersection_output);
 	const int expected_intersection[] = { 0, 2, 4 };
 	expect_hxarray(intersection_output, expected_intersection, hxsize(expected_intersection));
@@ -440,7 +440,7 @@ TEST(hxset_algorithms_test, hxarray_output_iterator_support) {
 	difference_output.push_back(tracker_t(0));
 	// "The output contains keys that appear in the first range but not the second."
 	//   sentinel { 0 } + diff { 1 } => { 0, 1 }
-	hxset_difference(left+0, left + hxsize(left),
+	(void)hxset_difference(left+0, left + hxsize(left),
 		right+0, right + hxsize(right), difference_output);
 	const int expected_difference[] = { 0, 1 };
 	expect_hxarray(difference_output, expected_difference, hxsize(expected_difference));

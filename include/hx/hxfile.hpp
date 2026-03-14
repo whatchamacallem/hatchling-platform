@@ -113,28 +113,28 @@ public:
 	void close(void);
 
 	/// Checks if the file is open.
-	bool is_open(void) const { return m_file_pimpl_ != hxnull; }
+	hxattr_nodiscard bool is_open(void) const { return m_file_pimpl_ != hxnull; }
 
 	/// Checks if an error has been encountered, EOF set or `set_fail` called.
-	bool fail(void) const { return m_fail_; }
+	hxattr_nodiscard bool fail(void) const { return m_fail_; }
 
 	/// Marks the file as having encountered a failure. Allows the user to
 	/// report additional errors without having to track them. Non-standard.
 	void set_fail(void) { m_fail_ = true; }
 
 	/// Checks if `EOF` has been reached.
-	bool eof(void) const { return m_eof_; }
+	hxattr_nodiscard bool eof(void) const { return m_eof_; }
 
 	/// Resets the failure and `EOF` flags. This is required to clear `EOF`
 	/// after `EOF` is encountered.
 	void clear(void);
 
 	/// Returns the current open mode of the file.
-	uint8_t mode(void) const { return m_open_mode_; }
+	hxattr_nodiscard uint8_t mode(void) const { return m_open_mode_; }
 
 	/// Returns the current position in the file if open, 0 otherwise. FILE*
 	/// implementation requires a 64-bit long to support 64-bit files.
-	size_t get_pos(void) const;
+	hxattr_nodiscard size_t get_pos(void) const;
 
 	/// Sets the current position in the file. Returns true on success. FILE*
 	/// implementation requires a 64-bit long to support 64-bit files. Resets

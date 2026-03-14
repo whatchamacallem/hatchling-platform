@@ -15,7 +15,7 @@ extern "C" {
 /// `hxbasename` - Returns a pointer to those characters following the last `\\` or
 /// `/` character or path if those are not present.
 /// - `path` : Non-null null-terminated path string.
-const char* hxbasename(const char* path_) hxattr_nonnull(1);
+hxattr_nodiscard const char* hxbasename(const char* path_) hxattr_nonnull(1);
 
 /// `hxfloat_dump` - Prints an array of floating point values. No output is
 /// produced when `HX_RELEASE >= 2`.
@@ -38,7 +38,7 @@ void hxhex_dump(const void* address_, size_t bytes_, bool pretty_) hxattr_nonnul
 // C and C++ Utilities
 
 /// Returns the size of a C array. Rejects pointer arguments at compile time.
-template<typename T_, size_t N_> constexpr size_t hxsize(T_ (&)[N_]) { return N_; }
+template<typename T_, size_t N_> hxattr_nodiscard constexpr size_t hxsize(T_ (&)[N_]) { return N_; }
 
 // ----------------------------------------------------------------------------
 // C++ SFINAE (Substitution Failure Is Not An Error) based enable_if checks.
@@ -226,7 +226,7 @@ template<typename T_> using hxrestrict_t = typename hxrestrict_t_<T_>::type;
 /// are considered graphical or mark making. This is compatible with scanf-style
 /// parsing of UTF-8 string parameters. However, this is not `en_US.UTF-8` or
 /// the default C locale.
-inline bool hxisgraph(char ch_) {
+hxattr_nodiscard inline bool hxisgraph(char ch_) {
 	return ((static_cast<unsigned char>(ch_) - 0x21u) < 0x5eu)
 		|| ((static_cast<unsigned char>(ch_) & 0x80u) != 0u);
 }
@@ -236,14 +236,14 @@ inline bool hxisgraph(char ch_) {
 /// `\t \n \v \f \r`. This is compatible with scanf-style parsing of
 /// UTF-8 string parameters. However, this is not `en_US.UTF-8` or the default
 /// C locale.
-inline bool hxisspace(char ch_) {
+hxattr_nodiscard inline bool hxisspace(char ch_) {
 	return ch_ == ' ' || (static_cast<unsigned char>(ch_) - 0x09u) < 0x05u;
 }
 
 /// Returns `log2(n)` as an integer which is the power of 2 of the largest bit
 /// in `n`. NOTA BENE: `hxlog2i(0)` is currently -127 and is undefined.
 /// - `i` : A `uint32_t`.
-inline int hxlog2i(uint32_t i_) {
+hxattr_nodiscard inline int hxlog2i(uint32_t i_) {
 	// Use the floating point hardware because this isn't important enough.
 	// The memcpy is an intrinsic.
 	float f_ = static_cast<float>(i_);
@@ -254,7 +254,7 @@ inline int hxlog2i(uint32_t i_) {
 /// `hxabs` - Returns the absolute value of `x` using a `<` comparison.
 /// - `x` : The value to compute the absolute value for.
 template<typename T_>
-constexpr T_ hxabs(T_ x_) { return ((x_) < T_()) ? (T_() - (x_)) : (x_); }
+hxattr_nodiscard constexpr T_ hxabs(T_ x_) { return ((x_) < T_()) ? (T_() - (x_)) : (x_); }
 
 /// `hxclamp` - Returns `x` clamped between the `minimum` and `maximum` using `<`
 /// comparisons.
@@ -262,7 +262,7 @@ constexpr T_ hxabs(T_ x_) { return ((x_) < T_()) ? (T_() - (x_)) : (x_); }
 /// - `minimum` : The minimum allowable value.
 /// - `maximum` : The maximum allowable value.
 template<typename T_>
-constexpr T_ hxclamp(T_ x_, T_ minimum_, T_ maximum_) {
+hxattr_nodiscard constexpr T_ hxclamp(T_ x_, T_ minimum_, T_ maximum_) {
 	hxassertmsg(!(maximum_ < minimum_), "minimum <= maximum");
 	return (x_ < minimum_) ? minimum_ : ((maximum_ < x_) ? maximum_ : x_);
 }
@@ -292,13 +292,13 @@ constexpr T_&& hxforward(hxremove_reference_t<T_>& x_) {
 /// - `x` : The first value.
 /// - `y` : The second value.
 template<typename T_>
-constexpr T_ hxmax(T_ x_, T_ y_) { return ((y_) < (x_)) ? (x_) : (y_); }
+hxattr_nodiscard constexpr T_ hxmax(T_ x_, T_ y_) { return ((y_) < (x_)) ? (x_) : (y_); }
 
 /// `hxmin` - Returns the minimum value of `x` and `y` using a `<` comparison.
 /// - `x` : The first value.
 /// - `y` : The second value.
 template<typename T_>
-constexpr T_ hxmin(T_ x_, T_ y_) { return ((x_) < (y_)) ? (x_) : (y_); }
+hxattr_nodiscard constexpr T_ hxmin(T_ x_, T_ y_) { return ((x_) < (y_)) ? (x_) : (y_); }
 
 /// Implements `std::move`. Converts either a `T&` or a `T&&` to a `T&&`. Do not
 /// specify `T` explicitly as it will not work as expected. This uses the rules

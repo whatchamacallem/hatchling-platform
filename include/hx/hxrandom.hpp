@@ -24,7 +24,7 @@ public:
 	hxrandom(uint64_t stream_ = 1u) : m_state_(stream_) { }
 
 	/// Returns [0..2^32).
-	uint32_t operator()(void) { return this->generate_32(); }
+	hxattr_nodiscard uint32_t operator()(void) { return this->generate_32(); }
 
 	/// Returns a random number in the range [base..base+range).
 	/// `range(0.0f,10.0f)` returns `0.0f` to `9.999f` and not `10.0f`. Uses a
@@ -32,7 +32,7 @@ public:
 	/// overflow the type and `size` must be positive.
 	/// - `base` : The beginning of the range. e.g., 0.
 	/// - `size` : Positive size of the range. e.g., 10 elements.
-	template<typename T_> T_ range(T_ base_, T_ size_) {
+	template<typename T_> hxattr_nodiscard T_ range(T_ base_, T_ size_) {
 		// Use double parameters if you need a bigger size. An emulated
 		// floating point multiply is faster and more stable than integer modulo.
 		hxassertmsg(static_cast<float>(size_) < float{0x01000000u},
@@ -41,7 +41,7 @@ public:
 	}
 
 	/// double version.
-	double range(double base_, double size_) {
+	hxattr_nodiscard double range(double base_, double size_) {
 		// Use `uint64_t` parameters if you need a bigger size. An emulated
 		// floating point multiply is faster and more stable than integer modulo.
 		hxassertmsg(size_ < double{0x40000000000000ll},
@@ -50,12 +50,12 @@ public:
 	}
 
 	/// int64_t version. Negative size is undefined.
-	int64_t range(int64_t base_, int64_t size_) {
+	hxattr_nodiscard int64_t range(int64_t base_, int64_t size_) {
 		return base_ + static_cast<int64_t>(this->generate_64() % static_cast<uint64_t>(size_));
 	}
 
 	/// uint64_t version.
-	uint64_t range(uint64_t base_, uint64_t size_) {
+	hxattr_nodiscard uint64_t range(uint64_t base_, uint64_t size_) {
 		return base_ + this->generate_64() % size_;
 	}
 
@@ -85,13 +85,13 @@ public:
 	}
 
 	/// Returns [0..2^8).
-	uint8_t generate_8(void) { return static_cast<uint8_t>(this->generate_32()); }
+	hxattr_nodiscard uint8_t generate_8(void) { return static_cast<uint8_t>(this->generate_32()); }
 
 	/// Returns [0..2^16).
-	uint16_t generate_16(void) { return static_cast<uint16_t>(this->generate_32()); }
+	hxattr_nodiscard uint16_t generate_16(void) { return static_cast<uint16_t>(this->generate_32()); }
 
 	/// Returns [0..2^32).
-	uint32_t generate_32(void) {
+	hxattr_nodiscard uint32_t generate_32(void) {
 		m_state_ = uint64_t{0x5851f42d4c957f2dull} * m_state_ + uint64_t{0x14057b7ef767814full};
 
 		// MODIFICATION: Use the 4 msb bits as a random 0..15 bit variable shift
@@ -104,7 +104,7 @@ public:
 	}
 
 	/// Returns [0..2^64).
-	uint64_t generate_64(void) {
+	hxattr_nodiscard uint64_t generate_64(void) {
 		const uint64_t result_ = static_cast<uint64_t>(this->generate_32())
 			| (static_cast<uint64_t>(this->generate_32()) << 32);
 		return result_;
@@ -112,13 +112,13 @@ public:
 
 	/// Returns a float between `[0..1)`. Can safely be used to generate array
 	/// indices without overflowing.
-	float generate_f01(void) {
+	hxattr_nodiscard float generate_f01(void) {
 		return static_cast<float>(this->generate_32()) * (1.0f / 4294967296.0f); // 0x1p-32f
 	}
 
 	/// Returns a double between `[0..1)`. Can safely be used to generate array
 	/// indices without overflowing.
-	double generate_d01(void) {
+	hxattr_nodiscard double generate_d01(void) {
 		return static_cast<double>(this->generate_64()) * (1.0 / 18446744073709551616.0); // 0x1p-64;
 	}
 

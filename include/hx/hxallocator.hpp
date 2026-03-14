@@ -29,7 +29,7 @@ public:
 	}
 
 	/// Returns the number of elements of `T` allocated.
-	constexpr size_t capacity(void) const { return fixed_capacity_; }
+	hxattr_nodiscard constexpr size_t capacity(void) const { return fixed_capacity_; }
 
 	/// Returns a reference to a const and potentially uninitialized array of `T`.
 	const T_ (&data() const)[fixed_capacity_] {
@@ -86,7 +86,7 @@ public:
 	}
 
 	/// Returns the number of elements of `T` allocated.
-	size_t capacity(void) const { return m_capacity_; }
+	hxattr_nodiscard size_t capacity(void) const { return m_capacity_; }
 
 	/// Returns a const array of `T`.
 	const T_* data(void) const { return m_data_; }

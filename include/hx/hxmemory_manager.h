@@ -153,18 +153,18 @@ public:
 	/// allocator. There should be no system overhead. Allocations made directly
 	/// to `new`, `delete`, `malloc` and `free` are not tracked by
 	/// hxsystem_allocator_heap.
-	size_t get_current_allocation_count(void) const;
+	hxattr_nodiscard size_t get_current_allocation_count(void) const;
 
 	/// Gets the total number of bytes allocated outstanding for this memory
 	/// allocator. Freed bytes might not be reused until the scope closes. There
 	/// may also be significant system overhead that is not being reported.
-	size_t get_current_bytes_allocated(void) const;
+	hxattr_nodiscard size_t get_current_bytes_allocated(void) const;
 
 	/// Gets the number of allocations made when this scope was entered.
-	size_t get_initial_allocation_count(void) const { return m_initial_allocation_count_; }
+	hxattr_nodiscard size_t get_initial_allocation_count(void) const { return m_initial_allocation_count_; }
 
 	/// Gets the number of bytes allocated when this scope was entered.
-	size_t get_initial_bytes_allocated(void) const { return m_initial_bytes_allocated_; }
+	hxattr_nodiscard size_t get_initial_bytes_allocated(void) const { return m_initial_bytes_allocated_; }
 
 private:
 	// The hxsystem_allocator_* classes are responsible for setting
@@ -195,7 +195,7 @@ void hxmemory_manager_shut_down(void) hxattr_cold;
 
 /// `hxmemory_manager_leak_count` - Returns the total number of allocations
 /// outstanding made by the memory manager.
-size_t hxmemory_manager_leak_count(void) hxattr_cold;
+hxattr_nodiscard size_t hxmemory_manager_leak_count(void) hxattr_cold;
 
 /// `hxdelete` - Deletes an object of type `T` and frees its memory using the
 /// memory manager.

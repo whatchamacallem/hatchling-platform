@@ -34,17 +34,17 @@ public:
 	void set(key_t_ key_, value_t_ value_) { this->set_(key_, value_); }
 
 	/// Returns the stored `value_t`.
-	value_t_ get_value(void) const { return m_value_; }
+	hxattr_nodiscard value_t_ get_value(void) const { return m_value_; }
 
 	/// Returns the stored `value_t*`.
-	value_t_ get_value(void) { return m_value_; }
+	hxattr_nodiscard value_t_ get_value(void) { return m_value_; }
 
 	/// Comparison operator for comparison sorting `hxradix_sort_key` objects
 	/// by key as a fallback for short arrays.
 	bool operator<(hxradix_sort_key x_) const { return m_key_ < x_.m_key_; }
 
 	/// A version of the key that may have been modified to work as a `uint32_t`.
-	uint32_t get_modified_key(void) const { return m_key_; }
+	hxattr_nodiscard uint32_t get_modified_key(void) const { return m_key_; }
 
 private:
 	// Required by the implementation of hxradix_sort_void/hxradix_sort_void11.

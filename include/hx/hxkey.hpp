@@ -45,7 +45,7 @@ template<typename A_, typename B_>
 #if HX_CPLUSPLUS >= 202002L
 requires requires(const A_& a_, const B_& b_) { { a_ == b_ } -> hxconvertible_to<bool>; }
 #endif
-constexpr bool hxkey_equal(const A_& a_, const B_& b_) {
+hxattr_nodiscard constexpr bool hxkey_equal(const A_& a_, const B_& b_) {
     return a_ == b_;
 }
 
@@ -53,12 +53,12 @@ constexpr bool hxkey_equal(const A_& a_, const B_& b_) {
 /// Returns true if two C strings are equal (`strcmp(a, b) == 0`).
 /// - `a` : The first C string.
 /// - `b` : The second C string.
-inline bool hxkey_equal(const hxcstring_const_& a_, const hxcstring_const_& b_) {
+hxattr_nodiscard inline bool hxkey_equal(const hxcstring_const_& a_, const hxcstring_const_& b_) {
     return ::strcmp(a_, b_) == 0;
 }
 
 /// Non-const overload.
-inline bool hxkey_equal(const hxcstring_& a_, const hxcstring_& b_) {
+hxattr_nodiscard inline bool hxkey_equal(const hxcstring_& a_, const hxcstring_& b_) {
     return ::strcmp(a_, b_) == 0;
 }
 
@@ -82,7 +82,7 @@ template<typename A_, typename B_>
 #if HX_CPLUSPLUS >= 202002L
 requires requires(const A_& a_, const B_& b_) { { a_ < b_ } -> hxconvertible_to<bool>; }
 #endif
-constexpr bool hxkey_less(const A_& a_, const B_& b_) {
+hxattr_nodiscard constexpr bool hxkey_less(const A_& a_, const B_& b_) {
     return a_ < b_;
 }
 
@@ -91,12 +91,12 @@ constexpr bool hxkey_less(const A_& a_, const B_& b_) {
 /// stable ordering without looking up a locale. Uses (`strcmp(a, b) < 0`).
 /// - `a` : The first C string.
 /// - `b` : The second C string.
-inline bool hxkey_less(const hxcstring_const_& a_, const hxcstring_const_& b_) {
+hxattr_nodiscard inline bool hxkey_less(const hxcstring_const_& a_, const hxcstring_const_& b_) {
     return ::strcmp(a_, b_) < 0;
 }
 
 /// Non-const overload.
-inline bool hxkey_less(const hxcstring_& a_, const hxcstring_& b_) {
+hxattr_nodiscard inline bool hxkey_less(const hxcstring_& a_, const hxcstring_& b_) {
     return ::strcmp(a_, b_) < 0;
 }
 
@@ -115,14 +115,14 @@ inline bool (*hxkey_less_function(void))(const hxremove_cvref_t<T_>&, const hxre
 /// multiplier taken from Linux's `hash.h`.
 /// - `x` : The input value.
 template<typename T_>
-constexpr hxhash_t hxkey_hash(T_ x_) {
+hxattr_nodiscard constexpr hxhash_t hxkey_hash(T_ x_) {
     return static_cast<hxhash_t>(x_) * hxhash_t{0x61C88647u};
 };
 
 /// `hxkey_hash(const char*)` - Returns the FNV-1a hash of a C string. Uses
 /// FNV-1a string hashing.
 /// - `s` : The C string.
-inline hxhash_t hxkey_hash(const char* s_) {
+hxattr_nodiscard inline hxhash_t hxkey_hash(const char* s_) {
     hxhash_t x_ = hxhash_t{0x811c9dc5};
     while(*s_ != '\0') {
         x_ ^= static_cast<hxhash_t>(*s_++);

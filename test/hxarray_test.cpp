@@ -1040,9 +1040,9 @@ TEST(hxarray_test, memcpy_clones_contents) {
 TEST(hxarray_test, memset_sets_bytes) {
 	hxarray<unsigned char,6> bytes;
 	bytes.resize(6u, 0u);
-	bytes.memset(0xab);
+	bytes.memset(0xca);
 	for(size_t index = 0u; index < bytes.size(); ++index) {
-		EXPECT_EQ(static_cast<int>(bytes[index]), 0xab);
+		EXPECT_EQ(static_cast<int>(bytes[index]), 0xca);
 	}
 }
 

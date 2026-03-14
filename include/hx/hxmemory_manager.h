@@ -29,13 +29,11 @@
 ///
 /// `HX_RELEASE == 0` debug memory byte patterns:
 ///
-/// | Hex    | Decimal | Pattern Description                              |
-/// | ------ | ------- | ------------------------------------------------ |
-/// | `0xab` | 171     | Allocated to client code.                        |
-/// | `0xbc` | 188     | Allocated to `hxallocator` dynamic allocation.   |
-/// | `0xcd` | 205     | Belongs to `hxmemory_manager` allocator.         |
-/// | `0xde` | 222     | Returned to `libc` heap allocator.               |
-/// | `0xef` | 239     | Reserved for client poisoned data. E.g. `0xefu`. |
+/// | Hex    | Pattern Description              |
+/// | ------ | -------------------------------- |
+/// | `0xab` | Static `hxallocator` instance.   | 
+/// | `0xcd` | Allocated.                       |
+/// | `0xdd` | Deallocated.                     |   
 ///
 /// Global new and delete are provided when `HX_NO_LIBCXX==1`. This is a
 /// requirement for running as a stand alone C++ runtime. Otherwise they are not

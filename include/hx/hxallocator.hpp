@@ -24,7 +24,7 @@ public:
 	/// Initializes memory to `0xbc` when `HX_RELEASE < 1`.
 	hxallocator() {
 #if (HX_RELEASE) < 1
-		::memset(m_data_, 0xbc, sizeof m_data_);
+		::memset(m_data_, 0xab, sizeof m_data_);
 #endif
 	}
 

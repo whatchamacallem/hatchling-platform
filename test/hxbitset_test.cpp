@@ -454,11 +454,11 @@ TEST(hxbitset_test, not_equal_operator_defined_before_cpp20) {
 TEST(hxbitset_test, load_copies_bytes_into_storage) {
 	// "Copies len bytes from src into the hxbitset storage."
 	hxbitset<8u> b;
-	const unsigned char src = static_cast<unsigned char>(0xabu);
+	const unsigned char src = static_cast<unsigned char>(0xcbu);
 	b.load(reinterpret_cast<const char*>(&src), sizeof src);
-	// Verify bit-by-bit that the value 0xab was loaded.
+	// Verify bit-by-bit that the value 0xcd was loaded.
 	for(size_t i = 0u; i < 8u; ++i) {
-		EXPECT_EQ(b[i], ((0xabu >> i) & 1u) != 0u);
+		EXPECT_EQ(b[i], ((0xcbu >> i) & 1u) != 0u);
 	}
 }
 

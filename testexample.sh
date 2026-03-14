@@ -41,7 +41,27 @@ ccache clang++ $BUILD $FLAGS *.o -lpthread -lstdc++ -lm -o hxexample
 
 cp $HX_DIR/example/example.cfg .
 
-echo exit | ./hxexample
+CORRECT=$HX_DIR/example/example_correct.txt
+
+if [ ! -f "$CORRECT" ]; then
+	echo "WARNING: regenerating $CORRECT..."
+	echo exit | ./hxexample 2>/dev/null > "$CORRECT"
+fi
+
+echo exit | ./hxexample 2>/dev/null > hxexample_out.txt
+if ! diff -u "$CORRECT" hxexample_out.txt; then
+	echo "error: output differs from $CORRECT"
+	exit 1
+fi
+
+cat "$CORRECT"
+echo "output matches example_correct.txt"
 echo "\nRun hxexample from the bin directory to test interactively."
+
+# Run clang-tidy directly without cmake or compile_commands.json.
+echo 'run clang-tidy on example.cpp...'
+clang-tidy -quiet $HX_DIR/example/example.cpp -- \
+	-std=c++20 -pthread -fno-exceptions -fno-rtti \
+	-I$HX_DIR/include $BUILD $FLAGS
 
 echo 🐉🐉🐉

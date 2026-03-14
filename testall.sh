@@ -65,6 +65,7 @@ time ./debugbuild.sh --headless
 time ./testcmake.sh
 time ./testcoverage.sh --headless
 time ./testerrorhandling.sh
+time ./testexample.sh
 time ./testmatrix.sh
 time ./teststrip.sh
 time ./testwasm.sh --headless

@@ -37,7 +37,7 @@ bool g_hxexample_exit = false;
 // Sets g_hxexample_exit under lock. Without SA_RESTART, SIGINT also interrupts
 // blocking fgets, causing it to return null and break the main loop.
 void hxexample_notify_sigint(int) {
-	hxunique_lock lock_(g_hxexample_exit_mutex);
+	const hxunique_lock lock_(g_hxexample_exit_mutex);
 	g_hxexample_exit = true;
 }
 
@@ -51,7 +51,7 @@ double s_hxexample_zoom = 3.0;
 
 // Sets g_hxexample_exit, causing the main loop to break after the current render.
 bool hxexample_exit(void) {
-	hxunique_lock lock_(g_hxexample_exit_mutex);
+	const hxunique_lock lock_(g_hxexample_exit_mutex);
 	g_hxexample_exit = true;
 	return true;
 }
@@ -100,11 +100,11 @@ public:
 
 		// Terminal chars are ~2x taller than wide; halve the y-step for square pixels.
 		const double row_scale = col_scale * 0.5;
-		const double imaginary_origin = m_center_y + ((double)m_row - 19.5) * row_scale;
+		const double imaginary_origin = m_center_y + (static_cast<double>(m_row) - 19.5) * row_scale;
 		char* dst = m_row_buffer;
 
 		for(size_t col = 0; col < 80; ++col) {
-			const double real_origin = m_center_x + ((double)col - 39.5) * col_scale;
+			const double real_origin = m_center_x + (static_cast<double>(col) - 39.5) * col_scale;
 			double real = 0.0;
 			double imaginary = 0.0;
 			size_t iter = 0;
@@ -119,7 +119,7 @@ public:
 				++iter;
 			}
 			const size_t palette_size = sizeof s_hxexample_palette - 1u;
-			const size_t palette_index = hxmin((size_t)(iter * 91 / m_max_iter), palette_size - 1u);
+			const size_t palette_index = hxmin(iter * 91 / (m_max_iter != 0u ? m_max_iter : 1u), palette_size - 1u);
 			dst[col] = (iter == m_max_iter) ? '@' : s_hxexample_palette[palette_index];
 		}
 		dst[80] = '\n';
@@ -144,7 +144,7 @@ private:
 // Writes a Chrome tracing profile to profile.json after each render.
 bool hxexample_render(hxtask_queue& queue, hxarray<hxexample_row_task, 40u>& tasks,
 		hxarray<hxarray<char, 82u>, 40u>& row_storage) {
-	size_t max_iter = (size_t)(50.0 * ::sqrt(::sqrt(1.0 / (double)s_hxexample_zoom))) + 20;
+	size_t max_iter = static_cast<size_t>(50.0 * ::sqrt(::sqrt(1.0 / s_hxexample_zoom))) + 20;
 	if(max_iter < 64)   { max_iter = 64; }
 	if(max_iter > 4096) { max_iter = 4096; }
 
@@ -161,11 +161,11 @@ bool hxexample_render(hxtask_queue& queue, hxarray<hxexample_row_task, 40u>& tas
 	hxprofiler_write_to_chrome_tracing("profile.json");
 
 	for(size_t row = 0; row < 40u; ++row) {
-		hxout.print("%s", row_storage[(size_t)row].data());
+		hxout.print("%s", row_storage[row].data());
 	}
 
 	hxout.print("center (%.6g, %.6g) zoom %.6g\n",
-		(double)s_hxexample_center_x, (double)s_hxexample_center_y, (double)s_hxexample_zoom);
+		s_hxexample_center_x, s_hxexample_center_y, s_hxexample_zoom);
 	return true;
 }
 
@@ -214,12 +214,12 @@ int main(void) {
 			char line[256];
 			for(;;) {
 				hxout << "> ";
-				if(::fgets(line, (int)sizeof line, stdin) == hxnull) {
+				if(::fgets(line, static_cast<int>(sizeof line), stdin) == hxnull) {
 					break;
 				}
 				if(hxconsole_exec_line(line)) {
 					{
-						hxunique_lock lock_(g_hxexample_exit_mutex);
+						const hxunique_lock lock_(g_hxexample_exit_mutex);
 						if(g_hxexample_exit) { break; }
 					}
 
@@ -229,7 +229,6 @@ int main(void) {
 					hxexample_usage();
 				}
 			}
-			queue.wait_for_all();
 		}
 	}
 

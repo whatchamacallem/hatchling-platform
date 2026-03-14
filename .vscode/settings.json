@@ -34,6 +34,7 @@
         "demangle",
         "Demangled",
         "DENTANGLEMENT",
+        "deque",
         "displayname",
         "docstrings",
         "Doxyfile",

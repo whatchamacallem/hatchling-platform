@@ -74,10 +74,16 @@ purposes:
 
 - **Task Queue**: An unopinionated task queue with a worker pool.
 
-- **Containers**: Non-reallocating implementations of `vector`, `unordered_set`
-  and `unordered_map`. These are `hxarray` and `hxhash_table`. Due to the
-  cache-coherent and pre-allocated nature of this programming style, there is
-  little need for more than an array class. Use additional libraries if needed.
+- **Containers**: Provides a set of containers designed for environments where
+  reallocation is not used. `hxarray` provides a statically or dynamically
+  allocated array. This class was written with an exhaustive feature set because
+  arrays are cache-coherent and memory efficient. `hxhash_table` provides both
+  unordered map and unordered set functionality without requiring copies or
+  allocations. `hxdeque` provides a highly optimized deque compared to the
+  standard. `hxbitset` is available for bit manipulation. That said, this
+  codebase is intended for low-level work where complex container libraries
+  cause code bloat, memory fragmentation, and poor cache coherence. If those are
+  not your concerns, consider using additional libraries.
 
 - **Algorithms**: `hxradix_sort` is provided for Θ(n) sorting. See
   `<hx/hxalgorithm.h>` for standard algorithms and comparison based sorting and

@@ -264,10 +264,10 @@ public:
 	const_iterator cend(void) const { return const_iterator(); }
 
 	/// Returns the number of elements in the hash table.
-	size_t size(void) const { return m_size_; }
+	hxattr_nodiscard size_t size(void) const { return m_size_; }
 
 	/// Checks if the hash table is empty.
-	bool empty(void) const { return m_size_ == 0u; }
+	hxattr_nodiscard bool empty(void) const { return m_size_ == 0u; }
 
 	/// Returns a node containing key if any or allocates and returns a new one.
 	/// Any allocation required uses `hxsystem_allocator_current` and `HX_ALIGNMENT`.
@@ -295,17 +295,17 @@ public:
 	/// The previous object is non-const as it may be modified.
 	/// - `key` : The key to search for in the hash table.
 	/// - `previous` : A previously found `node_t` with the same key, or hxnull.
-	node_t_* find(const typename node_t_::key_t& key_, const node_t_* previous_=hxnull);
+	hxattr_nodiscard node_t_* find(const typename node_t_::key_t& key_, const node_t_* previous_=hxnull);
 
 	/// `const` version.
-	const node_t_* find(const typename node_t_::key_t& key_, const node_t_* previous_=hxnull) const {
+	hxattr_nodiscard const node_t_* find(const typename node_t_::key_t& key_, const node_t_* previous_=hxnull) const {
 		// This code calls the non-const version for brevity.
 		return const_cast<hxhash_table*>(this)->find(key_, previous_);
 	}
 
 	/// Counts the number of Nodes with the given key.
 	/// - `key` : The key to count occurrences of in the hash table.
-	size_t count(const typename node_t_::key_t& key_) const;
+	hxattr_nodiscard size_t count(const typename node_t_::key_t& key_) const;
 
 	/// Removes and returns the first `node_t` with the given key.
 	/// - `key` : The key to search for and remove from the hash table.
@@ -346,17 +346,17 @@ public:
 	void release_all(void);
 
 	/// Returns the number of buckets in the hash table.
-	size_t bucket_count(void) const { return m_table_.capacity(); };
+	hxattr_nodiscard size_t bucket_count(void) const { return m_table_.capacity(); };
 
 	/// Returns the average number of Nodes per bucket.
-	float load_factor(void) const {
+	hxattr_nodiscard float load_factor(void) const {
 		return m_table_.capacity()
 			? (static_cast<float>(m_size_) / static_cast<float>(m_table_.capacity()))
 			: 0.0f;
 	}
 
 	/// Returns the size of the largest bucket.
-	size_t load_max(void) const;
+	hxattr_nodiscard size_t load_max(void) const;
 
 private:
 	static_assert(table_size_bits_ < hxhash_bits, "Hash bits must be [0..hxhash_bits].");

@@ -28,6 +28,8 @@ public:
 	virtual const char* get_label(void) const { return "task"; }
 
 private:
+	friend class hxtask_queue;
+
 	// Reduce confusion by separating these out.
 	void process(hxtask_queue* q_) {
 		execute(q_);

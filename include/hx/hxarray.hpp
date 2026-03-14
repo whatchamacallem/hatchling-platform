@@ -217,7 +217,7 @@ public:
 	/// ```
 	/// - `fn` : A functor returning boolean. `!all_of(x)` -> `any_not(x)`.
 	template<typename functor_t_>
-	bool all_of(functor_t_&& fn_) const;
+	hxattr_nodiscard bool all_of(functor_t_&& fn_) const;
 
 	/// A non-const version of `all_of`.
 	template<typename functor_t_>
@@ -233,7 +233,7 @@ public:
 	/// ```
 	/// - `fn` : A functor returning boolean. `!any_of(x)` -> `none_of(x)`.
 	template<typename functor_t_>
-	bool any_of(functor_t_&& fn_) const;
+	hxattr_nodiscard bool any_of(functor_t_&& fn_) const;
 
 	/// A non-const version of `any_of`.
 	template<typename functor_t_>
@@ -277,12 +277,12 @@ public:
 	/// Performs a binary search using `hxkey_less`. Returns `end()` when not
 	/// found.
 	/// - `value` : The value to locate.
-	const T_* binary_search(const T_& value_) const;
+	hxattr_nodiscard const T_* binary_search(const T_& value_) const;
 
 	/// Non-const version. Performs a binary search using `hxkey_less`. Returns
 	/// `end` when not found.
 	/// - `value` : The value to locate.
-	T_* binary_search(const T_& value_);
+	hxattr_nodiscard T_* binary_search(const T_& value_);
 
 	/// Returns a `const T*` to the beginning of the array (alias for
 	/// `begin`).
@@ -369,11 +369,11 @@ public:
 	/// Finds the first occurrence of `value` using `hxkey_equal`.
 	/// Returns `end` if no element matches.
 	/// - `value` : The value to locate.
-	const T_* find(const T_& value_) const;
+	hxattr_nodiscard const T_* find(const T_& value_) const;
 
 	/// Non-const version of `find` using `hxkey_equal`.
 	/// - `value` : The value to locate.
-	T_* find(const T_& value_);
+	hxattr_nodiscard T_* find(const T_& value_);
 
 	/// Finds the first element for which the predicate returns true. Returns
 	/// `end` if no element matches. e.g.,
@@ -385,11 +385,11 @@ public:
 	/// ```
 	/// - `fn` : A functor returning boolean.
 	template<typename functor_t_>
-	const T_* find_if(functor_t_&& fn_) const;
+	hxattr_nodiscard const T_* find_if(functor_t_&& fn_) const;
 
 	/// Non-const version of `find_if`.
 	template<typename functor_t_>
-	T_* find_if(functor_t_&& fn_);
+	hxattr_nodiscard T_* find_if(functor_t_&& fn_);
 
 	/// Calls a function, lambda, or `std::function` on each element.
 	/// (Non-standard.) Lambdas and `std::function` instances can be provided as
@@ -427,11 +427,11 @@ public:
 
 	/// Returns a `const T*` to the element at `index` or `hxnull` otherwise.
 	/// - `index` : The 0-based offset of the element.
-	const T_* get(size_t index_) const;
+	hxattr_nodiscard const T_* get(size_t index_) const;
 
 	/// Returns a `T*` to the element at `index` or `hxnull` otherwise.
 	/// - `index` : The 0-based offset of the element.
-	T_* get(size_t index_);
+	hxattr_nodiscard T_* get(size_t index_);
 
 	/// Inserts the element at the offset indicated. Should not compile with
 	/// `hxnull`. `insert(begin(), x)` and `insert(end(), x)` will work as long as
@@ -469,7 +469,7 @@ public:
 
 	/// Returns the capacity of the array or 0 if unallocated. This is the
 	/// standard way to report that reallocation is not allowed.
-	size_t max_size(void) const { return this->capacity(); }
+	hxattr_nodiscard size_t max_size(void) const { return this->capacity(); }
 
 	/// Copies another `hxarray` using `memcpy`.
 	/// - `x` : The other array.
@@ -523,10 +523,10 @@ public:
 	void resize(size_t size_, const T_& x_);
 
 	/// Returns the number of elements in the array.
-	size_t size(void) const { return static_cast<size_t>(m_end_ - this->data()); }
+	hxattr_nodiscard size_t size(void) const { return static_cast<size_t>(m_end_ - this->data()); }
 
 	/// Returns the number of bytes in the array. (Non-standard.)
-	size_t size_bytes(void) const { return sizeof(T_) * this->size(); }
+	hxattr_nodiscard size_t size_bytes(void) const { return sizeof(T_) * this->size(); }
 
 	/// Sorts the array using `hxkey_less`. (Non-standard.)
 	void sort(void);

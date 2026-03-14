@@ -53,7 +53,7 @@ public:
 	/// priorities.
 	/// - `fn` : A functor returning boolean. `!all_of(x)` -> `any_not(x)`.
 	template<typename functor_t_>
-	bool all_of(functor_t_&& fn_) const;
+	hxattr_nodiscard bool all_of(functor_t_&& fn_) const;
 
 	/// Locks the queue and calls `fn` on each task. Returns true if the
 	/// predicate returns true for any element and false otherwise. Will stop
@@ -61,7 +61,7 @@ public:
 	/// priorities.
 	/// - `fn` : A functor returning boolean. `!any_of(x)` -> `none_of(x)`.
 	template<typename functor_t_>
-	bool any_of(functor_t_&& fn_) const;
+	hxattr_nodiscard bool any_of(functor_t_&& fn_) const;
 
 	/// Removes a specific queued task without executing it. Returns true if the
 	/// task was found and removed. Thread-safe. Returns false if the task is
@@ -75,7 +75,7 @@ public:
 	void clear(void);
 
 	/// Returns true when no tasks are queued. Thread-safe.
-	bool empty(void) const;
+	hxattr_nodiscard bool empty(void) const;
 
 	/// Queues a task for later execution. Does not delete the task after
 	/// execution. When `HX_USE_THREADS` is enabled, this is thread-safe and
@@ -114,14 +114,14 @@ public:
 	void for_each_immutable(functor_t_&& fn_);
 
 	/// Returns true if the queue capacity has been reached.
-	bool full(void) const;
+	hxattr_nodiscard bool full(void) const;
 
 	/// Returns the maximum number of tasks that can be queued. This value is
 	/// fixed at construction and does not require locking.
-	size_t max_size(void) const;
+	hxattr_nodiscard size_t max_size(void) const;
 
 	/// Returns the number of queued tasks. Thread-safe.
-	size_t size(void) const;
+	hxattr_nodiscard size_t size(void) const;
 
 	/// Execute remaining tasks. The thread calling `wait_for_all` executes
 	/// tasks as well. Intended to be called by the thread that owns the queue

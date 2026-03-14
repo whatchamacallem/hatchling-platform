@@ -172,20 +172,20 @@ public:
 	const_iterator cend(void) const { return end(); }
 
 	/// Returns the number of nodes currently in the list.
-	size_t size(void) const { return m_size_; }
+	hxattr_nodiscard size_t size(void) const { return m_size_; }
 
 	/// Returns `true` if the list contains no nodes.
-	bool empty(void) const { return m_head_.list_next() == sentinel_(); }
+	hxattr_nodiscard bool empty(void) const { return m_head_.list_next() == sentinel_(); }
 
 	/// Returns a pointer to the first node. The list must not be empty.
-	node_t_* front(void);
+	hxattr_nodiscard node_t_* front(void);
 	/// Returns a const pointer to the first node. The list must not be empty.
-	const node_t_* front(void) const;
+	hxattr_nodiscard const node_t_* front(void) const;
 
 	/// Returns a pointer to the last node. The list must not be empty.
-	node_t_* back(void);
+	hxattr_nodiscard node_t_* back(void);
 	/// Returns a const pointer to the last node. The list must not be empty.
-	const node_t_* back(void) const;
+	hxattr_nodiscard const node_t_* back(void) const;
 
 	/// Inserts `ptr` at the front of the list. `ptr` must not be null.
 	void push_front(node_t_* ptr_);

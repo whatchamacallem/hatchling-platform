@@ -41,7 +41,7 @@ private:
 	// Internal use only.
 	hxarray_back_inserter_(array_t_& x_) : m_x_(x_) { }
 #if HX_CPLUSPLUS >= 201703L
-	// Use `operator=` to add a an element and return a reference. Copy elision
+	// Use `operator=` to add an element and return a reference. Copy elision
 	// is C++17.
 	hxarray_back_inserter_(const hxarray_back_inserter_& x_) = delete;
 #endif
@@ -863,14 +863,24 @@ size_t hxarray<T_, capacity_>::erase_if(functor_t_&& fn_) {
 template<hxarray_concept_ T_, size_t capacity_>
 template<typename functor_t_>
 size_t hxarray<T_, capacity_>::erase_if_heap(functor_t_&& fn_) {
-	size_t removed_ = 0u;
-	T_* data_ = this->data();
-	for(size_t index_ = this->size(); index_--;) {
-		if(hxforward<functor_t_>(fn_)(data_[index_])) {
-			this->erase_unordered(index_);
-			++removed_;
-			hxdetail_::hxheapsort_heapify_(data_, data_ + index_, m_end_, hxkey_less_function<T_>());
+	T_* hxrestrict src_ = this->data();
+	T_* hxrestrict dst_ = src_;
+	for(T_* end_ = m_end_; src_ != end_; ++src_) {
+		if(!hxforward<functor_t_>(fn_)(*src_)) {
+			// Survivor: move into the next free slot, or leave in place.
+			if(src_ != dst_) {
+				*dst_ = hxmove(*src_);
+			}
+			++dst_;
 		}
+		else {
+			src_->~T_(); // Removed: destroy without freeing storage.
+		}
+	}
+	size_t removed_ = static_cast<size_t>(m_end_ - dst_);
+	m_end_ = dst_;
+	if(removed_) {
+		hxdetail_::hxmake_heap_<T_*>(this->data(), m_end_, hxkey_less_function<T_>());
 	}
 	return removed_;
 }

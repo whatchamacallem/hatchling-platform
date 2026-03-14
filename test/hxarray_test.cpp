@@ -346,6 +346,26 @@ TEST(hxarray_test, erase_if_heap_removes_matching_values) {
 	EXPECT_EQ(heap.erase_if_heap([](int) { return false; }), 0u);
 }
 
+// This is a regression test for hxarray::erase_if_heap.
+// Heap [10, 9, 5, 8, 7, 3, 4, 6]: erasing 3 at index 5 moves 6 (the last
+// element) to index 5. sift-down finds no children. Without sift-up, 6 > 5
+// (parent at index 2) leaves the heap invalid.
+TEST(hxarray_test, erase_if_heap_sift_up_required_single_erase) {
+	// [10, 9, 5, 8, 7, 3, 4, 6]: a valid max-heap assigned directly.
+	// index:  0   1  2  3  4  5  6  7
+	static const int prebuilt[] = { 10, 9, 5, 8, 7, 3, 4, 6 };
+	hxarray<int, 8> heap;
+	heap.assign(prebuilt, prebuilt + hxsize(prebuilt));
+	EXPECT_TRUE(hxarray_test_is_max_heap(heap));
+
+	const size_t removed = heap.erase_if_heap([](int value) -> bool {
+		return value == 3;
+	});
+	EXPECT_EQ(removed, 1u);
+	EXPECT_EQ(heap.size(), 7u);
+	EXPECT_TRUE(hxarray_test_is_max_heap(heap));
+}
+
 TEST(hxarray_test, make_heap_builds_max_heap) {
 	static const int values[] = { 12, 3, 17, 8, 5, 14, 6 };
 	hxarray<int, 7> heap;

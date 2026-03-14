@@ -61,9 +61,9 @@ Symbols that are included belong in the `include/hx` directory. Symbols that are
 internal generally belong in the `include/hx/detail` directory and end with an
 additional `_` if not already present.
 
-All tests go in the `test` directory. Symbols in the `test` directory never end
-with an `_` and this rule overrides the rules above in order to show that
-internal symbols are not used when testing the APIs.
+All tests go in the `test` directory. Symbols in the `test` and `example`
+directory never end with an `_` and this rule overrides the rules above in order
+to show that internal symbols are not used when testing the APIs.
 
 Place temporary planning documents at the top level prefixed with `plan`.
 

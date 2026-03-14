@@ -12,6 +12,16 @@ tests that are entirely redundant with other tests or do not meaningfully test
 anything.  e.g. do not test a reference to an object to see if it does the same
 thing as the object itself.
 
+Do not write test suites until requested as the design may not be finalized.
+Every branch needs to be tested both ways with off by one tests and also do
+white box testing that ensures the documentation is being followed. All test
+symbols that show up in the linker map must contain `hx` and `test`.
+
+Do not generate tests that are entirely redundant with other tests or do not
+meaningfully test real code.  e.g. Do not compare the return value of a function
+called on an object with the return value of the same function called on a
+reference to the same object.
+
 Ignore spell checker errors instead of generating hex.
 
 ## Style Guide
@@ -25,9 +35,9 @@ available. Prefer `size_t` to `unsigned long long`.
 Do not use C++ exceptions, RTTI or assume asserts are enabled. Check when adding
 includes whether they are redundant and write them as `<stdio.h>` not `<cstido>`.
 
-All symbols are snake_case. Except feature test macros are SCREAMING_SNAKE_CASE.
-Do not use abbreviated names except for iterators. Use K&R style whitespace.
-Code shouldn't go past 100 columns.
+All symbols are `snake_case`. Except feature test macros are
+`SCREAMING_SNAKE_CASE`. Do not use abbreviated names except for iterators. Use
+K&R style whitespace. Code shouldn't go past 100 columns.
 
 Classes, structs and functions begin with `hx` and not `hx_`. Functions end with
 `_t`. Template parameters snake_case and end with `_t_`. Use `struct` only in C
@@ -35,14 +45,7 @@ code. Function parameters and private fields do not begin with `hx` and end with
 an underscore. Private fields begin with `m_`. Global variables start with
 `g_hx` and static or anonymous namespace variables start with `s_hx`. Prefix
 calls to the C standard library with `::` to indicate they are in the global
-namespace. All test symbols that show up in the linker map must contain `hx` and
-`test`.
-
-Remove trailing `_` from symbols in doxygen comments and leave them in regular
-comments. Update documentation only when obsolete and follow existing style. Do not add
-documentation describing reasons for making changes, e.g. instructions given,
-issues resolved or bugs fixed. Do not put `;` or `-` in english sentences unless
-it is part of a code block. Documentation will be explicitly requested.
+namespace.
 
 Prefer code that avoids stepping through unnecessary function calls in the
 debugger or requires unnecessary traversal of data structures in the debugger
@@ -68,6 +71,17 @@ translation unit local declarations and definitions close to where they are used
 but instead places them near the top of the file to be immediately visible to
 reviewers. E.g. at most one anonymous namespace at the top of a translation unit
 should normally be needed.
+
+## Documentation
+
+Update documentation independently only when making changes that obsolete it. Do
+not add documentation describing reasons for making changes, e.g. instructions
+given, issues resolved or bugs fixed. Remove trailing `_` from symbols in
+doxygen comments and leave them in regular comments and follow existing style
+otherwise. Do not put `;` or `-` in english sentences unless it is part of a
+code block. Documentation will be explicitly requested when the design is final.
+Usage examples in documentation are not expected to follow the preceding rules
+and are instead examples of code written independently outside of the project.
 
 ## Project Structure
 

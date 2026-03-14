@@ -41,6 +41,7 @@ ccache clang++ $BUILD $FLAGS *.o -lpthread -lstdc++ -lm -o hxexample
 
 cp $HX_DIR/example/example.cfg .
 
-echo quit | ./hxexample
+echo exit | ./hxexample
+echo "\nRun hxexample from the bin directory to test interactively."
 
 echo 🐉🐉🐉

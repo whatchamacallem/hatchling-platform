@@ -50,19 +50,17 @@ bool hxexample_exit(void) {
 	return true;
 }
 
-bool hxexample_profile_dump(void)   { hxprofiler_write_to_chrome_tracing("profile.json"); return true; }
 bool hxexample_left(double amount)  { s_hxexample_center_x -= amount * s_hxexample_zoom;  return true; }
 bool hxexample_right(double amount) { s_hxexample_center_x += amount * s_hxexample_zoom;  return true; }
 bool hxexample_up(double amount)	{ s_hxexample_center_y -= amount * s_hxexample_zoom;  return true; }
 bool hxexample_down(double amount)  { s_hxexample_center_y += amount * s_hxexample_zoom;  return true; }
-bool hxexample_in(double factor)	{ s_hxexample_zoom /= factor;						 return true; }
-bool hxexample_out(double factor)   { s_hxexample_zoom *= factor;						 return true; }
+bool hxexample_in(double factor)	{ s_hxexample_zoom /= factor;						  return true; }
+bool hxexample_out(double factor)   { s_hxexample_zoom *= factor;						  return true; }
 
 hxconsole_variable_named(s_hxexample_center_x, center_x);
 hxconsole_variable_named(s_hxexample_center_y, center_y);
 hxconsole_variable_named(s_hxexample_zoom, zoom);
 
-hxconsole_command_named(hxexample_profile_dump, profile_dump);
 hxconsole_command_named(hxexample_exit, exit);
 hxconsole_command_named(hxexample_left, left);
 hxconsole_command_named(hxexample_right, right);
@@ -122,18 +120,18 @@ public:
 	const char* get_label(void) const override { return "row"; }
 	
 private:
-	size_t	   m_row;
+	size_t m_row;
 	double m_center_x;
 	double m_center_y;
 	double m_zoom;
-	size_t	   m_max_iter;
+	size_t m_max_iter;
 	char*  m_row_buffer;
 };
 
 // ----------------------------------------------------------------------------
 
 static bool hxexample_render(hxtask_queue& queue, hxarray<hxexample_row_task, 40u>& tasks,
-		hxarray<hxarray<char, 82u>, 80u>& row_storage) {
+		hxarray<hxarray<char, 82u>, 40u>& row_storage) {
 	size_t max_iter = (size_t)(50.0 * ::sqrt(::sqrt(1.0 / (double)s_hxexample_zoom))) + 20;
 	if(max_iter < 64)   { max_iter = 64; }
 	if(max_iter > 4096) { max_iter = 4096; }
@@ -150,12 +148,12 @@ static bool hxexample_render(hxtask_queue& queue, hxarray<hxexample_row_task, 40
 	hxprofiler_stop();
 	hxprofiler_write_to_chrome_tracing("profile.json");
 
-	hxout.print("center (%.6g, %.6g) zoom %.6g\n",
-		(double)s_hxexample_center_x, (double)s_hxexample_center_y, (double)s_hxexample_zoom);
-
-	for(size_t row = 0; row < 80; ++row) {
+	for(size_t row = 0; row < 40u; ++row) {
 		hxout.print("%s", row_storage[(size_t)row].data());
 	}
+
+	hxout.print("center (%.6g, %.6g) zoom %.6g\n",
+		(double)s_hxexample_center_x, (double)s_hxexample_center_y, (double)s_hxexample_zoom);
 	return true;
 }
 
@@ -179,20 +177,31 @@ int main(void) {
 			exit_code = EXIT_FAILURE;
 		} else {
 			hxexample_render(queue, tasks, row_storage);
-			hxout << "Type help to list commands or exit to exit."
 
+			puts("Commands are:\n"
+				"\tcenter_x <optional-f64>\n"
+				"\tcenter_y <optional-f64>\n"
+				"\tzoom <optional-f64>\n"
+				"\tleft f64\n"
+				"\tright f64\n"
+				"\tup f64\n"
+				"\tdown f64\n"
+				"\tin f64\n"
+				"\tout f64\n"
+				"\texit");
 
 			char line[256];
 			for(;;) {
-				{
-					hxunique_lock lock_(g_hxexample_exit_mutex);
-					if(g_hxexample_exit) { break; }
-				}
 				hxout << "> ";
 				if(::fgets(line, (int)sizeof line, stdin) == hxnull) {
 					break;
 				}
 				if(hxconsole_exec_line(line)) {
+					{
+						hxunique_lock lock_(g_hxexample_exit_mutex);
+						if(g_hxexample_exit) { break; }
+					}
+
 					hxexample_render(queue, tasks, row_storage);
 				}
 			}

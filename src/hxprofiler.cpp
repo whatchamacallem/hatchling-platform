@@ -72,6 +72,9 @@ void hxprofiler_internal_::log_(void) {
 	hxlogconsole(" ]\n");
 }
 
+// ###
+// ### NOTA BENE: Only https://ui.perfetto.dev/ is working at the moment.
+// ###
 void hxprofiler_internal_::write_to_chrome_tracing_(const char* filename) {
 	HX_PROFILER_LOCK_();
 	m_is_started_ = false;
@@ -82,8 +85,14 @@ void hxprofiler_internal_::write_to_chrome_tracing_(const char* filename) {
 	if(!m_records.empty()) {
 		const hxcycles_t epoch = m_records[0].m_begin_;
 		for(size_t i = 0; i < m_records.size(); ++i) {
-			const hxprofiler_record_& rec = m_records[i];
 			if(i != 0) { f.print(",\n"); }
+
+			const hxprofiler_record_& rec = m_records[i];
+
+			// Register wrapping can cause bad samples. Meanwhile Chrome has been
+			// updated to throw exceptions when any sample has end < begin.
+			if(rec.m_end_ < rec.m_begin_) { continue; }
+
 			const char* label = rec.m_label_;
 			f.print("{\"name\":\"%s\",\"cat\":\"PERF\",\"ph\":\"B\",\"pid\":0,\"tid\":%u,\"ts\":%.15g},\n",
 				label,

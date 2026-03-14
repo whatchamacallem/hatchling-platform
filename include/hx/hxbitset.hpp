@@ -17,31 +17,15 @@ public:
 	/// Constructs a hxbitset from a single `size_t` value. Only valid when
 	/// `bits` equals the number of bits in `size_t`.
 	/// - `val` : The value to initialize the bitset with.
-	explicit hxbitset(size_t val_) {
-		static_assert(bits_ == s_bits_per_word_,
-			"hxbitset(size_t) requires bits_ == sizeof(size_t) * 8.");
-		m_data_[0] = val_;
-	}
+	explicit hxbitset(size_t val_);
 
 	/// Constructs a hxbitset as a copy of `x`.
 	/// - `x` : The hxbitset to copy from.
-	hxbitset(const hxbitset& x_) {
-		const size_t* hxrestrict src_ = x_.m_data_;
-		size_t* hxrestrict dst_ = m_data_;
-		const size_t* const end_ = dst_ + s_words_;
-		while(dst_ != end_) { *dst_++ = *src_++; }
-	}
+	hxbitset(const hxbitset& x_);
 
 	/// Assigns the bits of `x` to this hxbitset. Asserts that `&x` is not `this`.
 	/// - `x` : The hxbitset to copy from.
-	void operator=(const hxbitset& x_) {
-		hxassertmsg(static_cast<const void*>(this) != static_cast<const void*>(&x_),
-			"invalid_reference Assignment to self.");
-		const size_t* hxrestrict src_ = x_.m_data_;
-		size_t* hxrestrict dst_ = m_data_;
-		const size_t* const end_ = dst_ + s_words_;
-		while(dst_ != end_) { *dst_++ = *src_++; }
-	}
+	void operator=(const hxbitset& x_);
 
 	/// Returns the number of bits.
 	hxattr_nodiscard static constexpr size_t size(void) { return bits_; }
@@ -60,217 +44,80 @@ public:
 	/// to zero after the copy.
 	/// - `src` : Pointer to the source data.
 	/// - `len` : Number of bytes to copy. Must not exceed `bytes()`.
-	void load(const char* src_, size_t len_) {
-		hxassertmsg(len_ <= bytes(), "overflow_load %zu", len_);
-		::memcpy(m_data_, src_, len_); // NOLINT
-		m_data_[s_words_ - 1u] &= s_trailing_mask_;
-	}
+	void load(const char* src_, size_t len_);
 
 	/// Returns the value of the bit at position `pos`. Asserts that `pos` is in
 	/// range.
 	/// - `pos` : Bit index. Must be less than `bits`.
-	hxattr_nodiscard bool operator[](size_t pos_) const {
-		hxassertmsg(pos_ < bits_, "invalid_index %zu", pos_);
-		return (m_data_[pos_ / s_bits_per_word_]
-			& (static_cast<size_t>(1u) << (pos_ % s_bits_per_word_))) != 0u;
-	}
+	hxattr_nodiscard bool operator[](size_t pos_) const;
 
 	/// Returns the value of the bit at position `pos`. Asserts that `pos` is in
 	/// range.
 	/// - `pos` : Bit index must be less than `bits`.
-	hxattr_nodiscard bool test(size_t pos_) const {
-		hxassertmsg(pos_ < bits_, "invalid_index %zu", pos_);
-		return (m_data_[pos_ / s_bits_per_word_]
-			& (static_cast<size_t>(1u) << (pos_ % s_bits_per_word_))) != 0u;
-	}
+	hxattr_nodiscard bool test(size_t pos_) const;
 
 	/// Sets all bits to 1.
-	hxbitset& set(void) {
-		size_t* hxrestrict dst_ = m_data_;
-		const size_t* const end_ = dst_ + s_words_;
-		while(dst_ != end_) { *dst_++ = ~static_cast<size_t>(0u); }
-		m_data_[s_words_ - 1u] &= s_trailing_mask_;
-		return *this;
-	}
+	hxbitset& set(void);
 
 	/// Sets or clears the bit at position `pos`. Asserts that `pos` is in
 	/// range.
 	/// - `pos` : Bit index that must be less than `bits`.
 	/// - `value` : The value to assign, defaults to `true`.
-	hxbitset& set(size_t pos_, bool value_=true) {
-		hxassertmsg(pos_ < bits_, "invalid_index %zu", pos_);
-		const size_t mask_ = static_cast<size_t>(1u) << (pos_ % s_bits_per_word_);
-		if(value_) {
-			m_data_[pos_ / s_bits_per_word_] |= mask_;
-		} else {
-			m_data_[pos_ / s_bits_per_word_] &= ~mask_;
-		}
-		return *this;
-	}
+	hxbitset& set(size_t pos_, bool value_=true);
 
 	/// Clears all bits to 0.
-	hxbitset& reset(void) {
-		size_t* hxrestrict dst_ = m_data_;
-		const size_t* const end_ = dst_ + s_words_;
-		while(dst_ != end_) { *dst_++ = 0u; }
-		return *this;
-	}
+	hxbitset& reset(void);
 
 	/// Clears the bit at position `pos`. Asserts that `pos` is in range.
 	/// - `pos` : Bit index that must be less than `bits`.
-	hxbitset& reset(size_t pos_) {
-		hxassertmsg(pos_ < bits_, "invalid_index %zu", pos_);
-		m_data_[pos_ / s_bits_per_word_] &= ~(static_cast<size_t>(1u) << (pos_ % s_bits_per_word_));
-		return *this;
-	}
+	hxbitset& reset(size_t pos_);
 
 	/// Flips all bits.
-	hxbitset& flip(void) {
-		size_t* hxrestrict dst_ = m_data_;
-		const size_t* const end_ = dst_ + s_words_;
-		while(dst_ != end_) { *dst_++ ^= ~static_cast<size_t>(0u); }
-		m_data_[s_words_ - 1u] &= s_trailing_mask_;
-		return *this;
-	}
+	hxbitset& flip(void);
 
 	/// Flips the bit at position `pos`. Asserts that `pos` is in range.
 	/// - `pos` : Bit index that must be less than `bits`.
-	hxbitset& flip(size_t pos_) {
-		hxassertmsg(pos_ < bits_, "invalid_index %zu", pos_);
-		m_data_[pos_ / s_bits_per_word_] ^= (static_cast<size_t>(1u) << (pos_ % s_bits_per_word_));
-		return *this;
-	}
+	hxbitset& flip(size_t pos_);
 
 	/// Returns `true` if all bits are set.
-	hxattr_nodiscard bool all(void) const {
-		assert_no_trailing_bits_();
-		const size_t* hxrestrict dst_ = m_data_;
-		const size_t* const end_ = dst_ + (s_words_ - 1u);
-		while(dst_ != end_) {
-			if(*dst_++ != ~static_cast<size_t>(0u)) { return false; }
-		}
-		return m_data_[s_words_ - 1u] == s_trailing_mask_;
-	}
+	hxattr_nodiscard bool all(void) const;
 
 	/// Returns `true` if at least one bit is set.
-	hxattr_nodiscard bool any(void) const {
-		assert_no_trailing_bits_();
-		const size_t* hxrestrict dst_ = m_data_;
-		const size_t* const end_ = dst_ + s_words_;
-		while(dst_ != end_) {
-			if(*dst_++ != 0u) { return true; }
-		}
-		return false;
-	}
+	hxattr_nodiscard bool any(void) const;
 
 	/// Returns `true` if no bits are set.
 	hxattr_nodiscard bool none(void) const { return !this->any(); }
 
 	/// Applies bitwise AND with `x` in place. Asserts that `&x` is not `this`.
 	/// - `x` : The hxbitset to AND with.
-	hxbitset& operator&=(const hxbitset& x_) {
-		hxassertmsg(static_cast<const void*>(this) != static_cast<const void*>(&x_),
-			"invalid_reference Operation with self.");
-		size_t* hxrestrict dst_ = m_data_;
-		const size_t* hxrestrict src_ = x_.m_data_;
-		const size_t* const end_ = dst_ + s_words_;
-		while(dst_ != end_) { *dst_++ &= *src_++; }
-		return *this;
-	}
+	hxbitset& operator&=(const hxbitset& x_);
 
 	/// Applies bitwise OR with `x` in place. Asserts that `&x` is not `this`.
 	/// - `x` : The hxbitset to OR with.
-	hxbitset& operator|=(const hxbitset& x_) {
-		hxassertmsg(static_cast<const void*>(this) != static_cast<const void*>(&x_),
-			"invalid_reference Operation with self.");
-		size_t* hxrestrict dst_ = m_data_;
-		const size_t* hxrestrict src_ = x_.m_data_;
-		const size_t* const end_ = dst_ + s_words_;
-		while(dst_ != end_) { *dst_++ |= *src_++; }
-		assert_no_trailing_bits_();
-		return *this;
-	}
+	hxbitset& operator|=(const hxbitset& x_);
 
 	/// Applies bitwise XOR with `x` in place. Asserts that `&x` is not `this`.
 	/// - `x` : The hxbitset to XOR with.
-	hxbitset& operator^=(const hxbitset& x_) {
-		hxassertmsg(static_cast<const void*>(this) != static_cast<const void*>(&x_),
-			"invalid_reference Operation with self.");
-		size_t* hxrestrict dst_ = m_data_;
-		const size_t* hxrestrict src_ = x_.m_data_;
-		const size_t* const end_ = dst_ + s_words_;
-		while(dst_ != end_) { *dst_++ ^= *src_++; }
-		assert_no_trailing_bits_();
-		return *this;
-	}
+	hxbitset& operator^=(const hxbitset& x_);
 
 	/// Shifts all bits left by `count` positions, filling vacated bits with 0.
 	/// - `count` : Number of positions to shift left.
-	hxbitset& operator<<=(size_t count_) {
-		if(count_ == 0u) { return *this; }
-		const size_t word_shift_ = count_ / s_bits_per_word_;
-		const size_t bit_shift_ = count_ % s_bits_per_word_;
-		if(bit_shift_ == 0u) {
-			for(size_t i_ = s_words_; i_-- != 0u; ) {
-				m_data_[i_] = (i_ >= word_shift_) ? m_data_[i_ - word_shift_] : 0u;
-			}
-		} else {
-			for(size_t i_ = s_words_; i_-- != 0u; ) {
-				const size_t lo_ = (i_ >= word_shift_)
-					? (m_data_[i_ - word_shift_] << bit_shift_) : 0u;
-				const size_t hi_ = (i_ > word_shift_)
-					? (m_data_[i_ - word_shift_ - 1u] >> (s_bits_per_word_ - bit_shift_)) : 0u;
-				m_data_[i_] = lo_ | hi_;
-			}
-		}
-		m_data_[s_words_ - 1u] &= s_trailing_mask_;
-		assert_no_trailing_bits_();
-		return *this;
-	}
+	hxbitset& operator<<=(size_t count_);
 
 	/// Shifts all bits right by `count` positions, filling vacated bits with 0.
 	/// - `count` : Number of positions to shift right.
-	hxbitset& operator>>=(size_t count_) {
-		if(count_ == 0u) { return *this; }
-		const size_t word_shift_ = count_ / s_bits_per_word_;
-		const size_t bit_shift_ = count_ % s_bits_per_word_;
-		if(bit_shift_ == 0u) {
-			for(size_t i_ = 0u; i_ < s_words_; ++i_) {
-				m_data_[i_] = ((i_ + word_shift_) < s_words_) ? m_data_[i_ + word_shift_] : 0u;
-			}
-		} else {
-			for(size_t i_ = 0u; i_ < s_words_; ++i_) {
-				const size_t lo_ = ((i_ + word_shift_) < s_words_)
-					? (m_data_[i_ + word_shift_] >> bit_shift_) : 0u;
-				const size_t hi_ = ((i_ + word_shift_ + 1u) < s_words_)
-					? (m_data_[i_ + word_shift_ + 1u] << (s_bits_per_word_ - bit_shift_)) : 0u;
-				m_data_[i_] = lo_ | hi_;
-			}
-		}
-		assert_no_trailing_bits_();
-		return *this;
-	}
+	hxbitset& operator>>=(size_t count_);
 
 	/// Returns `true` if all bits compare equal to those of `x`. Asserts that
 	/// `&x` is not `this`.
 	/// - `x` : The hxbitset to compare with.
-	hxattr_nodiscard bool operator==(const hxbitset& x_) const {
-		hxassertmsg(static_cast<const void*>(this) != static_cast<const void*>(&x_),
-			"invalid_reference Operation with self.");
-		const size_t* hxrestrict dst_ = m_data_;
-		const size_t* hxrestrict src_ = x_.m_data_;
-		const size_t* const end_ = dst_ + s_words_;
-		while(dst_ != end_) { if(*dst_++ != *src_++) { return false; } }
-		return true;
-	}
+	hxattr_nodiscard bool operator==(const hxbitset& x_) const;
 
 #if HX_CPLUSPLUS < 202002L
 	/// Returns `true` if any bits differ from those of `x`. Only defined when
 	/// `HX_CPLUSPLUS < 202002L`.
 	/// - `x` : The hxbitset to compare with.
-	hxattr_nodiscard bool operator!=(const hxbitset& x_) const {
-		return !(*this == x_);
-	}
+	hxattr_nodiscard bool operator!=(const hxbitset& x_) const { return !(*this == x_); }
 #endif
 
 private:
@@ -282,9 +129,225 @@ private:
 		? (static_cast<size_t>(1u) << s_trailing_bits_) - 1u
 		: ~static_cast<size_t>(0u);
 
-	void assert_no_trailing_bits_(void) const {
-		hxassertmsg((m_data_[s_words_ - 1u] & ~s_trailing_mask_) == 0u, "trailing_bits_set");
-	}
+	void assert_no_trailing_bits_(void) const;
 
 	size_t m_data_[s_words_];
 };
+
+// ----------------------------------------------------------------------------
+
+template<size_t bits_>
+inline hxbitset<bits_>::hxbitset(size_t val_) {
+	static_assert(bits_ == s_bits_per_word_,
+		"hxbitset(size_t) requires bits_ == sizeof(size_t) * 8.");
+	m_data_[0] = val_;
+}
+
+template<size_t bits_>
+inline hxbitset<bits_>::hxbitset(const hxbitset& x_) {
+	const size_t* hxrestrict src_ = x_.m_data_;
+	size_t* hxrestrict dst_ = m_data_;
+	const size_t* const end_ = dst_ + s_words_;
+	while(dst_ != end_) { *dst_++ = *src_++; }
+}
+
+template<size_t bits_>
+inline void hxbitset<bits_>::operator=(const hxbitset& x_) {
+	hxassertmsg(static_cast<const void*>(this) != static_cast<const void*>(&x_),
+		"invalid_reference Assignment to self.");
+	const size_t* hxrestrict src_ = x_.m_data_;
+	size_t* hxrestrict dst_ = m_data_;
+	const size_t* const end_ = dst_ + s_words_;
+	while(dst_ != end_) { *dst_++ = *src_++; }
+}
+
+template<size_t bits_>
+inline void hxbitset<bits_>::load(const char* src_, size_t len_) {
+	hxassertmsg(len_ <= bytes(), "overflow_load %zu", len_);
+	::memcpy(m_data_, src_, len_); // NOLINT
+	m_data_[s_words_ - 1u] &= s_trailing_mask_;
+}
+
+template<size_t bits_>
+inline bool hxbitset<bits_>::operator[](size_t pos_) const {
+	hxassertmsg(pos_ < bits_, "invalid_index %zu", pos_);
+	return (m_data_[pos_ / s_bits_per_word_]
+		& (static_cast<size_t>(1u) << (pos_ % s_bits_per_word_))) != 0u;
+}
+
+template<size_t bits_>
+inline bool hxbitset<bits_>::test(size_t pos_) const {
+	hxassertmsg(pos_ < bits_, "invalid_index %zu", pos_);
+	return (m_data_[pos_ / s_bits_per_word_]
+		& (static_cast<size_t>(1u) << (pos_ % s_bits_per_word_))) != 0u;
+}
+
+template<size_t bits_>
+inline hxbitset<bits_>& hxbitset<bits_>::set(void) {
+	size_t* hxrestrict dst_ = m_data_;
+	const size_t* const end_ = dst_ + s_words_;
+	while(dst_ != end_) { *dst_++ = ~static_cast<size_t>(0u); }
+	m_data_[s_words_ - 1u] &= s_trailing_mask_;
+	return *this;
+}
+
+template<size_t bits_>
+inline hxbitset<bits_>& hxbitset<bits_>::set(size_t pos_, bool value_) {
+	hxassertmsg(pos_ < bits_, "invalid_index %zu", pos_);
+	const size_t mask_ = static_cast<size_t>(1u) << (pos_ % s_bits_per_word_);
+	if(value_) {
+		m_data_[pos_ / s_bits_per_word_] |= mask_;
+	} else {
+		m_data_[pos_ / s_bits_per_word_] &= ~mask_;
+	}
+	return *this;
+}
+
+template<size_t bits_>
+inline hxbitset<bits_>& hxbitset<bits_>::reset(void) {
+	size_t* hxrestrict dst_ = m_data_;
+	const size_t* const end_ = dst_ + s_words_;
+	while(dst_ != end_) { *dst_++ = 0u; }
+	return *this;
+}
+
+template<size_t bits_>
+inline hxbitset<bits_>& hxbitset<bits_>::reset(size_t pos_) {
+	hxassertmsg(pos_ < bits_, "invalid_index %zu", pos_);
+	m_data_[pos_ / s_bits_per_word_] &= ~(static_cast<size_t>(1u) << (pos_ % s_bits_per_word_));
+	return *this;
+}
+
+template<size_t bits_>
+inline hxbitset<bits_>& hxbitset<bits_>::flip(void) {
+	size_t* hxrestrict dst_ = m_data_;
+	const size_t* const end_ = dst_ + s_words_;
+	while(dst_ != end_) { *dst_++ ^= ~static_cast<size_t>(0u); }
+	m_data_[s_words_ - 1u] &= s_trailing_mask_;
+	return *this;
+}
+
+template<size_t bits_>
+inline hxbitset<bits_>& hxbitset<bits_>::flip(size_t pos_) {
+	hxassertmsg(pos_ < bits_, "invalid_index %zu", pos_);
+	m_data_[pos_ / s_bits_per_word_] ^= (static_cast<size_t>(1u) << (pos_ % s_bits_per_word_));
+	return *this;
+}
+
+template<size_t bits_>
+inline bool hxbitset<bits_>::all(void) const {
+	assert_no_trailing_bits_();
+	const size_t* hxrestrict dst_ = m_data_;
+	const size_t* const end_ = dst_ + (s_words_ - 1u);
+	while(dst_ != end_) {
+		if(*dst_++ != ~static_cast<size_t>(0u)) { return false; }
+	}
+	return m_data_[s_words_ - 1u] == s_trailing_mask_;
+}
+
+template<size_t bits_>
+inline bool hxbitset<bits_>::any(void) const {
+	assert_no_trailing_bits_();
+	const size_t* hxrestrict dst_ = m_data_;
+	const size_t* const end_ = dst_ + s_words_;
+	while(dst_ != end_) {
+		if(*dst_++ != 0u) { return true; }
+	}
+	return false;
+}
+
+template<size_t bits_>
+inline hxbitset<bits_>& hxbitset<bits_>::operator&=(const hxbitset& x_) {
+	hxassertmsg(static_cast<const void*>(this) != static_cast<const void*>(&x_),
+		"invalid_reference Operation with self.");
+	size_t* hxrestrict dst_ = m_data_;
+	const size_t* hxrestrict src_ = x_.m_data_;
+	const size_t* const end_ = dst_ + s_words_;
+	while(dst_ != end_) { *dst_++ &= *src_++; }
+	return *this;
+}
+
+template<size_t bits_>
+inline hxbitset<bits_>& hxbitset<bits_>::operator|=(const hxbitset& x_) {
+	hxassertmsg(static_cast<const void*>(this) != static_cast<const void*>(&x_),
+		"invalid_reference Operation with self.");
+	size_t* hxrestrict dst_ = m_data_;
+	const size_t* hxrestrict src_ = x_.m_data_;
+	const size_t* const end_ = dst_ + s_words_;
+	while(dst_ != end_) { *dst_++ |= *src_++; }
+	assert_no_trailing_bits_();
+	return *this;
+}
+
+template<size_t bits_>
+inline hxbitset<bits_>& hxbitset<bits_>::operator^=(const hxbitset& x_) {
+	hxassertmsg(static_cast<const void*>(this) != static_cast<const void*>(&x_),
+		"invalid_reference Operation with self.");
+	size_t* hxrestrict dst_ = m_data_;
+	const size_t* hxrestrict src_ = x_.m_data_;
+	const size_t* const end_ = dst_ + s_words_;
+	while(dst_ != end_) { *dst_++ ^= *src_++; }
+	assert_no_trailing_bits_();
+	return *this;
+}
+
+template<size_t bits_>
+inline hxbitset<bits_>& hxbitset<bits_>::operator<<=(size_t count_) {
+	if(count_ == 0u) { return *this; }
+	const size_t word_shift_ = count_ / s_bits_per_word_;
+	const size_t bit_shift_ = count_ % s_bits_per_word_;
+	if(bit_shift_ == 0u) {
+		for(size_t i_ = s_words_; i_-- != 0u; ) {
+			m_data_[i_] = (i_ >= word_shift_) ? m_data_[i_ - word_shift_] : 0u;
+		}
+	} else {
+		for(size_t i_ = s_words_; i_-- != 0u; ) {
+			const size_t lo_ = (i_ >= word_shift_)
+				? (m_data_[i_ - word_shift_] << bit_shift_) : 0u;
+			const size_t hi_ = (i_ > word_shift_)
+				? (m_data_[i_ - word_shift_ - 1u] >> (s_bits_per_word_ - bit_shift_)) : 0u;
+			m_data_[i_] = lo_ | hi_;
+		}
+	}
+	m_data_[s_words_ - 1u] &= s_trailing_mask_;
+	assert_no_trailing_bits_();
+	return *this;
+}
+
+template<size_t bits_>
+inline hxbitset<bits_>& hxbitset<bits_>::operator>>=(size_t count_) {
+	if(count_ == 0u) { return *this; }
+	const size_t word_shift_ = count_ / s_bits_per_word_;
+	const size_t bit_shift_ = count_ % s_bits_per_word_;
+	if(bit_shift_ == 0u) {
+		for(size_t i_ = 0u; i_ < s_words_; ++i_) {
+			m_data_[i_] = ((i_ + word_shift_) < s_words_) ? m_data_[i_ + word_shift_] : 0u;
+		}
+	} else {
+		for(size_t i_ = 0u; i_ < s_words_; ++i_) {
+			const size_t lo_ = ((i_ + word_shift_) < s_words_)
+				? (m_data_[i_ + word_shift_] >> bit_shift_) : 0u;
+			const size_t hi_ = ((i_ + word_shift_ + 1u) < s_words_)
+				? (m_data_[i_ + word_shift_ + 1u] << (s_bits_per_word_ - bit_shift_)) : 0u;
+			m_data_[i_] = lo_ | hi_;
+		}
+	}
+	assert_no_trailing_bits_();
+	return *this;
+}
+
+template<size_t bits_>
+inline bool hxbitset<bits_>::operator==(const hxbitset& x_) const {
+	hxassertmsg(static_cast<const void*>(this) != static_cast<const void*>(&x_),
+		"invalid_reference Operation with self.");
+	const size_t* hxrestrict dst_ = m_data_;
+	const size_t* hxrestrict src_ = x_.m_data_;
+	const size_t* const end_ = dst_ + s_words_;
+	while(dst_ != end_) { if(*dst_++ != *src_++) { return false; } }
+	return true;
+}
+
+template<size_t bits_>
+inline void hxbitset<bits_>::assert_no_trailing_bits_(void) const {
+	hxassertmsg((m_data_[s_words_ - 1u] & ~s_trailing_mask_) == 0u, "trailing_bits_set");
+}

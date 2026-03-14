@@ -114,6 +114,7 @@ void hxheapsort(iterator_t_ begin_, iterator_t_ end_) {
 /// - `less` : A key comparison functor defining a less-than ordering relationship.
 template<typename iterator_t_, typename less_t_> hxattr_hot
 void hxsort(iterator_t_ begin_, iterator_t_ end_, const less_t_& less_) {
+	// hxlog2i(0) is undefined but unused in this case.
 	hxintro_sort_<iterator_t_>(begin_, end_, less_, 2 * hxlog2i(static_cast<size_t>(end_ - begin_)));
 }
 
@@ -123,6 +124,7 @@ void hxsort(iterator_t_ begin_, iterator_t_ end_, const less_t_& less_) {
 /// - `end` : Pointer to one past the last element in the range to sort.
 template<typename iterator_t_> hxattr_hot
 void hxsort(iterator_t_ begin_, iterator_t_ end_) {
+	// hxlog2i(0) is undefined but unused in this case.
 	hxintro_sort_<iterator_t_>(begin_, end_, hxkey_less_function<decltype(*begin_)>(),
 		2 * hxlog2i(static_cast<size_t>(end_ - begin_)));
 }
@@ -140,8 +142,9 @@ void hxsort(iterator_t_ begin_, iterator_t_ end_) {
 /// - `end1` : Pointer to one past the last element of the second ordered range.
 /// - `output` : Destination output iterator receiving the merged output.
 /// - `less` : Comparator defining the less-than ordering relationship.
+/// Returns an output iterator positioned one past the last element written.
 template<typename iterator_t_, typename output_iterator_t_, typename less_t_> hxattr_hot
-void hxmerge(iterator_t_ begin0_, iterator_t_ end0_, iterator_t_ begin1_, iterator_t_ end1_,
+output_iterator_t_ hxmerge(iterator_t_ begin0_, iterator_t_ end0_, iterator_t_ begin1_, iterator_t_ end1_,
 		output_iterator_t_&& output_, const less_t_& less_) {
 	hxassertmsg(begin0_ <= end0_ && begin1_ <= end1_, "invalid_iterator");
 	hxrestrict_t<output_iterator_t_> output_r_(output_);
@@ -163,6 +166,7 @@ void hxmerge(iterator_t_ begin0_, iterator_t_ end0_, iterator_t_ begin1_, iterat
 		*output_r_ = hxmove(*begin1_);
 		++output_r_; ++begin1_;
 	}
+	return output_r_;
 }
 
 /// `hxmerge` (specialization) - Performs a stable merge sort of two ordered
@@ -176,10 +180,11 @@ void hxmerge(iterator_t_ begin0_, iterator_t_ end0_, iterator_t_ begin1_, iterat
 /// - `begin1` : Pointer to the beginning of the second ordered range to merge.
 /// - `end1` : Pointer to one past the last element of the second ordered range.
 /// - `output` : Destination output iterator receiving the merged output.
+/// Returns an output iterator positioned one past the last element written.
 template<typename iterator_t_, typename output_iterator_t_> hxattr_hot
-void hxmerge(iterator_t_ begin0_, iterator_t_ end0_, iterator_t_ begin1_,
+output_iterator_t_ hxmerge(iterator_t_ begin0_, iterator_t_ end0_, iterator_t_ begin1_,
 		iterator_t_ end1_, output_iterator_t_&& output_) {
-	hxmerge<iterator_t_, output_iterator_t_>(begin0_, end0_, begin1_, end1_,
+	return hxmerge<iterator_t_, output_iterator_t_>(begin0_, end0_, begin1_, end1_,
 		hxforward<output_iterator_t_>(output_), hxkey_less_function<decltype(*begin0_)>());
 }
 
@@ -365,9 +370,7 @@ output_iterator_t_ hxset_difference(iterator_t_ begin0_, iterator_t_ end0_, iter
 /// Returns `end` if the value is not found. Unsorted data will lead to errors.
 /// Non-unique values will be selected arbitrarily. The comparator parameter is
 /// a functor that returns true if the first argument is ordered before (i.e.,
-/// is less than) the second. The return value is non-standard. Passing a
-/// hxarray as an output iterator like this `hxset_difference<const int*,
-/// hxarray<int>&>(...)` will append to the array.
+/// is less than) the second.
 /// - `begin` : Pointer to the beginning of the range to search.
 /// - `end` : Pointer to one past the last element in the range to search.
 /// - `value` : The value to search for.
@@ -396,8 +399,7 @@ iterator_t_ hxbinary_search(iterator_t_ begin_, iterator_t_ end_, const value_t_
 }
 
 /// `hxbinary_search` (specialization) - An overload of `hxbinary_search` that
-/// uses `hxkey_less`.  Passing a hxarray as an output iterator like this
-/// `hxset_difference<const int*, hxarray<int>&>(...)` will append to the array.
+/// uses `hxkey_less`.
 /// - `begin` : Pointer to the beginning of the range to search.
 /// - `end` : Pointer to one past the last element in the range to search.
 /// - `value` : The value to search for.

@@ -125,9 +125,14 @@ TEST(hxhxalgorithm_test, hxmerge_iterator_support) {
 	// "Performs a stable merge sort of two ordered ranges [begin0, end0) and"
 	// "[begin1, end1) -> output."
 	//   /-\ ascending merge: { 1, 3, 5 } + { 2, 4, 6 } => { 1, 2, 3, 4, 5, 6 }
-	hxmerge(hxhxalgorithm_test_iter_api_t(left), hxhxalgorithm_test_iter_api_t(left + 3),
-		hxhxalgorithm_test_iter_api_t(right), hxhxalgorithm_test_iter_api_t(right + 3),
-		hxhxalgorithm_test_iter_api_t(dest), sort_iter_value_less);
+	hxhxalgorithm_test_iter_api_t merge_end =
+		hxmerge(hxhxalgorithm_test_iter_api_t(left), hxhxalgorithm_test_iter_api_t(left + 3),
+			hxhxalgorithm_test_iter_api_t(right), hxhxalgorithm_test_iter_api_t(right + 3),
+			hxhxalgorithm_test_iter_api_t(dest), sort_iter_value_less);
+
+	// "Returns an output iterator positioned one past the last element written."
+	//   6 elements written so offset must be 6.
+	EXPECT_EQ(merge_end - hxhxalgorithm_test_iter_api_t(dest), ptrdiff_t{6});
 
 	const int expected_sorted[6] = { 1, 2, 3, 4, 5, 6 };
 	// Confirm merged buffer now tracks { 1, 2, 3, 4, 5, 6 } without disturbing tickets.
@@ -146,9 +151,13 @@ TEST(hxhxalgorithm_test, hxmerge_iterator_support) {
 	// "Assumes both [begin0, end0) and [begin1, end1) are ordered by the less functor."
 	//   \-/ descending merge inputs { 5, 3, 1 } & { 6, 4, 2 } with greater-than
 	//   ensure stable output { 6, 5, 4, 3, 2, 1 }
-	hxmerge(hxhxalgorithm_test_iter_api_t(left_desc), hxhxalgorithm_test_iter_api_t(left_desc + 3),
-		hxhxalgorithm_test_iter_api_t(right_desc), hxhxalgorithm_test_iter_api_t(right_desc + 3),
-		hxhxalgorithm_test_iter_api_t(dest_desc), sort_iter_value_greater);
+	hxhxalgorithm_test_iter_api_t merge_desc_end =
+		hxmerge(hxhxalgorithm_test_iter_api_t(left_desc), hxhxalgorithm_test_iter_api_t(left_desc + 3),
+			hxhxalgorithm_test_iter_api_t(right_desc), hxhxalgorithm_test_iter_api_t(right_desc + 3),
+			hxhxalgorithm_test_iter_api_t(dest_desc), sort_iter_value_greater);
+
+	// 6 elements written so offset must be 6.
+	EXPECT_EQ(merge_desc_end - hxhxalgorithm_test_iter_api_t(dest_desc), ptrdiff_t{6});
 
 	const int expected_desc[6] = { 6, 5, 4, 3, 2, 1 };
 	// Ensure reverse-ordered comparison places tickets into { 6, 5, 4, 3, 2, 1 } without swaps.
@@ -329,6 +338,19 @@ TEST(hxhxalgorithm_test, sort_int_case) {
 	do_sort_int_case(hxsort<int*, bool (*)(int, int)>);
 }
 
+TEST(hxhxalgorithm_test, hxsort_empty_range) {
+	int ints[3] = { 3, 1, 2 };
+
+	// This code path invokes hxlog2i(0) which is currently -127 and is
+	// undefined. Confirm the printer doesn't catch fire.
+	hxsort(ints, ints, sort_int);
+	const int ints_unchanged[3] = { 3, 1, 2 };
+	EXPECT_EQ(::memcmp(ints, ints_unchanged, sizeof ints), 0);
+
+	hxsort(ints, ints + 1, sort_int);
+	EXPECT_EQ(::memcmp(ints, ints_unchanged, sizeof ints), 0);
+}
+
 TEST(hxset_algorithms_test, int_pointer_ranges) {
 	const int left[] = { 1, 3, 5, 7 };
 	const int right[] = { 3, 4, 7, 9 };
@@ -447,7 +469,11 @@ TEST(hxmerge_test, preserves_stable_ordering) {
 
 	// "Performs a stable merge sort of two ordered ranges [begin0, end0) and"
 	// "[begin1, end1) -> output." Verify equal keys keep ticket order.
-	hxmerge(left+0, left + left_count, right+0, right + right_count, dest+0);
+	hxmerge_test_record_t* merge_end = hxmerge(left+0, left + left_count, right+0, right + right_count, dest+0);
+
+	// "Returns an output iterator positioned one past the last element written."
+	//   4 + 4 elements written so offset must be 8.
+	EXPECT_EQ(merge_end - dest, ptrdiff_t{8});
 
 	const hxmerge_test_record_t expected[] = {
 		{ 1, 0 }, { 1, 1 }, { 3, 0 }, { 3, 1 },

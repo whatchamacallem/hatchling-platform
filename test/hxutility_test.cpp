@@ -184,7 +184,7 @@ TEST(hxutility_test, hxlog2i_returns_highest_set_bit) {
 	EXPECT_EQ(hxlog2i(2u), 1);
 	EXPECT_EQ(hxlog2i(3u), 1);
 	EXPECT_EQ(hxlog2i(16u), 4);
-	EXPECT_EQ(hxlog2i(static_cast<size_t>(1u) << 20), 20);
+	EXPECT_EQ(hxlog2i(1u << 20), 20);
 }
 
 TEST(hxutility_test, arithmetic_helpers_cover_min_max_abs_clamp) {

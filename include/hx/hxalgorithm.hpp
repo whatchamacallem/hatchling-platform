@@ -115,7 +115,7 @@ void hxheapsort(iterator_t_ begin_, iterator_t_ end_) {
 template<typename iterator_t_, typename less_t_> hxattr_hot
 void hxsort(iterator_t_ begin_, iterator_t_ end_, const less_t_& less_) {
 	// hxlog2i(0) is undefined but unused in this case.
-	hxintro_sort_<iterator_t_>(begin_, end_, less_, 2 * hxlog2i(static_cast<size_t>(end_ - begin_)));
+	hxintro_sort_<iterator_t_>(begin_, end_, less_, 2 * hxlog2i(static_cast<uint32_t>(end_ - begin_)));
 }
 
 /// `hxsort` (specialization) - An overload of `hxsort` that uses `hxkey_less`.
@@ -126,7 +126,7 @@ template<typename iterator_t_> hxattr_hot
 void hxsort(iterator_t_ begin_, iterator_t_ end_) {
 	// hxlog2i(0) is undefined but unused in this case.
 	hxintro_sort_<iterator_t_>(begin_, end_, hxkey_less_function<decltype(*begin_)>(),
-		2 * hxlog2i(static_cast<size_t>(end_ - begin_)));
+		2 * hxlog2i(static_cast<uint32_t>(end_ - begin_)));
 }
 
 /// `hxmerge` - Performs a stable merge sort of two ordered ranges `[begin0,

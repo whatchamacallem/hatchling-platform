@@ -12,9 +12,6 @@ extern "C" {
 // ----------------------------------------------------------------------------
 // C Utilities
 
-/// Returns the size of a C array.
-#define hxsize(x_) (sizeof (x_) / sizeof (x_)[0])
-
 /// `hxbasename` - Returns a pointer to those characters following the last `\\` or
 /// `/` character or path if those are not present.
 /// - `path` : Non-null null-terminated path string.
@@ -36,6 +33,12 @@ void hxhex_dump(const void* address_, size_t bytes_, bool pretty_) hxattr_nonnul
 
 #if HX_CPLUSPLUS
 } // extern "C"
+
+// ----------------------------------------------------------------------------
+// C and C++ Utilities
+
+/// Returns the size of a C array. Rejects pointer arguments at compile time.
+template<typename T_, size_t N_> constexpr size_t hxsize(T_ (&)[N_]) { return N_; }
 
 // ----------------------------------------------------------------------------
 // C++ SFINAE (Substitution Failure Is Not An Error) based enable_if checks.
@@ -152,6 +155,12 @@ template<> struct hxis_integral_<bool> : public hxtrue_t { };
 template<> struct hxis_integral_<char> : public hxtrue_t { };
 template<> struct hxis_integral_<signed char> : public hxtrue_t { };
 template<> struct hxis_integral_<unsigned char> : public hxtrue_t { };
+template<> struct hxis_integral_<wchar_t> : public hxtrue_t { };
+template<> struct hxis_integral_<char16_t> : public hxtrue_t { };
+template<> struct hxis_integral_<char32_t> : public hxtrue_t { };
+#if HX_CPLUSPLUS >= 202002L
+template<> struct hxis_integral_<char8_t> : public hxtrue_t { };
+#endif
 template<> struct hxis_integral_<short> : public hxtrue_t { };
 template<> struct hxis_integral_<unsigned short> : public hxtrue_t { };
 template<> struct hxis_integral_<int> : public hxtrue_t { };
@@ -178,6 +187,11 @@ template<typename T_> struct hxis_pointer_<T_*> : public hxtrue_t { };
 /// Returns whether T is a pointer type as `hxis_pointer_<T>::type`. Implements
 /// `std::is_pointer`.
 template<typename T> struct hxis_pointer : hxis_pointer_<hxremove_cv_t<T>> { };
+
+/// Implements `std::is_reference`.
+template<typename T_> struct hxis_reference : public hxfalse_t { };
+template<typename T_> struct hxis_reference<T_&>  : public hxtrue_t { };
+template<typename T_> struct hxis_reference<T_&&> : public hxtrue_t { };
 
 /// Implements `std::is_rvalue_reference`.
 template<typename T_> struct hxis_rvalue_reference : public hxfalse_t { };
@@ -209,7 +223,7 @@ template<typename T_> struct hxrestrict_t_<T_* const> { using type = T_* const h
 template<typename T_> using hxrestrict_t = typename hxrestrict_t_<T_>::type;
 
 /// Implements standard `isgraph` for a locale where all non-ASCII characters
-/// are considered graphical or mark making. This is compatable with scanf-style
+/// are considered graphical or mark making. This is compatible with scanf-style
 /// parsing of UTF-8 string parameters. However, this is not `en_US.UTF-8` or
 /// the default C locale.
 inline bool hxisgraph(char ch_) {
@@ -219,7 +233,7 @@ inline bool hxisgraph(char ch_) {
 
 /// Implements standard `isspace` for a locale where all non-ASCII characters
 /// are considered graphical or mark making. Returns nonzero for space and
-/// `\t \n \v \f \r`. This is compatable with scanf-style parsing of
+/// `\t \n \v \f \r`. This is compatible with scanf-style parsing of
 /// UTF-8 string parameters. However, this is not `en_US.UTF-8` or the default
 /// C locale.
 inline bool hxisspace(char ch_) {
@@ -228,8 +242,8 @@ inline bool hxisspace(char ch_) {
 
 /// Returns `log2(n)` as an integer which is the power of 2 of the largest bit
 /// in `n`. NOTA BENE: `hxlog2i(0)` is currently -127 and is undefined.
-/// - `i` : A `size_t`.
-inline int hxlog2i(size_t i_) {
+/// - `i` : A `uint32_t`.
+inline int hxlog2i(uint32_t i_) {
 	// Use the floating point hardware because this isn't important enough.
 	// The memcpy is an intrinsic.
 	float f_ = static_cast<float>(i_);
@@ -311,7 +325,7 @@ constexpr void hxswap(T_& x_, T_& y_) {
 /// - `x` : First `T&`.
 /// - `y` : Second `T&`.
 template<typename T_>
-constexpr void hxswap_memcpy(T_& x_, T_& y_) {
+void hxswap_memcpy(T_& x_, T_& y_) {
 	hxassertmsg(&x_ != &y_, "hxswap_memcpy No swapping with self.");
 	char t_[sizeof x_];
 	::memcpy(t_, &y_, sizeof x_); // NOLINT
@@ -322,6 +336,9 @@ constexpr void hxswap_memcpy(T_& x_, T_& y_) {
 #else // !HX_CPLUSPLUS
 // ----------------------------------------------------------------------------
 // C Macro Utility API - Does it all backwards in heels.
+
+/// Returns the size of a C array.
+#define hxsize(x_) (sizeof (x_) / sizeof (x_)[0])
 
 /// `hxabs` - Returns the absolute value of `x` using a `<` comparison.
 /// - `x` : The value to compute the absolute value for.

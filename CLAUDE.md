@@ -1,5 +1,9 @@
 # Hatchling Platform
 
+## Responses
+
+Always number separate items in any analysis so they are easy referenced.
+
 ## Testing
 
 Use `debugbuild.sh` to test changes by default and not cmake. 🐉🐉🐉 output

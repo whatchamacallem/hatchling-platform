@@ -56,14 +56,18 @@ public:
 	template<typename functor_t_>
 	bool any_of(functor_t_&& fn_) const;
 
-	/// Removes all queued tasks without executing them. Thread-safe.
+	/// Removes all queued tasks without executing them. Thread-safe. Does not
+	/// affect tasks that are already executing. Subtasks enqueued by executing
+	/// tasks after a call to `clear` will remain in the queue.
 	void clear(void);
 
 	/// Returns true when no tasks are queued. Thread-safe.
 	bool empty(void) const;
 
 	/// Queues a task for later execution. Does not delete the task after
-	/// execution. Thread-safe and callable from running tasks.
+	/// execution. When `HX_USE_THREADS` is enabled, this is thread-safe and
+	/// callable from running tasks. When `HX_USE_THREADS` is `0` there is no
+	/// locking and external synchronization is the caller's responsibility.
 	/// - `task` : Non-null pointer to the task to be enqueued for execution.
 	/// - `priority` : Optional priority for scheduling. Higher values run sooner.
 	void enqueue(hxtask* task_, int priority_=0) hxattr_nonnull(2);
@@ -83,16 +87,24 @@ public:
 
 	/// Non-const version of `for_each`. This version will perform `make_heap`
 	/// on the queue after calling `fn` on each task record. Reestablishing the
-	/// heap allows rescheduling everything by adjusting
-	/// `record_t::priority` in a lambda. For faster iteration on a
-	/// non-const queue use `all_of` with a functor returning true.
+	/// heap allows rescheduling everything by adjusting `record_t::priority` in
+	/// a lambda. Use `for_each_immutable` to iterate a non-const queue without
+	/// the heap rebuild cost.
 	template<typename functor_t_>
 	void for_each(functor_t_&& fn_);
+
+	/// Locks the queue and calls `fn` on each task record without rebuilding
+	/// the heap. Use this instead of `for_each` when priorities are not
+	/// modified.
+	/// - `fn` : Functor accepting a `record_t&`.
+	template<typename functor_t_>
+	void for_each_immutable(functor_t_&& fn_);
 
 	/// Returns true if the queue capacity has been reached.
 	bool full(void) const;
 
-	/// Returns the maximum number of tasks that can be queued.
+	/// Returns the maximum number of tasks that can be queued. This value is
+	/// fixed at construction and does not require locking.
 	size_t max_size(void) const;
 
 	/// Returns the number of queued tasks. Thread-safe.
@@ -100,7 +112,9 @@ public:
 
 	/// Execute remaining tasks. The thread calling `wait_for_all` executes
 	/// tasks as well. Intended to be called by the thread that owns the queue
-	/// and must not be called from `hxtask::execute`.
+	/// and must not be called from `hxtask::execute`. Tasks may safely call
+	/// `enqueue` during `execute` to schedule additional work before
+	/// `wait_for_all` returns.
 	void wait_for_all(void);
 
 private:
@@ -195,8 +209,16 @@ void hxtask_queue::for_each(functor_t_&& fn_) {
 #endif
 	m_tasks_.for_each(hxforward<functor_t_>(fn_));
 
-	// Restore the heap property. Use "all_of" for a faster const function.
+	// Restore the heap property. Use "for_each_immutable" when not modifying priorities.
 	hxmake_heap_(m_tasks_.begin(), m_tasks_.end(), hxkey_less_function<record_t>());
+}
+
+template<typename functor_t_>
+void hxtask_queue::for_each_immutable(functor_t_&& fn_) {
+#if HX_USE_THREADS
+	const hxunique_lock lock_(m_mutex_);
+#endif
+	m_tasks_.for_each(hxforward<functor_t_>(fn_));
 }
 
 inline bool hxtask_queue::full(void) const {
@@ -207,9 +229,7 @@ inline bool hxtask_queue::full(void) const {
 }
 
 inline size_t hxtask_queue::max_size(void) const {
-#if HX_USE_THREADS
-	const hxunique_lock lock_(m_mutex_);
-#endif
+	// Capacity is fixed at construction, no lock needed.
 	return m_tasks_.max_size();
 }
 

@@ -163,12 +163,12 @@ void hxtask_queue::thread_task_loop_(hxtask_queue* q_, thread_mode_t_ mode_) {
 					// All tasks are now considered complete. The workers can be
 					// released if the queue is shutting down.
 					if(mode_ == thread_mode_stopping_) {
-						q_->m_queue_run_level_ = run_level_stopped_;
-						q_->m_cond_var_new_tasks_.notify_all();
+					q_->m_queue_run_level_ = run_level_stopped_;
+					q_->m_cond_var_new_tasks_.notify_all();
 
 					// This triggers a release assert in any unexpected waiting threads.
 					q_->m_cond_var_completion_.notify_all();
-					}
+				}
 				}
 				return;
 			}

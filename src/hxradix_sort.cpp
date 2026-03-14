@@ -127,7 +127,7 @@ void hxradix_sort_void11(hxradix_sort_key_void* begin, hxradix_sort_key_void* en
 	for(const hxradix_sort_key_void* hxrestrict it = buf0; it != buf0End; ++it) {
 		buf1[hist0[it->get_modified_key() & 0x7ffu]++] = *it;
 	}
-	hxradix_sort_key_void* hxrestrict buf20 = (hist2[1] != size) ? buf2 : buf0;
+	hxradix_sort_key_void* buf20 = (hist2[1] != size) ? buf2 : buf0;
 	for(const hxradix_sort_key_void* hxrestrict it = buf1; it != buf1End; ++it) {
 		buf20[hist1[(it->get_modified_key() >> 11) & 0x7ffu]++] = *it;
 	}

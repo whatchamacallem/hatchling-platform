@@ -204,7 +204,7 @@ public:
 		const uintptr_t actual = hdr.actual;
 #if (HX_RELEASE) < 2
 		hdr.sentinel_value = hxmemory_allocation_header::sentinel_value_freed;
-		::memset(ptr, 0xde, hdr.size);
+		::memset(ptr, 0xdd, hdr.size);
 #endif
 		::free(reinterpret_cast<void*>(actual));
 #endif
@@ -229,9 +229,6 @@ public:
 		m_end_ = reinterpret_cast<uintptr_t>(ptr) + size;
 		m_current = reinterpret_cast<uintptr_t>(ptr);
 
-		if((HX_RELEASE) < 1) {
-			::memset(ptr, 0xcd, size);
-		}
 	}
 
 	void begin_allocation_scope(hxsystem_allocator_scope* scope,
@@ -318,7 +315,7 @@ public:
 
 		const uintptr_t previous_current = m_begin_ + scope->get_initial_bytes_allocated();
 		if((HX_RELEASE) < 1) {
-			::memset(reinterpret_cast<void*>(previous_current), 0xcd,
+			::memset(reinterpret_cast<void*>(previous_current), 0xdd,
 				static_cast<size_t>(m_current - previous_current));
 		}
 		m_current = previous_current;
@@ -527,7 +524,7 @@ hxattr_noexcept void* hxmalloc(size_t size) {
 	hxinit();
 	void* ptr = s_hxmemory_manager.allocate(size, hxsystem_allocator_current, HX_ALIGNMENT);
 	if((HX_RELEASE) < 1) {
-		::memset(ptr, 0xab, size);
+		::memset(ptr, 0xcd, size);
 	}
 	return ptr;
 }
@@ -537,7 +534,7 @@ hxattr_noexcept void* hxmalloc_ext(size_t size, hxsystem_allocator_t id, hxalign
 	hxinit();
 	void* ptr = s_hxmemory_manager.allocate(size, id, alignment);
 	if((HX_RELEASE) < 1) {
-		::memset(ptr, 0xab, size);
+		::memset(ptr, 0xcd, size);
 	}
 	return ptr;
 }

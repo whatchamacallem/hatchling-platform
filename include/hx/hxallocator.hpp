@@ -21,7 +21,7 @@ public:
 	/// Template specialization below should have been selected.
 	static_assert(fixed_capacity_ > 0u, "Fixed capacity must be > 0.");
 
-	/// Initializes memory to `0xbc` when `HX_RELEASE < 1`.
+	/// Initializes memory to `0xab` when `HX_RELEASE < 1`.
 	hxallocator() {
 #if (HX_RELEASE) < 1
 		::memset(m_data_, 0xab, sizeof m_data_);

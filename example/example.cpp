@@ -113,7 +113,8 @@ public:
             }
             dst[col] = (iter == m_max_iter) ? '@' : s_hxexample_palette[iter * 95 / m_max_iter];
         }
-        dst[80] = '\0';
+        dst[80] = '\n';
+        dst[81] = '\0';
     }
 
     const char* get_label(void) const override { return "row"; }
@@ -130,7 +131,7 @@ private:
 // ----------------------------------------------------------------------------
 
 static bool hxexample_render(hxtask_queue& queue, hxexample_row_task* tasks,
-        hxarray<char>& row_storage) {
+        hxarray<hxarray<char, 82>, 80>& row_storage) {
     int max_iter = (int)(50.0 * ::sqrt(::sqrt(1.0 / (double)s_hxexample_zoom))) + 20;
     if(max_iter < 64)   { max_iter = 64; }
     if(max_iter > 4096) { max_iter = 4096; }
@@ -139,7 +140,7 @@ static bool hxexample_render(hxtask_queue& queue, hxexample_row_task* tasks,
 
     for(int row = 0; row < 80; ++row) {
         tasks[row].set(row, s_hxexample_center_x, s_hxexample_center_y, s_hxexample_zoom,
-            max_iter, row_storage.data() + row * 81);
+            max_iter, row_storage[row].data());
         queue.enqueue(&tasks[row]);
     }
     queue.wait_for_all();
@@ -149,9 +150,9 @@ static bool hxexample_render(hxtask_queue& queue, hxexample_row_task* tasks,
 
     hxout.print("center (%.6g, %.6g) zoom %.6g\n",
         (double)s_hxexample_center_x, (double)s_hxexample_center_y, (double)s_hxexample_zoom);
-        
+
     for(int row = 0; row < 80; ++row) {
-        hxout.print("%s\n", row_storage.data() + row * 81);
+        hxout.print("%s", row_storage[row].data());
     }
     return true;
 }
@@ -166,7 +167,7 @@ int main(void) {
         // Allocate the task queue, row task array and row storage once at startup; freed before shutdown.
         hxtask_queue queue(80u, 8u);
         hxarray<hxexample_row_task, 80> tasks(80u);
-        hxarray<char> row_storage(80 * 81);
+        hxarray<hxarray<char, 82>, 80> row_storage(80u);
 
         if(!hxconsole_exec_filename("example.cfg")) {
             hxout << "error: example.cfg not found or failed to execute\n";

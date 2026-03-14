@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: MIT
 // This file is licensed under the MIT license found in the LICENSE.md file.
 //
-// An interactive Mandelbrot viewer.
+// An interactive Mandelbrot viewer demonstrating hxconsole, hxtask_queue,
+// hxprofiler, hxmutex and hxfile.
 //
 // The Mandelbrot set is a fractal defined in the complex plane, constituting
 // one of the most studied and visually recognised objects in mathematics. It is
@@ -17,11 +18,13 @@
 #include <hx/hxthread.hpp>
 #include <hx/hxtask_queue.hpp>
 
+#include <signal.h>
 #include <stdio.h>
 #include <math.h>
 
 namespace {
 
+// ASCII art palette ordered by visual density, lightest to darkest.
 const char s_hxexample_palette[] =
 	" `.-':,^=;><+!rc*/z?sLTv)J7(|Fi{C}fI31tlu[neoZ5Yxjya]2ESwqkP6h9d4VpOGbUAKXHm8RD#$Bg0MNWQ%&@";
 
@@ -31,7 +34,9 @@ const char s_hxexample_palette[] =
 hxmutex g_hxexample_exit_mutex;
 bool g_hxexample_exit = false;
 
-static void hxexample_notify_sigint(int) {
+// Sets g_hxexample_exit under lock. Without SA_RESTART, SIGINT also interrupts
+// blocking fgets, causing it to return null and break the main loop.
+void hxexample_notify_sigint(int) {
 	hxunique_lock lock_(g_hxexample_exit_mutex);
 	g_hxexample_exit = true;
 }
@@ -44,12 +49,14 @@ double s_hxexample_center_x = 0.0;
 double s_hxexample_center_y = 0.0;
 double s_hxexample_zoom = 3.0;
 
+// Sets g_hxexample_exit, causing the main loop to break after the current render.
 bool hxexample_exit(void) {
 	hxunique_lock lock_(g_hxexample_exit_mutex);
 	g_hxexample_exit = true;
 	return true;
 }
 
+// Pan and zoom commands scale movement by the current zoom level.
 bool hxexample_left(double amount)  { s_hxexample_center_x -= amount * s_hxexample_zoom;  return true; }
 bool hxexample_right(double amount) { s_hxexample_center_x += amount * s_hxexample_zoom;  return true; }
 bool hxexample_up(double amount)	{ s_hxexample_center_y -= amount * s_hxexample_zoom;  return true; }
@@ -73,6 +80,8 @@ hxconsole_command_named(hxexample_out, out);
 
 // ----------------------------------------------------------------------------
 
+// hxtask computing one row of the Mandelbrot image. Rows are dispatched in
+// parallel by hxexample_render via hxtask_queue.
 class hxexample_row_task : public hxtask {
 public:
 	void set(size_t row, double center_x, double center_y, double zoom, size_t max_iter, char* row_buffer) {
@@ -118,7 +127,7 @@ public:
 	}
 
 	const char* get_label(void) const override { return "row"; }
-	
+
 private:
 	size_t m_row;
 	double m_center_x;
@@ -130,7 +139,10 @@ private:
 
 // ----------------------------------------------------------------------------
 
-static bool hxexample_render(hxtask_queue& queue, hxarray<hxexample_row_task, 40u>& tasks,
+// Enqueues all 40 row tasks, waits for completion, then prints the frame.
+// max_iter is scaled with zoom so detail increases as the view narrows.
+// Writes a Chrome tracing profile to profile.json after each render.
+bool hxexample_render(hxtask_queue& queue, hxarray<hxexample_row_task, 40u>& tasks,
 		hxarray<hxarray<char, 82u>, 40u>& row_storage) {
 	size_t max_iter = (size_t)(50.0 * ::sqrt(::sqrt(1.0 / (double)s_hxexample_zoom))) + 20;
 	if(max_iter < 64)   { max_iter = 64; }
@@ -157,10 +169,30 @@ static bool hxexample_render(hxtask_queue& queue, hxarray<hxexample_row_task, 40
 	return true;
 }
 
+void hxexample_usage(void) {
+	puts("Commands are:\n"
+		"\tcenter_x <optional-f64>\n"
+		"\tcenter_y <optional-f64>\n"
+		"\tzoom <optional-f64>\n"
+		"\tleft f64\n"
+		"\tright f64\n"
+		"\tup f64\n"
+		"\tdown f64\n"
+		"\tin f64\n"
+		"\tout f64\n"
+		"\texit\n");
+}
+
+// Loads example.cfg, renders the initial frame, then loops reading hxconsole
+// commands from stdin. Ctrl-C sets g_hxexample_exit and interrupts fgets.
 int main(void) {
 	hxinit();
 
-	::signal(SIGINT, hxexample_notify_sigint);
+	struct ::sigaction sa;
+	sa.sa_handler = hxexample_notify_sigint;
+	::sigemptyset(&sa.sa_mask);
+	sa.sa_flags = 0; // No SA_RESTART: SIGINT interrupts blocking fgets
+	::sigaction(SIGINT, &sa, hxnull);
 
 	int exit_code = EXIT_SUCCESS;
 	{
@@ -177,18 +209,7 @@ int main(void) {
 			exit_code = EXIT_FAILURE;
 		} else {
 			hxexample_render(queue, tasks, row_storage);
-
-			puts("Commands are:\n"
-				"\tcenter_x <optional-f64>\n"
-				"\tcenter_y <optional-f64>\n"
-				"\tzoom <optional-f64>\n"
-				"\tleft f64\n"
-				"\tright f64\n"
-				"\tup f64\n"
-				"\tdown f64\n"
-				"\tin f64\n"
-				"\tout f64\n"
-				"\texit");
+			hxexample_usage();
 
 			char line[256];
 			for(;;) {
@@ -203,6 +224,9 @@ int main(void) {
 					}
 
 					hxexample_render(queue, tasks, row_storage);
+				}
+				else {
+					hxexample_usage();
 				}
 			}
 			queue.wait_for_all();

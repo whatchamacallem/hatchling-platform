@@ -9,6 +9,28 @@
 // Using ASSERT* instead of EXPECT* in this file adds coverage for those
 // macros. Memory corruption sounds fatal, so that seems appropriate.
 
+// Verify hxnew forwards arguments, catching the bug where args_... was used
+// instead of hxforward<Args_>(args_).... A move-only type will fail to compile
+// without forwarding, and a moveable type will be copied instead of moved.
+TEST(hxmemory_manager_test, hxnew_forward) {
+	struct hxtest_move_only {
+		explicit hxtest_move_only(int value_) : value(value_), move_count(0) { }
+		hxtest_move_only(hxtest_move_only&& other_) noexcept
+			: value(other_.value), move_count(other_.move_count + 1) { }
+		hxtest_move_only(const hxtest_move_only&) = delete;
+		int value;
+		int move_count;
+	};
+
+	// If hxforward is missing this test will not compile (move-only type).
+	// With hxforward the move constructor is invoked exactly once.
+	hxtest_move_only src(42);
+	hxtest_move_only* p = hxnew<hxtest_move_only, hxsystem_allocator_heap>(hxmove(src));
+	ASSERT_EQ(p->value, 42);
+	ASSERT_EQ(p->move_count, 1);
+	hxdelete(p);
+}
+
 // Verify that new and delete plausibly exist and that hxnullptr compiles.
 TEST(hxmemory_manager_test, hxnew) {
 	unsigned int* t = new unsigned int(3);

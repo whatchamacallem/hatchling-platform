@@ -33,9 +33,9 @@
 /// | ------ | ------- | ------------------------------------------------ |
 /// | `0xab` | 171     | Allocated to client code.                        |
 /// | `0xbc` | 188     | Allocated to `hxallocator` dynamic allocation.   |
-/// | `0xcd` | 205     | Belongs to system allocator.                     |
-/// | `0xde` | 222     | Returned to heap allocator.                      |
-/// | `0xef` | 239     | Reserved for client poisoned data. Also `0xefu`. |
+/// | `0xcd` | 205     | Belongs to `hxmemory_manager` allocator.         |
+/// | `0xde` | 222     | Returned to `libc` heap allocator.               |
+/// | `0xef` | 239     | Reserved for client poisoned data. E.g. `0xefu`. |
 ///
 /// Global new and delete are provided when `HX_NO_LIBCXX==1`. This is a
 /// requirement for running as a stand alone C++ runtime. Otherwise they are not
@@ -92,8 +92,8 @@ void hxfree(void* ptr_) hxattr_noexcept hxattr_hot;
 /// `hxmalloc_ext`. Will not return on failure. NOTA BENE: It is undefined
 /// behavior to compare pointers to different allocations. This is consistent
 /// with the C++ standard. Allocations of size 0 may or may not return the same
-/// pointer as previous allocations.
-/// Returns a pointer that must be released with `hxfree`.
+/// pointer as previous allocations. Returns a pointer that must be released
+/// with `hxfree`.
 /// - `size` : The size of the memory to allocate.
 /// - `allocator`(C++ only): The memory manager ID to use for allocation. (Default is
 ///   `hxsystem_allocator_current`.)
@@ -206,10 +206,6 @@ template <typename T_>
 void hxdelete(T_* t_) {
 	if(t_) {
 		t_->~T_();
-		if((HX_RELEASE) < 1) {
-			// Mark as released to memory manager.
-			::memset(static_cast<void*>(t_), 0xcd, sizeof *t_);
-		}
 		hxfree(t_);
 	}
 }
@@ -221,7 +217,8 @@ void hxdelete(T_* t_) {
 /// - `align` : A mask of low bits to be zeroed out when allocating new pointers. Defaults to `HX_ALIGNMENT`.
 template <typename T_, hxsystem_allocator_t allocator_=hxsystem_allocator_current, hxalignment_t align_=HX_ALIGNMENT, typename... Args_>
 T_* hxnew(Args_&&... args_) {
-	return ::new(hxmalloc_ext(sizeof(T_), allocator_, align_)) T_(args_...);
+	// Implements hxforward.
+	return ::new(hxmalloc_ext(sizeof(T_), allocator_, align_)) T_(static_cast<Args_&&>(args_)...);
 }
 
 /// A functor that deletes objects of type `T` using `hxdelete`. Used by

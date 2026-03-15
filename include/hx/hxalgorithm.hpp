@@ -143,7 +143,7 @@ void hxsort(iterator_t_ begin_, iterator_t_ end_) {
 /// - `output` : Destination output iterator receiving the merged output.
 /// - `less` : Comparator defining the less-than ordering relationship.
 /// Returns an output iterator positioned one past the last element written.
-template<typename iterator_t_, typename output_iterator_t_, typename less_t_> hxattr_hot hxattr_nodiscard
+template<typename iterator_t_, typename output_iterator_t_, typename less_t_> hxattr_hot
 output_iterator_t_ hxmerge(iterator_t_ begin0_, iterator_t_ end0_, iterator_t_ begin1_, iterator_t_ end1_,
 		output_iterator_t_&& output_, const less_t_& less_) {
 	hxassertmsg(begin0_ <= end0_ && begin1_ <= end1_, "invalid_iterator");
@@ -183,7 +183,7 @@ output_iterator_t_ hxmerge(iterator_t_ begin0_, iterator_t_ end0_, iterator_t_ b
 /// - `end1` : Pointer to one past the last element of the second ordered range.
 /// - `output` : Destination output iterator receiving the merged output.
 /// Returns an output iterator positioned one past the last element written.
-template<typename iterator_t_, typename output_iterator_t_> hxattr_hot hxattr_nodiscard
+template<typename iterator_t_, typename output_iterator_t_> hxattr_hot
 output_iterator_t_ hxmerge(iterator_t_ begin0_, iterator_t_ end0_, iterator_t_ begin1_,
 		iterator_t_ end1_, output_iterator_t_&& output_) {
 	return hxmerge<iterator_t_, output_iterator_t_>(begin0_, end0_, begin1_, end1_,
@@ -204,7 +204,7 @@ output_iterator_t_ hxmerge(iterator_t_ begin0_, iterator_t_ end0_, iterator_t_ b
 /// - `output` : Destination output iterator receiving the union.
 /// - `less` : Comparator defining the less-than ordering relationship.
 /// Returns a pointer to one past the last element written.
-template<typename iterator_t_, typename output_iterator_t_, typename less_t_> hxattr_hot hxattr_nodiscard
+template<typename iterator_t_, typename output_iterator_t_, typename less_t_> hxattr_hot
 output_iterator_t_ hxset_union(iterator_t_ begin0_, iterator_t_ end0_, iterator_t_ begin1_,
 		iterator_t_ end1_, output_iterator_t_&& output_, const less_t_& less_) {
 	hxassertmsg(begin0_ <= end0_ && begin1_ <= end1_, "invalid_iterator");
@@ -249,7 +249,7 @@ output_iterator_t_ hxset_union(iterator_t_ begin0_, iterator_t_ end0_, iterator_
 /// - `end1` : Pointer to one past the last element of the second ordered range.
 /// - `output` : Destination output iterator receiving the union.
 /// Returns an output iterator positioned one past the last element written.
-template<typename iterator_t_, typename output_iterator_t_> hxattr_hot hxattr_nodiscard
+template<typename iterator_t_, typename output_iterator_t_> hxattr_hot
 output_iterator_t_ hxset_union(iterator_t_ begin0_, iterator_t_ end0_, iterator_t_ begin1_,
 		iterator_t_ end1_, output_iterator_t_&& output_) {
 	return hxset_union<iterator_t_, output_iterator_t_>(begin0_, end0_, begin1_, end1_,
@@ -270,7 +270,7 @@ output_iterator_t_ hxset_union(iterator_t_ begin0_, iterator_t_ end0_, iterator_
 /// - `output` : Destination output iterator receiving the intersection.
 /// - `less` : Comparator defining the less-than ordering relationship.
 /// Returns a pointer to one past the last element written.
-template<typename iterator_t_, typename output_iterator_t_, typename less_t_> hxattr_hot hxattr_nodiscard
+template<typename iterator_t_, typename output_iterator_t_, typename less_t_> hxattr_hot
 output_iterator_t_ hxset_intersection(iterator_t_ begin0_, iterator_t_ end0_, iterator_t_ begin1_,
 		iterator_t_ end1_, output_iterator_t_&& output_, const less_t_& less_) {
 	hxassertmsg(begin0_ <= end0_ && begin1_ <= end1_, "invalid_iterator");
@@ -305,7 +305,7 @@ output_iterator_t_ hxset_intersection(iterator_t_ begin0_, iterator_t_ end0_, it
 /// - `end1` : Pointer to one past the last element of the second ordered range.
 /// - `output` : Destination output iterator receiving the intersection.
 /// Returns an output iterator positioned one past the last element written.
-template<typename iterator_t_, typename output_iterator_t_> hxattr_hot hxattr_nodiscard
+template<typename iterator_t_, typename output_iterator_t_> hxattr_hot
 output_iterator_t_ hxset_intersection(iterator_t_ begin0_, iterator_t_ end0_, iterator_t_ begin1_,
 		iterator_t_ end1_, output_iterator_t_&& output_) {
 	return hxset_intersection<iterator_t_, output_iterator_t_>(begin0_, end0_, begin1_, end1_,
@@ -327,7 +327,7 @@ output_iterator_t_ hxset_intersection(iterator_t_ begin0_, iterator_t_ end0_, it
 /// - `output` : Destination output iterator receiving the difference.
 /// - `less` : Comparator defining the less-than ordering relationship.
 /// Returns a pointer to one past the last element written.
-template<typename iterator_t_, typename output_iterator_t_, typename less_t_> hxattr_hot hxattr_nodiscard
+template<typename iterator_t_, typename output_iterator_t_, typename less_t_> hxattr_hot
 output_iterator_t_ hxset_difference(iterator_t_ begin0_, iterator_t_ end0_, iterator_t_ begin1_,
 		iterator_t_ end1_, output_iterator_t_&& output_, const less_t_& less_) {
 	hxassertmsg(begin0_ <= end0_ && begin1_ <= end1_, "invalid_iterator");
@@ -367,7 +367,7 @@ output_iterator_t_ hxset_difference(iterator_t_ begin0_, iterator_t_ end0_, iter
 /// - `end1` : Pointer to one past the last element of the second ordered range.
 /// - `output` : Destination output iterator receiving the difference.
 /// Returns an output iterator positioned one past the last element written.
-template<typename iterator_t_, typename output_iterator_t_> hxattr_hot hxattr_nodiscard
+template<typename iterator_t_, typename output_iterator_t_> hxattr_hot
 output_iterator_t_ hxset_difference(iterator_t_ begin0_, iterator_t_ end0_, iterator_t_ begin1_,
 		iterator_t_ end1_, output_iterator_t_&& output_) {
 	return hxset_difference<iterator_t_, output_iterator_t_>(begin0_, end0_, begin1_, end1_,

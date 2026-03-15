@@ -876,7 +876,7 @@ size_t hxarray<T_, capacity_>::erase_if_heap(functor_t_&& fn_) {
 			src_->~T_(); // Removed: destroy without freeing storage.
 		}
 	}
-	size_t removed_ = static_cast<size_t>(m_end_ - dst_);
+	const size_t removed_ = static_cast<size_t>(m_end_ - dst_);
 	m_end_ = dst_;
 	if(removed_) {
 		hxdetail_::hxmake_heap_<T_*>(this->data(), m_end_, hxkey_less_function<T_>());

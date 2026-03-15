@@ -81,6 +81,12 @@ reference to the same object.
 
 Ignore spell checker errors instead of generating hex.
 
+Never fix a failing test except when instructed to do so or those failures are a
+direct consequence of changes you are making. Do not fix a failing test in a
+manner that defeats the intent of the test except by removing it entirely.
+Prompt the user with a list of failing tests when they are unrelated to your
+work or the intent preserving fix is unclear.
+
 ## Documentation
 
 Update documentation independently only when making changes that obsolete it. Do

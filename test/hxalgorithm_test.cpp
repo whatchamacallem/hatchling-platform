@@ -125,7 +125,7 @@ TEST(hxhxalgorithm_test, hxmerge_iterator_support) {
 	// "Performs a stable merge sort of two ordered ranges [begin0, end0) and"
 	// "[begin1, end1) -> output."
 	//   /-\ ascending merge: { 1, 3, 5 } + { 2, 4, 6 } => { 1, 2, 3, 4, 5, 6 }
-	hxhxalgorithm_test_iter_api_t merge_end =
+	const hxhxalgorithm_test_iter_api_t merge_end =
 		hxmerge(hxhxalgorithm_test_iter_api_t(left), hxhxalgorithm_test_iter_api_t(left + 3),
 			hxhxalgorithm_test_iter_api_t(right), hxhxalgorithm_test_iter_api_t(right + 3),
 			hxhxalgorithm_test_iter_api_t(dest), sort_iter_value_less);
@@ -151,7 +151,7 @@ TEST(hxhxalgorithm_test, hxmerge_iterator_support) {
 	// "Assumes both [begin0, end0) and [begin1, end1) are ordered by the less functor."
 	//   \-/ descending merge inputs { 5, 3, 1 } & { 6, 4, 2 } with greater-than
 	//   ensure stable output { 6, 5, 4, 3, 2, 1 }
-	hxhxalgorithm_test_iter_api_t merge_desc_end =
+	const hxhxalgorithm_test_iter_api_t merge_desc_end =
 		hxmerge(hxhxalgorithm_test_iter_api_t(left_desc), hxhxalgorithm_test_iter_api_t(left_desc + 3),
 			hxhxalgorithm_test_iter_api_t(right_desc), hxhxalgorithm_test_iter_api_t(right_desc + 3),
 			hxhxalgorithm_test_iter_api_t(dest_desc), sort_iter_value_greater);

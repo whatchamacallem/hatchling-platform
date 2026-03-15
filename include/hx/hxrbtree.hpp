@@ -55,6 +55,7 @@
 #include "hxkey.hpp"
 #include "hxmemory_manager.h"
 #include "hxutility.h"
+#include "detail/hxrbtree_detail.hpp"
 
 #if HX_CPLUSPLUS >= 202002L
 /// Concept capturing the interface requirements for `hxrbtree` nodes.
@@ -79,6 +80,15 @@ public:
 
 private:
 	template<hxrbtree_concept_, bool, typename> friend class hxrbtree;
+
+	friend void hxrbtree_rb_rotate_left_(hxrbtree_node* node_, hxrbtree_node*& root_);
+	friend void hxrbtree_rb_rotate_right_(hxrbtree_node* node_, hxrbtree_node*& root_);
+	friend void hxrbtree_rb_insert_color_(hxrbtree_node* node_, hxrbtree_node*& root_);
+	friend void hxrbtree_rb_erase_(hxrbtree_node* node_, hxrbtree_node*& root_);
+	friend hxrbtree_node* hxrbtree_rb_first_(hxrbtree_node* root_);
+	friend hxrbtree_node* hxrbtree_rb_last_(hxrbtree_node* root_);
+	friend hxrbtree_node* hxrbtree_rb_next_(hxrbtree_node* node_);
+	friend hxrbtree_node* hxrbtree_rb_prev_(hxrbtree_node* node_);
 
 	hxrbtree_node(const hxrbtree_node&) = delete;
 	void operator=(const hxrbtree_node&) = delete;
@@ -255,7 +265,7 @@ public:
 	hxattr_nodiscard const node_t_* back(void) const;
 
 	/// Returns an iterator to the minimum node, or `end()` if the tree is empty.
-	iterator begin(void) { return iterator(rb_first_(m_root_), this); }
+	iterator begin(void) { return iterator(hxrbtree_rb_first_(m_root_), this); }
 	/// Returns a const iterator to the minimum node, or `end()` if the tree is empty.
 	const_iterator begin(void) const;
 
@@ -344,15 +354,6 @@ private:
 	hxrbtree(const hxrbtree&) = delete;
 	void operator=(const hxrbtree&) = delete;
 
-	static void rb_rotate_left_(hxrbtree_node* node_, hxrbtree_node*& root_);
-	static void rb_rotate_right_(hxrbtree_node* node_, hxrbtree_node*& root_);
-	static void rb_insert_color_(hxrbtree_node* node_, hxrbtree_node*& root_);
-	static void rb_erase_(hxrbtree_node* node_, hxrbtree_node*& root_);
-	static hxrbtree_node* rb_first_(hxrbtree_node* root_);
-	static hxrbtree_node* rb_last_(hxrbtree_node* root_);
-	static hxrbtree_node* rb_next_(hxrbtree_node* node_);
-	static hxrbtree_node* rb_prev_(hxrbtree_node* node_);
-
 	hxrbtree_node* m_root_;
 	size_t         m_size_;
 };
@@ -393,7 +394,7 @@ template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
 inline auto hxrbtree<node_t_, multi_t_, deleter_t_>::const_iterator::operator++(void)
 	-> const_iterator& {
 	hxassertmsg(m_current_node_ != hxnull, "invalid_iterator");
-	m_current_node_ = hxrbtree::rb_next_(m_current_node_);
+	m_current_node_ = hxrbtree_rb_next_(m_current_node_);
 	return *this;
 }
 
@@ -409,10 +410,10 @@ template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
 inline auto hxrbtree<node_t_, multi_t_, deleter_t_>::const_iterator::operator--(void)
 	-> const_iterator& {
 	if(m_current_node_ != hxnull) {
-		m_current_node_ = hxrbtree::rb_prev_(m_current_node_);
+		m_current_node_ = hxrbtree_rb_prev_(m_current_node_);
 	}
 	else {
-		m_current_node_ = rb_last_(m_tree_->m_root_);
+		m_current_node_ = hxrbtree_rb_last_(m_tree_->m_root_);
 	}
 	return *this;
 }
@@ -464,19 +465,19 @@ inline hxrbtree<node_t_, multi_t_, deleter_t_>::hxrbtree(void)
 template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
 inline node_t_* hxrbtree<node_t_, multi_t_, deleter_t_>::back(void) {
 	hxassertmsg(m_root_ != hxnull, "empty_tree");
-	return static_cast<node_t_*>(rb_last_(m_root_));
+	return static_cast<node_t_*>(hxrbtree_rb_last_(m_root_));
 }
 
 template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
 inline const node_t_* hxrbtree<node_t_, multi_t_, deleter_t_>::back(void) const {
 	hxassertmsg(m_root_ != hxnull, "empty_tree");
-	return static_cast<const node_t_*>(rb_last_(m_root_));
+	return static_cast<const node_t_*>(hxrbtree_rb_last_(m_root_));
 }
 
 template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
 inline auto hxrbtree<node_t_, multi_t_, deleter_t_>::begin(void) const
 	-> const_iterator {
-	return const_iterator(rb_first_(m_root_), this);
+	return const_iterator(hxrbtree_rb_first_(m_root_), this);
 }
 
 template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
@@ -489,9 +490,9 @@ template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
 template<typename deleter_override_t_>
 inline void hxrbtree<node_t_, multi_t_, deleter_t_>::clear(
 	const deleter_override_t_& deleter_) {
-	hxrbtree_node* node_ = rb_first_(m_root_);
+	hxrbtree_node* node_ = hxrbtree_rb_first_(m_root_);
 	while(node_ != hxnull) {
-		hxrbtree_node* next_ = rb_next_(node_);
+		hxrbtree_node* next_ = hxrbtree_rb_next_(node_);
 		if(deleter_) {
 			deleter_(static_cast<node_t_*>(node_));
 		}
@@ -504,7 +505,7 @@ template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
 template<typename deleter_override_t_>
 inline void hxrbtree<node_t_, multi_t_, deleter_t_>::erase(
 	node_t_* ptr_, const deleter_override_t_& deleter_) {
-	rb_erase_(ptr_, m_root_);
+	hxrbtree_rb_erase_(ptr_, m_root_);
 	--m_size_;
 	if(deleter_) {
 		deleter_(ptr_);
@@ -514,7 +515,7 @@ inline void hxrbtree<node_t_, multi_t_, deleter_t_>::erase(
 template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
 inline node_t_* hxrbtree<node_t_, multi_t_, deleter_t_>::extract(node_t_* ptr_) {
 	hxassertmsg(ptr_ != hxnull, "null_node");
-	rb_erase_(ptr_, m_root_);
+	hxrbtree_rb_erase_(ptr_, m_root_);
 	--m_size_;
 	return ptr_;
 }
@@ -545,13 +546,13 @@ inline const node_t_* hxrbtree<node_t_, multi_t_, deleter_t_>::find(
 template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
 inline node_t_* hxrbtree<node_t_, multi_t_, deleter_t_>::front(void) {
 	hxassertmsg(m_root_ != hxnull, "empty_tree");
-	return static_cast<node_t_*>(rb_first_(m_root_));
+	return static_cast<node_t_*>(hxrbtree_rb_first_(m_root_));
 }
 
 template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
 inline const node_t_* hxrbtree<node_t_, multi_t_, deleter_t_>::front(void) const {
 	hxassertmsg(m_root_ != hxnull, "empty_tree");
-	return static_cast<const node_t_*>(rb_first_(m_root_));
+	return static_cast<const node_t_*>(hxrbtree_rb_first_(m_root_));
 }
 
 template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
@@ -578,7 +579,7 @@ inline node_t_* hxrbtree<node_t_, multi_t_, deleter_t_>::insert(node_t_* ptr_) {
 	ptr_->m_rb_right_ = hxnull;
 	ptr_->rb_set_parent_color_(parent_, 0);
 	*link_ = ptr_;
-	rb_insert_color_(ptr_, m_root_);
+	hxrbtree_rb_insert_color_(ptr_, m_root_);
 	++m_size_;
 	return ptr_;
 }
@@ -634,8 +635,8 @@ inline node_t_* hxrbtree<node_t_, multi_t_, deleter_t_>::pop_back(void) {
 	if(m_root_ == hxnull) {
 		return hxnull;
 	}
-	node_t_* ptr_ = static_cast<node_t_*>(rb_last_(m_root_));
-	rb_erase_(ptr_, m_root_);
+	node_t_* ptr_ = static_cast<node_t_*>(hxrbtree_rb_last_(m_root_));
+	hxrbtree_rb_erase_(ptr_, m_root_);
 	--m_size_;
 	return ptr_;
 }
@@ -645,8 +646,8 @@ inline node_t_* hxrbtree<node_t_, multi_t_, deleter_t_>::pop_front(void) {
 	if(m_root_ == hxnull) {
 		return hxnull;
 	}
-	node_t_* ptr_ = static_cast<node_t_*>(rb_first_(m_root_));
-	rb_erase_(ptr_, m_root_);
+	node_t_* ptr_ = static_cast<node_t_*>(hxrbtree_rb_first_(m_root_));
+	hxrbtree_rb_erase_(ptr_, m_root_);
 	--m_size_;
 	return ptr_;
 }
@@ -657,300 +658,4 @@ inline void hxrbtree<node_t_, multi_t_, deleter_t_>::release_all(void) {
 	m_size_  = 0u;
 }
 
-// rb_first_ / rb_last_ / rb_next_ / rb_prev_
-
-template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
-inline hxrbtree_node* hxrbtree<node_t_, multi_t_, deleter_t_>::rb_first_(
-	hxrbtree_node* root_) {
-	if(root_ == hxnull) {
-		return hxnull;
-	}
-	while(root_->m_rb_left_ != hxnull) {
-		root_ = root_->m_rb_left_;
-	}
-	return root_;
-}
-
-template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
-inline hxrbtree_node* hxrbtree<node_t_, multi_t_, deleter_t_>::rb_last_(
-	hxrbtree_node* root_) {
-	if(root_ == hxnull) {
-		return hxnull;
-	}
-	while(root_->m_rb_right_ != hxnull) {
-		root_ = root_->m_rb_right_;
-	}
-	return root_;
-}
-
-template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
-inline hxrbtree_node* hxrbtree<node_t_, multi_t_, deleter_t_>::rb_next_(
-	hxrbtree_node* node_) {
-	if(node_->m_rb_right_ != hxnull) {
-		return rb_first_(node_->m_rb_right_);
-	}
-	hxrbtree_node* parent_ = node_->rb_parent_();
-	while(parent_ != hxnull && node_ == parent_->m_rb_right_) {
-		node_   = parent_;
-		parent_ = parent_->rb_parent_();
-	}
-	return parent_;
-}
-
-template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
-inline hxrbtree_node* hxrbtree<node_t_, multi_t_, deleter_t_>::rb_prev_(
-	hxrbtree_node* node_) {
-	if(node_->m_rb_left_ != hxnull) {
-		return rb_last_(node_->m_rb_left_);
-	}
-	hxrbtree_node* parent_ = node_->rb_parent_();
-	while(parent_ != hxnull && node_ == parent_->m_rb_left_) {
-		node_   = parent_;
-		parent_ = parent_->rb_parent_();
-	}
-	return parent_;
-}
-
-// rb_rotate_left_ / rb_rotate_right_
-
-template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
-inline void hxrbtree<node_t_, multi_t_, deleter_t_>::rb_rotate_left_(
-	hxrbtree_node* node_, hxrbtree_node*& root_) {
-	hxrbtree_node* right_ = node_->m_rb_right_;
-	hxrbtree_node* parent_ = node_->rb_parent_();
-	node_->m_rb_right_ = right_->m_rb_left_;
-	if(right_->m_rb_left_ != hxnull) {
-		right_->m_rb_left_->rb_set_parent_(node_);
-	}
-	right_->m_rb_left_ = node_;
-	right_->rb_set_parent_(parent_);
-	if(parent_ != hxnull) {
-		if(node_ == parent_->m_rb_left_) {
-			parent_->m_rb_left_ = right_;
-		}
-		else {
-			parent_->m_rb_right_ = right_;
-		}
-	}
-	else {
-		root_ = right_;
-	}
-	node_->rb_set_parent_(right_);
-}
-
-template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
-inline void hxrbtree<node_t_, multi_t_, deleter_t_>::rb_rotate_right_(
-	hxrbtree_node* node_, hxrbtree_node*& root_) {
-	hxrbtree_node* left_ = node_->m_rb_left_;
-	hxrbtree_node* parent_ = node_->rb_parent_();
-	node_->m_rb_left_ = left_->m_rb_right_;
-	if(left_->m_rb_right_ != hxnull) {
-		left_->m_rb_right_->rb_set_parent_(node_);
-	}
-	left_->m_rb_right_ = node_;
-	left_->rb_set_parent_(parent_);
-	if(parent_ != hxnull) {
-		if(node_ == parent_->m_rb_right_) {
-			parent_->m_rb_right_ = left_;
-		}
-		else {
-			parent_->m_rb_left_ = left_;
-		}
-	}
-	else {
-		root_ = left_;
-	}
-	node_->rb_set_parent_(left_);
-}
-
-// rb_insert_color_
-
-template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
-inline void hxrbtree<node_t_, multi_t_, deleter_t_>::rb_insert_color_(
-	hxrbtree_node* node_, hxrbtree_node*& root_) {
-	hxrbtree_node* parent_ = node_->rb_parent_();
-	while(parent_ != hxnull && parent_->rb_is_red_()) {
-		hxrbtree_node* gparent_ = parent_->rb_parent_();
-		if(parent_ == gparent_->m_rb_left_) {
-			hxrbtree_node* uncle_ = gparent_->m_rb_right_;
-			if(uncle_ != hxnull && uncle_->rb_is_red_()) {
-				uncle_->rb_set_color_(1);
-				parent_->rb_set_color_(1);
-				gparent_->rb_set_color_(0);
-				node_   = gparent_;
-				parent_ = node_->rb_parent_();
-			}
-			else {
-				if(node_ == parent_->m_rb_right_) {
-					rb_rotate_left_(parent_, root_);
-					hxrbtree_node* tmp_ = parent_;
-					parent_ = node_;
-					node_   = tmp_;
-				}
-				parent_->rb_set_color_(1);
-				gparent_->rb_set_color_(0);
-				rb_rotate_right_(gparent_, root_);
-			}
-		}
-		else {
-			hxrbtree_node* uncle_ = gparent_->m_rb_left_;
-			if(uncle_ != hxnull && uncle_->rb_is_red_()) {
-				uncle_->rb_set_color_(1);
-				parent_->rb_set_color_(1);
-				gparent_->rb_set_color_(0);
-				node_   = gparent_;
-				parent_ = node_->rb_parent_();
-			}
-			else {
-				if(node_ == parent_->m_rb_left_) {
-					rb_rotate_right_(parent_, root_);
-					hxrbtree_node* tmp_ = parent_;
-					parent_ = node_;
-					node_   = tmp_;
-				}
-				parent_->rb_set_color_(1);
-				gparent_->rb_set_color_(0);
-				rb_rotate_left_(gparent_, root_);
-			}
-		}
-	}
-	root_->rb_set_color_(1);
-}
-
-// rb_erase_
-
-template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
-inline void hxrbtree<node_t_, multi_t_, deleter_t_>::rb_erase_(
-	hxrbtree_node* node_, hxrbtree_node*& root_) {
-	hxrbtree_node* child_  = hxnull;
-	hxrbtree_node* parent_ = hxnull;
-	int color_ = 0;
-
-	if(node_->m_rb_left_ == hxnull) {
-		child_ = node_->m_rb_right_;
-	}
-	else if(node_->m_rb_right_ == hxnull) {
-		child_ = node_->m_rb_left_;
-	}
-	else {
-		hxrbtree_node* successor_ = rb_first_(node_->m_rb_right_);
-		child_  = successor_->m_rb_right_;
-		parent_ = successor_->rb_parent_();
-		color_  = successor_->rb_color_();
-		if(child_ != hxnull) {
-			child_->rb_set_parent_(parent_);
-		}
-		if(parent_ == node_) {
-			if(child_ != hxnull) {
-				child_->rb_set_parent_(successor_);
-			}
-			parent_ = successor_;
-		}
-		else {
-			parent_->m_rb_left_ = child_;
-			successor_->m_rb_right_ = node_->m_rb_right_;
-			node_->m_rb_right_->rb_set_parent_(successor_);
-		}
-		successor_->m_rb_left_  = node_->m_rb_left_;
-		successor_->rb_set_parent_color_(node_->rb_parent_(), node_->rb_color_());
-		if(node_->rb_parent_() != hxnull) {
-			if(node_->rb_parent_()->m_rb_left_ == node_) {
-				node_->rb_parent_()->m_rb_left_ = successor_;
-			}
-			else {
-				node_->rb_parent_()->m_rb_right_ = successor_;
-			}
-		}
-		else {
-			root_ = successor_;
-		}
-		node_->m_rb_left_->rb_set_parent_(successor_);
-		goto rebalance_;
-	}
-
-	parent_ = node_->rb_parent_();
-	color_  = node_->rb_color_();
-	if(child_ != hxnull) {
-		child_->rb_set_parent_(parent_);
-	}
-	if(parent_ != hxnull) {
-		if(parent_->m_rb_left_ == node_) {
-			parent_->m_rb_left_ = child_;
-		}
-		else {
-			parent_->m_rb_right_ = child_;
-		}
-	}
-	else {
-		root_ = child_;
-	}
-
-rebalance_:
-	if(color_ == 0) {
-		return;
-	}
-	while((child_ == hxnull || child_->rb_is_black_()) && child_ != root_) {
-		if(parent_->m_rb_left_ == child_) {
-			hxrbtree_node* sibling_ = parent_->m_rb_right_;
-			if(sibling_->rb_is_red_()) {
-				sibling_->rb_set_color_(1);
-				parent_->rb_set_color_(0);
-				rb_rotate_left_(parent_, root_);
-				sibling_ = parent_->m_rb_right_;
-			}
-			if((sibling_->m_rb_left_ == hxnull || sibling_->m_rb_left_->rb_is_black_()) &&
-				(sibling_->m_rb_right_ == hxnull || sibling_->m_rb_right_->rb_is_black_())) {
-				sibling_->rb_set_color_(0);
-				child_  = parent_;
-				parent_ = child_->rb_parent_();
-			}
-			else {
-				if(sibling_->m_rb_right_ == hxnull || sibling_->m_rb_right_->rb_is_black_()) {
-					sibling_->m_rb_left_->rb_set_color_(1);
-					sibling_->rb_set_color_(0);
-					rb_rotate_right_(sibling_, root_);
-					sibling_ = parent_->m_rb_right_;
-				}
-				sibling_->rb_set_color_(parent_->rb_color_());
-				parent_->rb_set_color_(1);
-				sibling_->m_rb_right_->rb_set_color_(1);
-				rb_rotate_left_(parent_, root_);
-				child_ = root_;
-				break;
-			}
-		}
-		else {
-			hxrbtree_node* sibling_ = parent_->m_rb_left_;
-			if(sibling_->rb_is_red_()) {
-				sibling_->rb_set_color_(1);
-				parent_->rb_set_color_(0);
-				rb_rotate_right_(parent_, root_);
-				sibling_ = parent_->m_rb_left_;
-			}
-			if((sibling_->m_rb_right_ == hxnull || sibling_->m_rb_right_->rb_is_black_()) &&
-				(sibling_->m_rb_left_ == hxnull || sibling_->m_rb_left_->rb_is_black_())) {
-				sibling_->rb_set_color_(0);
-				child_  = parent_;
-				parent_ = child_->rb_parent_();
-			}
-			else {
-				if(sibling_->m_rb_left_ == hxnull || sibling_->m_rb_left_->rb_is_black_()) {
-					sibling_->m_rb_right_->rb_set_color_(1);
-					sibling_->rb_set_color_(0);
-					rb_rotate_left_(sibling_, root_);
-					sibling_ = parent_->m_rb_left_;
-				}
-				sibling_->rb_set_color_(parent_->rb_color_());
-				parent_->rb_set_color_(1);
-				sibling_->m_rb_left_->rb_set_color_(1);
-				rb_rotate_right_(parent_, root_);
-				child_ = root_;
-				break;
-			}
-		}
-	}
-	if(child_ != hxnull) {
-		child_->rb_set_color_(1);
-	}
-}
 

@@ -16,10 +16,10 @@ class hxhash_table_node_integer {
 public:
 	using key_t = key_t_;
 
-	/// Constructs a node wrapping the key.
+	/// Constructs a node wrapping the key and caches its hash.
 	/// - `key` : Key value represented by the node.
 	hxhash_table_node_integer(const key_t_& key_) :
-		m_hash_next_(hxnull), m_key_(key_) { }
+		m_hash_next_(hxnull), m_key_(key_), m_hash_(hxkey_hash(key_)) { }
 
 	/// Returns the next node pointer in the bucket's embedded linked list.
 	void* hash_next(void) const { return m_hash_next_; }
@@ -28,8 +28,8 @@ public:
 
 	/// The key and hash identify the `node_t` and should not change once added.
 	const key_t_& key(void) const { return m_key_; }
-	/// Returns the hash associated with the stored key.
-	hxhash_t hash(void) const { return hxkey_hash(m_key_); };
+	/// Returns the cached hash value for the stored key.
+	hxhash_t hash(void) const { return m_hash_; };
 
 private:
 	hxhash_table_node_integer(void) = delete;
@@ -38,6 +38,7 @@ private:
 
 	void* m_hash_next_;
 	key_t_ m_key_;
+	hxhash_t m_hash_;
 };
 
 /// `hxhash_table_node_string_literal` - Specialization of

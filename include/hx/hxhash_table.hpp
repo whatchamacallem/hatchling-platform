@@ -270,19 +270,12 @@ public:
 	/// Checks if the hash table is empty.
 	hxattr_nodiscard bool empty(void) const { return m_size_ == 0u; }
 
-	/// Returns a node containing key if any or allocates and returns a new one.
-	/// Any allocation required uses `hxsystem_allocator_current` and `HX_ALIGNMENT`.
-	/// - `key` : The key to search for or insert.
-	node_t_& operator[](const typename node_t_::key_t& key_) { return this->insert_unique(key_); }
-
-	/// Returns a node containing key if any or allocates and returns a new one.
-	/// Unfortunately this code may calculate the hash twice.
-	/// - `key` : The key to search for or insert.
-	/// - `allocator` : The memory manager ID to use for allocation. Defaults to `hxsystem_allocator_current`.
-	/// - `alignment` : The alignment for allocation. Defaults to `HX_ALIGNMENT`.
-	node_t_& insert_unique(const typename node_t_::key_t& key_,
-		hxsystem_allocator_t allocator_=hxsystem_allocator_current,
-		hxalignment_t alignment_=HX_ALIGNMENT);
+	/// Inserts `ptr` only if no node with the same key is present. Returns `ptr`
+	/// when inserted or the existing node when not. The hash is computed once in
+	/// the node constructor and reused here. The caller owns `ptr` when it is not
+	/// returned and must discard it.
+	/// - `node` : The `node_t` to insert if its key is unique.
+	node_t_* insert_unique(node_t_* ptr_);
 
 	/// Inserts a `node_t` into the hash table, allowing duplicate keys. Nodes that
 	/// have non-null hash pointers are allowed because they may have been released
@@ -378,22 +371,18 @@ private:
 };
 
 template<hxhash_table_concept_ node_t_, hxhash_t table_size_bits_, typename deleter_t_>
-inline node_t_& hxhash_table<node_t_, table_size_bits_, deleter_t_>::insert_unique(
-	const typename node_t_::key_t& key_,
-	hxsystem_allocator_t allocator_,
-	hxalignment_t alignment_)
+inline node_t_* hxhash_table<node_t_, table_size_bits_, deleter_t_>::insert_unique(node_t_* ptr_)
 {
-	node_t_** pos_ = this->get_bucket_head_(hxkey_hash(key_));
+	node_t_** pos_ = this->get_bucket_head_(ptr_->hash());
 	for(node_t_* n_ = *pos_; n_; n_ = static_cast<node_t_*>(n_->hash_next())) {
-		if(hxkey_equal(n_->key(), key_)) {
-			return *n_;
+		if(hxkey_equal(n_->key(), ptr_->key())) {
+			return n_;
 		}
 	}
-	node_t_* n_ = ::new(hxmalloc_ext(sizeof(node_t_), allocator_, alignment_))node_t_(key_);
-	n_->hash_next() = *pos_;
-	*pos_ = n_;
+	ptr_->hash_next() = *pos_;
+	*pos_ = ptr_;
 	++m_size_;
-	return *n_;
+	return ptr_;
 }
 
 template<hxhash_table_concept_ node_t_, hxhash_t table_size_bits_, typename deleter_t_>

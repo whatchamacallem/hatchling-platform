@@ -34,25 +34,6 @@ struct hxtest_list_custom_deleter_t {
 
 } // namespace
 
-// hxlist_node default-constructs with both pointers null (unlinked).
-TEST(hxlist_test, node_constructs_unlinked) {
-	hxtest_list_node_t n(42);
-	EXPECT_EQ(n.list_prev(), (hxlist_node*)hxnull);
-	EXPECT_EQ(n.list_next(), (hxlist_node*)hxnull);
-	EXPECT_EQ(n.value, 42);
-}
-
-// list_prev and list_next non-const overloads return references that modify the node.
-TEST(hxlist_test, node_pointer_references_are_assignable) {
-	hxtest_list_node_t a(1), b(2);
-	a.list_prev() = &b;
-	a.list_next() = &b;
-	EXPECT_EQ(a.list_prev(), (hxlist_node*)&b);
-	EXPECT_EQ(a.list_next(), (hxlist_node*)&b);
-	// Restore to avoid dangling in destructor.
-	a.list_prev() = hxnull;
-	a.list_next() = hxnull;
-}
 
 // Newly constructed list is empty, size is 0, begin equals end.
 TEST(hxlist_test, empty_on_construction) {

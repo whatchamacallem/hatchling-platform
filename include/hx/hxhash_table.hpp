@@ -202,7 +202,8 @@ public:
 		}
 
 		hxhash_table* m_hash_table_;
-		hxhash_t m_next_index_;
+		// size_t avoids zero-extension on 64-bit in next_bucket loop
+		size_t m_next_index_;
 
 	protected:
 		// Used by const_iterator.

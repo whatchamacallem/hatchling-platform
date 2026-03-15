@@ -122,7 +122,7 @@ hxattr_nodiscard constexpr hxhash_t hxkey_hash(T_ x_) {
 /// `hxkey_hash(const char*)` - Returns the FNV-1a hash of a C string. Uses
 /// FNV-1a string hashing.
 /// - `s` : The C string.
-hxattr_nodiscard inline hxhash_t hxkey_hash(const char* s_) {
+hxattr_nodiscard hxattr_hot inline hxhash_t hxkey_hash(const char* s_) {
     hxhash_t x_ = hxhash_t{0x811c9dc5};
     while(*s_ != '\0') {
         x_ ^= static_cast<hxhash_t>(*s_++);

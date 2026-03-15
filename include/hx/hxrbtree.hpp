@@ -78,7 +78,7 @@ public:
 	hxrbtree_node(void) : m_rb_parent_color_(0u), m_rb_right_(hxnull), m_rb_left_(hxnull) { }
 
 private:
-	template<typename, bool, typename> friend class hxrbtree;
+	template<hxrbtree_concept_, bool, typename> friend class hxrbtree;
 
 	hxrbtree_node(const hxrbtree_node&) = delete;
 	void operator=(const hxrbtree_node&) = delete;
@@ -848,8 +848,9 @@ inline void hxrbtree<node_t_, multi_t_, deleter_t_>::rb_erase_(
 		}
 		else {
 			parent_->m_rb_left_ = child_;
+			successor_->m_rb_right_ = node_->m_rb_right_;
+			node_->m_rb_right_->rb_set_parent_(successor_);
 		}
-		successor_->m_rb_right_ = node_->m_rb_right_;
 		successor_->m_rb_left_  = node_->m_rb_left_;
 		successor_->rb_set_parent_color_(node_->rb_parent_(), node_->rb_color_());
 		if(node_->rb_parent_() != hxnull) {
@@ -863,7 +864,6 @@ inline void hxrbtree<node_t_, multi_t_, deleter_t_>::rb_erase_(
 		else {
 			root_ = successor_;
 		}
-		node_->m_rb_right_->rb_set_parent_(successor_);
 		node_->m_rb_left_->rb_set_parent_(successor_);
 		goto rebalance_;
 	}

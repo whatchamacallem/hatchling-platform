@@ -353,7 +353,7 @@ TEST(hxlist_test, iterator_post_increment) {
 	list.push_back(&a);
 	list.push_back(&b);
 	hxlist<hxtest_list_node_t, hxdo_not_delete>::iterator it = list.begin();
-	hxlist<hxtest_list_node_t, hxdo_not_delete>::iterator old = it++;
+	const hxlist<hxtest_list_node_t, hxdo_not_delete>::iterator old = it++;
 	EXPECT_EQ(old->value, 1);
 	EXPECT_EQ(it->value, 2);
 	list.release_all();
@@ -384,7 +384,7 @@ TEST(hxlist_test, iterator_post_decrement) {
 	list.push_back(&a);
 	list.push_back(&b);
 	hxlist<hxtest_list_node_t, hxdo_not_delete>::iterator it = list.end();
-	hxlist<hxtest_list_node_t, hxdo_not_delete>::iterator old = it--;
+	const hxlist<hxtest_list_node_t, hxdo_not_delete>::iterator old = it--;
 	EXPECT_EQ(old, list.end());
 	EXPECT_EQ(it->value, 2);
 	list.release_all();
@@ -396,7 +396,7 @@ TEST(hxlist_test, iterator_equality) {
 	hxlist<hxtest_list_node_t, hxdo_not_delete> list;
 	list.push_back(&a);
 	list.push_back(&b);
-	hxlist<hxtest_list_node_t, hxdo_not_delete>::iterator it1 = list.begin();
+	const hxlist<hxtest_list_node_t, hxdo_not_delete>::iterator it1 = list.begin();
 	hxlist<hxtest_list_node_t, hxdo_not_delete>::iterator it2 = list.begin();
 	EXPECT_TRUE(it1 == it2);
 	EXPECT_FALSE(it1 != it2);
@@ -411,7 +411,7 @@ TEST(hxlist_test, iterator_arrow_operator) {
 	hxtest_list_node_t a(1);
 	hxlist<hxtest_list_node_t, hxdo_not_delete> list;
 	list.push_back(&a);
-	hxlist<hxtest_list_node_t, hxdo_not_delete>::iterator it = list.begin();
+	const hxlist<hxtest_list_node_t, hxdo_not_delete>::iterator it = list.begin();
 	it->value = 99;
 	EXPECT_EQ(a.value, 99);
 	list.release_all();
@@ -442,7 +442,7 @@ TEST(hxlist_test, mixed_push_front_and_push_back) {
 	list.push_front(&c); // front: c(2), a(1), b(4)
 	list.insert_before(&b, &d); // front: c(2), a(1), d(3), b(4)
 	// Expected order by value: 2, 1, 3, 4.
-	int expected[] = { 2, 1, 3, 4 };
+	const int expected[] = { 2, 1, 3, 4 };
 	int idx = 0;
 	for(const hxtest_list_node_t& n : list) {
 		EXPECT_EQ(n.value, expected[idx++]);

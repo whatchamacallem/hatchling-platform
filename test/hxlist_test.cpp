@@ -258,7 +258,7 @@ TEST(hxlist_test, erase_with_custom_deleter_override) {
 	EXPECT_TRUE(list.empty());
 }
 
-// clear on an empty list is a no-op (m_size_ != 0 branch not taken).
+// clear on an empty list is a no-op (m_size != 0 branch not taken).
 TEST(hxlist_test, clear_empty_list) {
 	hxlist<hxtest_list_node_t, hxdo_not_delete> list;
 	list.clear();

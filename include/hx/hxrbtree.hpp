@@ -96,13 +96,13 @@ private:
 	hxrbtree_node(const hxrbtree_node&) = delete;
 	void operator=(const hxrbtree_node&) = delete;
 
-	hxrbtree_node* rb_parent_(void) const;
-	void rb_set_parent_(hxrbtree_node* parent_);
-	int rb_color_(void) const;
-	void rb_set_color_(int color_);
-	void rb_set_parent_color_(hxrbtree_node* parent_, int color_);
-	bool rb_is_red_(void) const;
-	bool rb_is_black_(void) const;
+	hxrbtree_node* parent_(void) const;
+	void set_parent_(hxrbtree_node* parent_);
+	int color_(void) const;
+	void set_color_(int color_);
+	void set_parent_color_(hxrbtree_node* parent_, int color_);
+	bool is_red_(void) const;
+	bool is_black_(void) const;
 
 	uintptr_t m_parent_color_;
 	hxrbtree_node* m_right_;
@@ -380,31 +380,31 @@ private:
 
 // hxrbtree_node
 
-inline hxrbtree_node* hxrbtree_node::rb_parent_(void) const {
+inline hxrbtree_node* hxrbtree_node::parent_(void) const {
 	return reinterpret_cast<hxrbtree_node*>(m_parent_color_ & ~static_cast<uintptr_t>(1u));
 }
 
-inline void hxrbtree_node::rb_set_parent_(hxrbtree_node* parent_) {
+inline void hxrbtree_node::set_parent_(hxrbtree_node* parent_) {
 	m_parent_color_ = (m_parent_color_ & static_cast<uintptr_t>(1u)) | reinterpret_cast<uintptr_t>(parent_);
 }
 
-inline int hxrbtree_node::rb_color_(void) const {
+inline int hxrbtree_node::color_(void) const {
 	return static_cast<int>(m_parent_color_ & static_cast<uintptr_t>(1u));
 }
 
-inline void hxrbtree_node::rb_set_color_(int color_) {
+inline void hxrbtree_node::set_color_(int color_) {
 	m_parent_color_ = (m_parent_color_ & ~static_cast<uintptr_t>(1u)) | static_cast<uintptr_t>(color_);
 }
 
-inline void hxrbtree_node::rb_set_parent_color_(hxrbtree_node* parent_, int color_) {
+inline void hxrbtree_node::set_parent_color_(hxrbtree_node* parent_, int color_) {
 	m_parent_color_ = reinterpret_cast<uintptr_t>(parent_) | static_cast<uintptr_t>(color_);
 }
 
-inline bool hxrbtree_node::rb_is_red_(void) const {
+inline bool hxrbtree_node::is_red_(void) const {
 	return (m_parent_color_ & static_cast<uintptr_t>(1u)) == 0u;
 }
 
-inline bool hxrbtree_node::rb_is_black_(void) const {
+inline bool hxrbtree_node::is_black_(void) const {
 	return (m_parent_color_ & static_cast<uintptr_t>(1u)) != 0u;
 }
 
@@ -604,7 +604,7 @@ inline node_t_* hxrbtree<node_t_, multi_t_, deleter_t_>::insert(node_t_* ptr_) {
 	}
 	ptr_->m_left_  = hxnull;
 	ptr_->m_right_ = hxnull;
-	ptr_->rb_set_parent_color_(parent_, 0);
+	ptr_->set_parent_color_(parent_, 0);
 	*link_ = ptr_;
 	hxrbtree_insert_color_(ptr_, m_root_);
 	++m_size_;
@@ -685,36 +685,6 @@ inline void hxrbtree<node_t_, multi_t_, deleter_t_>::release_all(void) {
 	m_size_  = 0u;
 }
 
-
-// hxrbtree_red_parent_ / hxrbtree_rotate_set_parents_
-
-// Reads the parent pointer from a node known to be red (color bit == 0),
-// skipping the mask.
-hxattr_hot inline hxrbtree_node* hxrbtree_red_parent_(const hxrbtree_node* node_) {
-	return reinterpret_cast<hxrbtree_node*>(node_->m_parent_color_);
-}
-
-// Transfers old_'s parent+color word to new_, sets old_'s parent to new_ with
-// color_, and redirects old_'s parent's child pointer to new_.  Fuses the
-// three writes that classic separate rotation code performs individually.
-hxattr_hot inline void hxrbtree_rotate_set_parents_(
-	hxrbtree_node* old_, hxrbtree_node* new_, hxrbtree_node*& root_, int color_) {
-	hxrbtree_node* parent_ = old_->rb_parent_();
-	new_->m_parent_color_ = old_->m_parent_color_;
-	old_->rb_set_parent_color_(new_, color_);
-	if(parent_ != hxnull) {
-		if(parent_->m_left_ == old_) {
-			parent_->m_left_ = new_;
-		}
-		else {
-			parent_->m_right_ = new_;
-		}
-	}
-	else {
-		root_ = new_;
-	}
-}
-
 // hxrbtree_first_ / hxrbtree_last_ / hxrbtree_next_ / hxrbtree_prev_
 
 hxattr_hot inline hxrbtree_node* hxrbtree_first_(hxrbtree_node* root_) {
@@ -745,10 +715,10 @@ hxattr_hot inline hxrbtree_node* hxrbtree_next_(hxrbtree_node* node_) {
 		}
 		return node_;
 	}
-	hxrbtree_node* parent_ = node_->rb_parent_();
+	hxrbtree_node* parent_ = node_->parent_();
 	while(parent_ != hxnull && node_ == parent_->m_right_) {
 		node_   = parent_;
-		parent_ = parent_->rb_parent_();
+		parent_ = parent_->parent_();
 	}
 	return parent_;
 }
@@ -761,10 +731,10 @@ hxattr_hot inline hxrbtree_node* hxrbtree_prev_(hxrbtree_node* node_) {
 		}
 		return node_;
 	}
-	hxrbtree_node* parent_ = node_->rb_parent_();
+	hxrbtree_node* parent_ = node_->parent_();
 	while(parent_ != hxnull && node_ == parent_->m_left_) {
 		node_   = parent_;
-		parent_ = parent_->rb_parent_();
+		parent_ = parent_->parent_();
 	}
 	return parent_;
 }

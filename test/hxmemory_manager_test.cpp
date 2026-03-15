@@ -9,14 +9,14 @@
 // Using ASSERT* instead of EXPECT* in this file adds coverage for those
 // macros. Memory corruption sounds fatal, so that seems appropriate.
 
-// Verify hxnew forwards arguments, catching the bug where args_... was used
-// instead of hxforward<Args_>(args_).... A move-only type will fail to compile
+// Verify hxnew forwards arguments, catching the bug where args... was used
+// instead of hxforward<Args>(args).... A move-only type will fail to compile
 // without forwarding, and a moveable type will be copied instead of moved.
 TEST(hxmemory_manager_test, hxnew_forward) {
 	struct hxtest_move_only {
-		explicit hxtest_move_only(int value_) : value(value_), move_count(0) { }
-		hxtest_move_only(hxtest_move_only&& other_) noexcept
-			: value(other_.value), move_count(other_.move_count + 1) { }
+		explicit hxtest_move_only(int v) : value(v), move_count(0) { }
+		hxtest_move_only(hxtest_move_only&& other) noexcept
+			: value(other.value), move_count(other.move_count + 1) { }
 		hxtest_move_only(const hxtest_move_only&) = delete;
 		int value;
 		int move_count;

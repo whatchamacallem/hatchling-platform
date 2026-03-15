@@ -57,7 +57,8 @@ Checks: >
   -clang-analyzer-osx.*,
   -clang-analyzer-webkit.*,
   -performance-enum-size,
-  -performance-no-int-to-ptr
+  -performance-no-int-to-ptr,
+  -readability-else-after-return
 FormatStyle: none
 HeaderFilterRegex: '(^|.*/)(include|src|test)/'
 WarningsAsErrors: '*'

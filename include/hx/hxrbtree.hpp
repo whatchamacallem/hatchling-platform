@@ -68,6 +68,34 @@ concept hxrbtree_concept_ =
 #define hxrbtree_concept_ typename
 #endif
 
+/// Intrusive red-black tree node base. Derive from `hxrbtree_node` to make a
+/// type linkable into an `hxrbtree`. Nodes default to unlinked on construction.
+/// The node color is stored in the low bit of `m_rb_parent_color_`, requiring
+/// at least two-byte alignment, which is verified by a `static_assert`.
+class hxrbtree_node {
+public:
+	/// Constructs an unlinked node with all pointers and color set to zero.
+	hxrbtree_node(void) : m_rb_parent_color_(0u), m_rb_right_(hxnull), m_rb_left_(hxnull) { }
+
+private:
+	template<typename, bool, typename> friend class hxrbtree;
+
+	hxrbtree_node(const hxrbtree_node&) = delete;
+	void operator=(const hxrbtree_node&) = delete;
+
+	hxrbtree_node* rb_parent_(void) const;
+	void rb_set_parent_(hxrbtree_node* parent_);
+	int rb_color_(void) const;
+	void rb_set_color_(int color_);
+	void rb_set_parent_color_(hxrbtree_node* parent_, int color_);
+	bool rb_is_red_(void) const;
+	bool rb_is_black_(void) const;
+
+	uintptr_t m_rb_parent_color_;
+	hxrbtree_node* m_rb_right_;
+	hxrbtree_node* m_rb_left_;
+};
+
 /// `hxrbtree_set_node` - Optional base class for ordered set entries. Caches
 /// the key by value. Copying and modification are disallowed to protect the
 /// integrity of the tree. See `hxrbtree_map_node` if you need a mutable node.
@@ -95,7 +123,7 @@ private:
 	key_t_ m_key_;
 };
 
-/// `hxrbtree_map_node` - Base class for ordered map entries.
+/// `hxrbtree_map_node` - Optional base class for ordered map entries.
 template<typename key_t_, typename value_t_>
 class hxrbtree_map_node : public hxrbtree_set_node<key_t_> {
 public:
@@ -122,34 +150,6 @@ public:
 
 private:
 	value_t_ m_value_;
-};
-
-/// Intrusive red-black tree node base. Derive from `hxrbtree_node` to make a
-/// type linkable into an `hxrbtree`. Nodes default to unlinked on construction.
-/// The node color is stored in the low bit of `m_rb_parent_color_`, requiring
-/// at least two-byte alignment, which is verified by a `static_assert`.
-class hxrbtree_node {
-public:
-	/// Constructs an unlinked node with all pointers and color set to zero.
-	hxrbtree_node(void) : m_rb_parent_color_(0u), m_rb_right_(hxnull), m_rb_left_(hxnull) { }
-
-private:
-	template<typename, bool, typename> friend class hxrbtree;
-
-	hxrbtree_node(const hxrbtree_node&) = delete;
-	void operator=(const hxrbtree_node&) = delete;
-
-	hxrbtree_node* rb_parent_(void) const;
-	void rb_set_parent_(hxrbtree_node* parent_);
-	int rb_color_(void) const;
-	void rb_set_color_(int color_);
-	void rb_set_parent_color_(hxrbtree_node* parent_, int color_);
-	bool rb_is_red_(void) const;
-	bool rb_is_black_(void) const;
-
-	uintptr_t m_rb_parent_color_;
-	hxrbtree_node* m_rb_right_;
-	hxrbtree_node* m_rb_left_;
 };
 
 static_assert(alignof(hxrbtree_node) >= 2, "hxrbtree_node alignment insufficient for color bit");

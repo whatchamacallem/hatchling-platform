@@ -60,10 +60,8 @@ indicates success. When asked to run tests execute `bin/hxtest` with `bin` as
 the current directory. Consider all `.sh` files in the project except
 `ubuntu_packages.sh` safe to run at any time.
 
-Support for `ILP32`, `IL32P64`, `LP64` and `LLP64` are required to pass tests.
-Do not emit tests that are entirely redundant with other tests or do not
-meaningfully test anything.  e.g. do not test a reference to an object to see if
-it does the same thing as the object itself.
+Compiling tests with a C++11 compiler against C99 libraries is required. Support
+for `ILP32`, `IL32P64`, `LP64` and `LLP64` are required to pass tests.
 
 Do not write test suites until requested as the design may not be finalized.
 Every branch needs to be tested both ways with off by one tests and also do

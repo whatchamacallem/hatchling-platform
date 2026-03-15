@@ -117,8 +117,8 @@ constexpr hxhash_t hxhash_prime3_ = hxhash_t{0xC2B2AE3Du};
 constexpr hxhash_t hxhash_prime4_ = hxhash_t{0x27D4EB2Fu};
 constexpr hxhash_t hxhash_prime5_ = hxhash_t{0x165667B1u};
 
-// xxhash32 avalanche: finalizes a hash value with full bit dispersion.
-hxattr_nodiscard constexpr hxhash_t hxhash_avalanche_(hxhash_t x_) {
+// xxhash32 avalanche: x ^= x >> 15, x *= prime2, x ^= x >> 13, x *= prime3, x ^= x >> 16.
+hxattr_nodiscard inline hxhash_t hxhash_avalanche_(hxhash_t x_) {
     x_ ^= x_ >> 15u;
     x_ *= hxhash_prime2_;
     x_ ^= x_ >> 13u;
@@ -133,12 +133,11 @@ hxattr_nodiscard constexpr hxhash_t hxhash_avalanche_(hxhash_t x_) {
 /// xxhash32 short-input path for a single 4-byte word.
 /// - `x` : The input value.
 template<typename T_>
-hxattr_nodiscard constexpr hxhash_t hxkey_hash(T_ x_) {
-    // xxhash32 short-input init: seed=0, length=4.
+hxattr_nodiscard inline hxhash_t hxkey_hash(T_ x_) {
+    // xxhash32 short-input path: seed=0, length=4, single 4-byte word mix then avalanche.
     hxhash_t h_ = hxhash_prime5_ + hxhash_t{4u};
-    // Process as a single 4-byte word.
     h_ += static_cast<hxhash_t>(x_) * hxhash_prime3_;
-    h_ = ((h_ << 17u) | (h_ >> 15u)) * hxhash_prime4_;
+    h_  = ((h_ << 17u) | (h_ >> 15u)) * hxhash_prime4_;
     return hxhash_avalanche_(h_);
 }
 

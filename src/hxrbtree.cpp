@@ -223,7 +223,8 @@ rebalance_:
 	while((child_ == hxnull || child_->rb_is_black_()) && child_ != root_) {
 		if(parent_->m_rb_left_ == child_) {
 			hxrbtree_node* sibling_ = parent_->m_rb_right_;
-			if(sibling_->rb_is_red_()) {
+			hxassert(sibling_ != hxnull);
+			if(sibling_->rb_is_red_()) { // NOLINT(clang-analyzer-core.CallAndMessage)
 				sibling_->rb_set_color_(1);
 				parent_->rb_set_color_(0);
 				hxrbtree_rb_rotate_left_(parent_, root_);
@@ -244,7 +245,8 @@ rebalance_:
 				}
 				sibling_->rb_set_color_(parent_->rb_color_());
 				parent_->rb_set_color_(1);
-				sibling_->m_rb_right_->rb_set_color_(1);
+				hxassert(sibling_->m_rb_right_ != hxnull);
+				sibling_->m_rb_right_->rb_set_color_(1); // NOLINT(clang-analyzer-core.CallAndMessage)
 				hxrbtree_rb_rotate_left_(parent_, root_);
 				child_ = root_;
 				break;
@@ -252,6 +254,7 @@ rebalance_:
 		}
 		else {
 			hxrbtree_node* sibling_ = parent_->m_rb_left_;
+			hxassert(sibling_ != hxnull);
 			if(sibling_->rb_is_red_()) {
 				sibling_->rb_set_color_(1);
 				parent_->rb_set_color_(0);
@@ -273,7 +276,8 @@ rebalance_:
 				}
 				sibling_->rb_set_color_(parent_->rb_color_());
 				parent_->rb_set_color_(1);
-				sibling_->m_rb_left_->rb_set_color_(1);
+				hxassert(sibling_->m_rb_left_ != hxnull);
+				sibling_->m_rb_left_->rb_set_color_(1); // NOLINT(clang-analyzer-core.CallAndMessage)
 				hxrbtree_rb_rotate_right_(parent_, root_);
 				child_ = root_;
 				break;

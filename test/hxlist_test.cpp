@@ -8,7 +8,7 @@
 namespace {
 
 struct hxtest_list_node_t : hxlist_node {
-	explicit hxtest_list_node_t(int value) : value(value) { }
+	explicit hxtest_list_node_t(int v) : value(v) { }
 	int value;
 };
 
@@ -16,7 +16,7 @@ struct hxtest_list_node_t : hxlist_node {
 static int s_hxtest_destructor_count = 0;
 
 struct hxtest_list_counted_node_t : hxlist_node {
-	explicit hxtest_list_counted_node_t(int value) : value(value) { }
+	explicit hxtest_list_counted_node_t(int v) : value(v) { }
 	~hxtest_list_counted_node_t(void) { ++s_hxtest_destructor_count; }
 	int value;
 };

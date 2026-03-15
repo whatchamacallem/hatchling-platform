@@ -361,19 +361,19 @@ private:
 // hxrbtree_node
 
 inline hxrbtree_node* hxrbtree_node::rb_parent_(void) const {
-	return reinterpret_cast<hxrbtree_node*>(m_rb_parent_color_ & ~uintptr_t(1u));
+	return reinterpret_cast<hxrbtree_node*>(m_rb_parent_color_ & ~static_cast<uintptr_t>(1u));
 }
 
 inline void hxrbtree_node::rb_set_parent_(hxrbtree_node* parent_) {
-	m_rb_parent_color_ = (m_rb_parent_color_ & uintptr_t(1u)) | reinterpret_cast<uintptr_t>(parent_);
+	m_rb_parent_color_ = (m_rb_parent_color_ & static_cast<uintptr_t>(1u)) | reinterpret_cast<uintptr_t>(parent_);
 }
 
 inline int hxrbtree_node::rb_color_(void) const {
-	return static_cast<int>(m_rb_parent_color_ & uintptr_t(1u));
+	return static_cast<int>(m_rb_parent_color_ & static_cast<uintptr_t>(1u));
 }
 
 inline void hxrbtree_node::rb_set_color_(int color_) {
-	m_rb_parent_color_ = (m_rb_parent_color_ & ~uintptr_t(1u)) | static_cast<uintptr_t>(color_);
+	m_rb_parent_color_ = (m_rb_parent_color_ & ~static_cast<uintptr_t>(1u)) | static_cast<uintptr_t>(color_);
 }
 
 inline void hxrbtree_node::rb_set_parent_color_(hxrbtree_node* parent_, int color_) {
@@ -381,11 +381,11 @@ inline void hxrbtree_node::rb_set_parent_color_(hxrbtree_node* parent_, int colo
 }
 
 inline bool hxrbtree_node::rb_is_red_(void) const {
-	return (m_rb_parent_color_ & uintptr_t(1u)) == 0u;
+	return (m_rb_parent_color_ & static_cast<uintptr_t>(1u)) == 0u;
 }
 
 inline bool hxrbtree_node::rb_is_black_(void) const {
-	return (m_rb_parent_color_ & uintptr_t(1u)) != 0u;
+	return (m_rb_parent_color_ & static_cast<uintptr_t>(1u)) != 0u;
 }
 
 // const_iterator
@@ -490,13 +490,23 @@ template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
 template<typename deleter_override_t_>
 inline void hxrbtree<node_t_, multi_t_, deleter_t_>::clear(
 	const deleter_override_t_& deleter_) {
-	hxrbtree_node* node_ = hxrbtree_rb_first_(m_root_);
+	// Rotate left children up to form a right-spine, then delete along the spine.
+	// This avoids reading parent pointers of deleted nodes.
+	hxrbtree_node* node_ = m_root_;
 	while(node_ != hxnull) {
-		hxrbtree_node* next_ = hxrbtree_rb_next_(node_);
-		if(deleter_) {
-			deleter_(static_cast<node_t_*>(node_));
+		if(node_->m_rb_left_ != hxnull) {
+			hxrbtree_node* left_ = node_->m_rb_left_;
+			node_->m_rb_left_   = left_->m_rb_right_;
+			left_->m_rb_right_  = node_;
+			node_               = left_;
 		}
-		node_ = next_;
+		else {
+			hxrbtree_node* right_ = node_->m_rb_right_;
+			if(deleter_) {
+				deleter_(static_cast<node_t_*>(node_));
+			}
+			node_ = right_;
+		}
 	}
 	release_all();
 }
@@ -562,13 +572,10 @@ inline node_t_* hxrbtree<node_t_, multi_t_, deleter_t_>::insert(node_t_* ptr_) {
 	hxrbtree_node* parent_ = hxnull;
 	while(*link_ != hxnull) {
 		parent_ = *link_;
-		if(hxkey_less(static_cast<node_t_&>(*parent_).key(), ptr_->key())) {
-			link_ = &parent_->m_rb_right_;
-		}
-		else if(hxkey_less(ptr_->key(), static_cast<node_t_&>(*parent_).key())) {
+		if(hxkey_less(ptr_->key(), static_cast<node_t_&>(*parent_).key())) {
 			link_ = &parent_->m_rb_left_;
 		}
-		else if(!multi_t_) {
+		else if(!hxkey_less(static_cast<node_t_&>(*parent_).key(), ptr_->key()) && !multi_t_) {
 			return static_cast<node_t_*>(parent_);
 		}
 		else {

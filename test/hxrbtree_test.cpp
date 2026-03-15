@@ -19,6 +19,31 @@ struct hxtest_rbtree_node_t : hxrbtree_set_node<int> {
 	~hxtest_rbtree_node_t(void) { ++s_hxtest_destructor_count; }
 };
 
+// Aligned storage for N hxtest_rbtree_node_t objects constructed in-place from
+// an array of int keys. C++11-compatible: avoids copy or move construction.
+template<size_t n_t_>
+struct hxtest_rbtree_buf_t {
+	hxtest_rbtree_buf_t(const int (&keys_)[n_t_]) {
+		for(size_t i_ = 0u; i_ < n_t_; ++i_) {
+			::new(static_cast<void*>(&m_buf_[i_])) hxtest_rbtree_node_t(keys_[i_]);
+		}
+	}
+	~hxtest_rbtree_buf_t(void) {
+		for(size_t i_ = n_t_; i_-- > 0u;) {
+			reinterpret_cast<hxtest_rbtree_node_t*>(&m_buf_[i_])->~hxtest_rbtree_node_t();
+		}
+	}
+	hxtest_rbtree_node_t& operator[](size_t i_) {
+		return *reinterpret_cast<hxtest_rbtree_node_t*>(&m_buf_[i_]);
+	}
+	const hxtest_rbtree_node_t& operator[](size_t i_) const {
+		return *reinterpret_cast<const hxtest_rbtree_node_t*>(&m_buf_[i_]);
+	}
+	hxtest_rbtree_buf_t(const hxtest_rbtree_buf_t&) = delete;
+	void operator=(const hxtest_rbtree_buf_t&) = delete;
+	alignas(hxtest_rbtree_node_t) unsigned char m_buf_[n_t_][sizeof(hxtest_rbtree_node_t)];
+};
+
 struct hxtest_rbtree_custom_deleter_t {
 	void operator()(hxtest_rbtree_node_t* ptr_) const {
 		++s_hxtest_custom_deleter_count;
@@ -96,15 +121,8 @@ TEST(hxrbtree_test, insert_descending_order) {
 
 // Insert in an order that exercises all rotation paths (zig-zig and zig-zag).
 TEST(hxrbtree_test, insert_mixed_order) {
-	hxtest_rbtree_node_t nodes[7] = {
-		hxtest_rbtree_node_t(4),
-		hxtest_rbtree_node_t(2),
-		hxtest_rbtree_node_t(6),
-		hxtest_rbtree_node_t(1),
-		hxtest_rbtree_node_t(3),
-		hxtest_rbtree_node_t(5),
-		hxtest_rbtree_node_t(7)
-	};
+	const int keys_[7] = { 4, 2, 6, 1, 3, 5, 7 };
+	hxtest_rbtree_buf_t<7> nodes(keys_);
 	hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete> tree;
 	for(size_t i = 0u; i < 7u; ++i) {
 		tree.insert(&nodes[i]);
@@ -392,14 +410,8 @@ TEST(hxrbtree_test, erase_custom_deleter_override) {
 
 // Erase a node with two children: successor splice and rebalance.
 TEST(hxrbtree_test, erase_node_with_two_children) {
-	hxtest_rbtree_node_t nodes[6] = {
-		hxtest_rbtree_node_t(4),
-		hxtest_rbtree_node_t(2),
-		hxtest_rbtree_node_t(6),
-		hxtest_rbtree_node_t(1),
-		hxtest_rbtree_node_t(3),
-		hxtest_rbtree_node_t(5)
-	};
+	const int keys_[6] = { 4, 2, 6, 1, 3, 5 };
+	hxtest_rbtree_buf_t<6> nodes(keys_);
 	hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete> tree;
 	for(size_t i = 0u; i < 6u; ++i) {
 		tree.insert(&nodes[i]);
@@ -503,7 +515,7 @@ TEST(hxrbtree_test, lower_bound_equal_key) {
 	tree.insert(&a);
 	tree.insert(&b);
 	tree.insert(&c);
-	hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>::iterator it_ =
+	const hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>::iterator it_ =
 		tree.lower_bound(4);
 	EXPECT_EQ(&(*it_), &b);
 	tree.release_all();
@@ -516,7 +528,7 @@ TEST(hxrbtree_test, lower_bound_one_below_existing) {
 	tree.insert(&a);
 	tree.insert(&b);
 	tree.insert(&c);
-	hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>::iterator it_ =
+	const hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>::iterator it_ =
 		tree.lower_bound(3);
 	EXPECT_EQ(it_->key(), 4);
 	tree.release_all();
@@ -569,7 +581,7 @@ TEST(hxrbtree_test, upper_bound_equal_key) {
 	tree.insert(&a);
 	tree.insert(&b);
 	tree.insert(&c);
-	hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>::iterator it_ =
+	const hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>::iterator it_ =
 		tree.upper_bound(4);
 	EXPECT_EQ(it_->key(), 6);
 	tree.release_all();
@@ -647,7 +659,7 @@ TEST(hxrbtree_test, iterator_post_increment) {
 	tree.insert(&b);
 	hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>::iterator it_ =
 		tree.begin();
-	hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>::iterator old_ = it_++;
+	const hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>::iterator old_ = it_++;
 	EXPECT_EQ(old_->key(), 1);
 	EXPECT_EQ(it_->key(), 2);
 	tree.release_all();
@@ -680,7 +692,7 @@ TEST(hxrbtree_test, iterator_post_decrement) {
 	tree.insert(&b);
 	hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>::iterator it_ =
 		tree.end();
-	hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>::iterator old_ = it_--;
+	const hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>::iterator old_ = it_--;
 	EXPECT_EQ(old_, tree.end());
 	EXPECT_EQ(it_->key(), 2);
 	tree.release_all();
@@ -692,7 +704,7 @@ TEST(hxrbtree_test, iterator_equality) {
 	hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete> tree;
 	tree.insert(&a);
 	tree.insert(&b);
-	hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>::iterator it1_ =
+	const hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>::iterator it1_ =
 		tree.begin();
 	hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>::iterator it2_ =
 		tree.begin();
@@ -709,7 +721,7 @@ TEST(hxrbtree_test, iterator_arrow_operator) {
 	hxtest_rbtree_node_t a(1);
 	hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete> tree;
 	tree.insert(&a);
-	hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>::iterator it_ =
+	const hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>::iterator it_ =
 		tree.begin();
 	EXPECT_EQ(it_->key(), 1);
 	tree.release_all();
@@ -738,7 +750,7 @@ TEST(hxrbtree_test, const_iterator_dereference) {
 	hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete> tree;
 	tree.insert(&a);
 	const hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>& ct_ = tree;
-	hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>::const_iterator it_ =
+	const hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>::const_iterator it_ =
 		ct_.begin();
 	EXPECT_EQ((*it_).key(), 5);
 	tree.release_all();
@@ -781,16 +793,8 @@ TEST(hxrbtree_test, map_node_mutable_value) {
 // Ascending insertion exercises the right-leaning red uncle recolor path
 // and the left-right zig-zag rotation repeatedly.
 TEST(hxrbtree_test, insert_15_ascending_check_order) {
-	hxtest_rbtree_node_t nodes[15] = {
-		hxtest_rbtree_node_t(1),  hxtest_rbtree_node_t(2),
-		hxtest_rbtree_node_t(3),  hxtest_rbtree_node_t(4),
-		hxtest_rbtree_node_t(5),  hxtest_rbtree_node_t(6),
-		hxtest_rbtree_node_t(7),  hxtest_rbtree_node_t(8),
-		hxtest_rbtree_node_t(9),  hxtest_rbtree_node_t(10),
-		hxtest_rbtree_node_t(11), hxtest_rbtree_node_t(12),
-		hxtest_rbtree_node_t(13), hxtest_rbtree_node_t(14),
-		hxtest_rbtree_node_t(15)
-	};
+	const int keys_[15] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
+	hxtest_rbtree_buf_t<15> nodes(keys_);
 	hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete> tree;
 	for(size_t i = 0u; i < 15u; ++i) {
 		tree.insert(&nodes[i]);
@@ -805,16 +809,8 @@ TEST(hxrbtree_test, insert_15_ascending_check_order) {
 // Descending insertion exercises the left-leaning red uncle recolor path
 // and the right-left zig-zag rotation.
 TEST(hxrbtree_test, insert_15_descending_check_order) {
-	hxtest_rbtree_node_t nodes[15] = {
-		hxtest_rbtree_node_t(15), hxtest_rbtree_node_t(14),
-		hxtest_rbtree_node_t(13), hxtest_rbtree_node_t(12),
-		hxtest_rbtree_node_t(11), hxtest_rbtree_node_t(10),
-		hxtest_rbtree_node_t(9),  hxtest_rbtree_node_t(8),
-		hxtest_rbtree_node_t(7),  hxtest_rbtree_node_t(6),
-		hxtest_rbtree_node_t(5),  hxtest_rbtree_node_t(4),
-		hxtest_rbtree_node_t(3),  hxtest_rbtree_node_t(2),
-		hxtest_rbtree_node_t(1)
-	};
+	const int keys_[15] = { 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1 };
+	hxtest_rbtree_buf_t<15> nodes(keys_);
 	hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete> tree;
 	for(size_t i = 0u; i < 15u; ++i) {
 		tree.insert(&nodes[i]);
@@ -829,15 +825,8 @@ TEST(hxrbtree_test, insert_15_descending_check_order) {
 // Covers erase rebalance loops with black sibling, red sibling, and
 // two-black-nephews cases on both left and right sides.
 TEST(hxrbtree_test, erase_all_nodes_one_by_one) {
-	hxtest_rbtree_node_t nodes[7] = {
-		hxtest_rbtree_node_t(4),
-		hxtest_rbtree_node_t(2),
-		hxtest_rbtree_node_t(6),
-		hxtest_rbtree_node_t(1),
-		hxtest_rbtree_node_t(3),
-		hxtest_rbtree_node_t(5),
-		hxtest_rbtree_node_t(7)
-	};
+	const int keys_[7] = { 4, 2, 6, 1, 3, 5, 7 };
+	hxtest_rbtree_buf_t<7> nodes(keys_);
 	hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete> tree;
 	for(size_t i = 0u; i < 7u; ++i) {
 		tree.insert(&nodes[i]);
@@ -846,24 +835,17 @@ TEST(hxrbtree_test, erase_all_nodes_one_by_one) {
 	const int erase_order[] = { 1, 2, 3, 4, 5, 6, 7 };
 	for(size_t i = 0u; i < 7u; ++i) {
 		hxtest_rbtree_node_t* n_ = tree.find(erase_order[i]);
-		EXPECT_NE(n_, (hxtest_rbtree_node_t*)hxnull);
+		EXPECT_NE(n_, static_cast<hxtest_rbtree_node_t*>(hxnull));
 		tree.erase(n_, hxdo_not_delete());
-		hxtest_check_order(tree, (size_t)(6 - (int)i));
+		hxtest_check_order(tree, static_cast<size_t>(6 - static_cast<int>(i)));
 	}
 	EXPECT_TRUE(tree.empty());
 }
 
 // Erase in reverse key order to exercise the right-child rebalance cases.
 TEST(hxrbtree_test, erase_all_nodes_reverse_order) {
-	hxtest_rbtree_node_t nodes[7] = {
-		hxtest_rbtree_node_t(4),
-		hxtest_rbtree_node_t(2),
-		hxtest_rbtree_node_t(6),
-		hxtest_rbtree_node_t(1),
-		hxtest_rbtree_node_t(3),
-		hxtest_rbtree_node_t(5),
-		hxtest_rbtree_node_t(7)
-	};
+	const int keys_[7] = { 4, 2, 6, 1, 3, 5, 7 };
+	hxtest_rbtree_buf_t<7> nodes(keys_);
 	hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete> tree;
 	for(size_t i = 0u; i < 7u; ++i) {
 		tree.insert(&nodes[i]);
@@ -871,9 +853,9 @@ TEST(hxrbtree_test, erase_all_nodes_reverse_order) {
 	const int erase_order[] = { 7, 6, 5, 4, 3, 2, 1 };
 	for(size_t i = 0u; i < 7u; ++i) {
 		hxtest_rbtree_node_t* n_ = tree.find(erase_order[i]);
-		EXPECT_NE(n_, (hxtest_rbtree_node_t*)hxnull);
+		EXPECT_NE(n_, static_cast<hxtest_rbtree_node_t*>(hxnull));
 		tree.erase(n_, hxdo_not_delete());
-		hxtest_check_order(tree, (size_t)(6 - (int)i));
+		hxtest_check_order(tree, static_cast<size_t>(6 - static_cast<int>(i)));
 	}
 	EXPECT_TRUE(tree.empty());
 }

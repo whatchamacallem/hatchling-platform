@@ -109,25 +109,50 @@ inline bool (*hxkey_less_function(void))(const hxremove_cvref_t<T_>&, const hxre
         (&hxkey_less);
 }
 
-/// `hxkey_hash(T)` - Returns the hash of a numeric value. Used by the base hash
-/// table node. It must be overridden for your key type. Overrides are evaluated
-/// when and where the hash table is instantiated. Uses the well-studied hash
-/// multiplier taken from Linux's `hash.h`.
+// xxhash32 prime constants and avalanche mixing. Useful when hashing sequential
+// data. These are used by hxkey_hash overloads below.
+constexpr hxhash_t hxhash_prime1_ = hxhash_t{0x9E3779B1u};
+constexpr hxhash_t hxhash_prime2_ = hxhash_t{0x85EBCA77u};
+constexpr hxhash_t hxhash_prime3_ = hxhash_t{0xC2B2AE3Du};
+constexpr hxhash_t hxhash_prime4_ = hxhash_t{0x27D4EB2Fu};
+constexpr hxhash_t hxhash_prime5_ = hxhash_t{0x165667B1u};
+
+// xxhash32 avalanche: finalizes a hash value with full bit dispersion.
+hxattr_nodiscard constexpr hxhash_t hxhash_avalanche_(hxhash_t x_) {
+    x_ ^= x_ >> 15u;
+    x_ *= hxhash_prime2_;
+    x_ ^= x_ >> 13u;
+    x_ *= hxhash_prime3_;
+    x_ ^= x_ >> 16u;
+    return x_;
+}
+
+/// `hxkey_hash(T)` - Returns the xxhash32 of a numeric value cast to 32 bits.
+/// Used by the base hash table node. Override for custom key types. Overrides
+/// are evaluated when and where the hash table is instantiated. Uses the
+/// xxhash32 short-input path for a single 4-byte word.
 /// - `x` : The input value.
 template<typename T_>
 hxattr_nodiscard constexpr hxhash_t hxkey_hash(T_ x_) {
-    return static_cast<hxhash_t>(x_) * hxhash_t{0x61C88647u};
-};
+    // xxhash32 short-input init: seed=0, length=4.
+    hxhash_t h_ = hxhash_prime5_ + hxhash_t{4u};
+    // Process as a single 4-byte word.
+    h_ += static_cast<hxhash_t>(x_) * hxhash_prime3_;
+    h_ = ((h_ << 17u) | (h_ >> 15u)) * hxhash_prime4_;
+    return hxhash_avalanche_(h_);
+}
 
-/// `hxkey_hash(const char*)` - Returns the FNV-1a hash of a C string. Uses
-/// FNV-1a string hashing.
+/// `hxkey_hash(const char*)` - Returns the xxhash32 of a C string. Uses the
+/// xxhash32 byte-by-byte short-input path with seed 0.
 /// - `s` : The C string.
 hxattr_nodiscard hxattr_hot inline hxhash_t hxkey_hash(const char* s_) {
-    hxhash_t x_ = hxhash_t{0x811c9dc5};
+    // xxhash32 short-input init: seed=0, length accumulated below.
+    hxhash_t h_ = hxhash_prime5_;
+    hxhash_t len_ = hxhash_t{0u};
     while(*s_ != '\0') {
-        // Enforce zero extension. It may also be a perf issue.
-        x_ ^= static_cast<hxhash_t>(static_cast<unsigned char>(*s_++));
-        x_ *= hxhash_t{0x01000193};
+        h_ += static_cast<hxhash_t>(static_cast<unsigned char>(*s_++)) * hxhash_prime5_;
+        h_ = ((h_ << 11u) | (h_ >> 21u)) * hxhash_prime1_;
+        ++len_;
     }
-    return x_;
+    return hxhash_avalanche_(h_ + len_);
 }

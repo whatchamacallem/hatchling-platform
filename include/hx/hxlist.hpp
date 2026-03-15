@@ -204,7 +204,7 @@ public:
 	void push_front(node_t_* ptr_);
 
 	/// Resets the list to empty without invoking the deleter on any node.
-	/// Ownership of all nodes is abandoned; use only when nodes are managed
+	/// Ownership of all nodes is abandoned. Use only when nodes are managed
 	/// elsewhere or have already been freed.
 	void release_all(void);
 

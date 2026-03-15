@@ -191,7 +191,7 @@ public:
 #endif
 	}
 
-	/// Unlocks the mutex. Returns true on success; asserts and returns false
+	/// Unlocks the mutex. Returns true on success. Asserts and returns false
 	/// otherwise. It is undefined to unlock a mutex that you have not locked, and
 	/// such an operation may succeed.
 	bool unlock(void) {

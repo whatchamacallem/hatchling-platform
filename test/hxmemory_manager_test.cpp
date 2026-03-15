@@ -188,7 +188,7 @@ public:
 			hxfree(ptr2);
 		}
 
-		// hxassert was hit; the free happened after the scope closed.
+		// hxassert was hit. The free happened after the scope closed.
 		ASSERT_EQ(g_hxsettings.asserts_to_be_skipped, 0);
 
 		g_hxsettings.asserts_to_be_skipped = asserts_allowed;

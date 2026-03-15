@@ -40,7 +40,7 @@ template<> inline char hxconsole_parse_arg_<char>(const char* str_, char** next_
 	return static_cast<char>(v_);
 }
 
-// bool: only 0 or 1 are valid; anything else is a parse error.
+// bool: only 0 or 1 are valid. Anything else is a parse error.
 template<> inline bool hxconsole_parse_arg_<bool>(const char* str_, char** next_) {
 	const long v_ = hxconsole_strtol_(str_, next_);
 	if(v_ != 0 && v_ != 1) { *next_ = const_cast<char*>(str_); }

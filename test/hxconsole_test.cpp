@@ -285,7 +285,7 @@ TEST(hxconsole_test, variable_query) {
 }
 
 // ============================================================================
-// variable_overflow: out-of-range returns false, variable unchanged;
+// variable_overflow: out-of-range returns false, variable unchanged.
 // exact boundaries must succeed.
 
 TEST(hxconsole_test, variable_overflow) {
@@ -394,7 +394,7 @@ TEST(hxconsole_test, variable_parse_error) {
 	EXPECT_FALSE(hxconsole_exec_line("s_hxconsole_test_i32 abc"));
 	EXPECT_EQ(s_hxconsole_test_i32, (int32_t)10);
 
-	// bool: only 0 and 1 are valid; 2 and non-numeric strings are parse errors.
+	// bool: only 0 and 1 are valid. 2 and non-numeric strings are parse errors.
 	s_hxconsole_test_bool = true;
 	EXPECT_FALSE(hxconsole_exec_line("s_hxconsole_test_bool 2"));
 	EXPECT_EQ(s_hxconsole_test_bool, true);
@@ -756,7 +756,7 @@ TEST(hxconsole_test, file_fail) {
 	}
 	EXPECT_FALSE(hxconsole_exec_filename("hxconsole_test_file_test.txt"));
 
-	// issue 5: mid-file failure stops execution; line 3 must not run.
+	// issue 5: mid-file failure stops execution. Line 3 must not run.
 	s_hxconsole_test_file_var1 = 0.0f;
 	{
 		hxfile(hxfile::out, "hxconsole_test_file_test.txt")

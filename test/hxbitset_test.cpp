@@ -368,7 +368,7 @@ TEST(hxbitset_test, left_shift_trailing_bits_masked_off) {
 	// bit s_bits_per_word is now set (from bit s_bits_per_word-1).
 	EXPECT_TRUE(b[sizeof(size_t) * 8u]);
 	EXPECT_EQ(b.data()[1], static_cast<size_t>(1u));
-	// bit s_bits_per_word+1 does not exist; the mask keeps word[1] to 1.
+	// bit s_bits_per_word+1 does not exist. The mask keeps word[1] to 1.
 	EXPECT_EQ(b.data()[1] & ~static_cast<size_t>(1u), static_cast<size_t>(0u));
 }
 
@@ -477,7 +477,7 @@ TEST(hxbitset_test, load_masks_trailing_bits) {
 }
 
 TEST(hxbitset_test, load_partial_bytes) {
-	// Load fewer than bytes() bytes; the rest of the storage is unspecified
+	// Load fewer than bytes() bytes. The rest of the storage is unspecified
 	// but the loaded portion must be correct.
 	hxbitset<sizeof(size_t) * 8u * 2u> b;
 	size_t val = static_cast<size_t>(1u);

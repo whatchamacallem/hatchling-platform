@@ -11,7 +11,7 @@
 
 #include <stdio.h> // vsnprintf only.
 
-// g_hxinit_ver_ should not be explicitly zero-initialized; MSVC handles that
+// g_hxinit_ver_ should not be explicitly zero-initialized. MSVC handles that
 // differently.
 extern "C" {
 	// If non-zero the platform has been initialized without being shut down.
@@ -22,7 +22,7 @@ extern "C" {
 // HX_FLOATING_POINT_TRAPS - Traps (FE_DIVBYZERO|FE_INVALID|FE_OVERFLOW) in
 // debug builds so you can safely run without checks in release builds. Use
 // -DHX_FLOATING_POINT_TRAPS=0 to disable this debug facility. There is no C++
-// standard-conforming way to disable floating point error checking; that
+// standard-conforming way to disable floating point error checking. That
 // requires a gcc/clang extension. Using -fno-math-errno and -fno-trapping-math
 // will work if you require C++ conforming accuracy without the overhead of
 // error checking. -ffast-math includes both of those switches. You need the math

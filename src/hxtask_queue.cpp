@@ -109,7 +109,7 @@ void hxtask_queue::wait_for_all(void) {
 			m_tasks_.pop_heap();
 
 			// This is the last time this object is touched. It may delete or
-			// re-enqueue itself; we don't care.
+			// re-enqueue itself. We don't care.
 			hxprofile_scope(task->get_label());
 			task->process(this);
 		}

@@ -111,7 +111,7 @@ const hxsystem_allocator_scope temporary_stack_scope(hxsystem_allocator_temporar
 		EXPECT_EQ(table.size(), 1u);
 		EXPECT_EQ(table.count(k), 1u);
 
-		// insert_unique with a duplicate key returns the existing node; caller discards the rejected ptr.
+		// insert_unique with a duplicate key returns the existing node. Caller discards the rejected ptr.
 		hxtest_integer* dup = hxnew<hxtest_integer>(k);
 		EXPECT_EQ(table.insert_unique(dup), node);
 		hxdelete(dup);
@@ -139,7 +139,7 @@ const hxsystem_allocator_scope temporary_stack_scope(hxsystem_allocator_temporar
 		EXPECT_NE(new_node->value.id, node->value.id);
 		EXPECT_EQ(table.size(), 1u);
 
-		// Destructor frees new_node; node was already extracted above.
+		// Destructor frees new_node. Node was already extracted above.
 		hxdelete(node);
 	}
 	EXPECT_EQ(m_constructed, 3);
@@ -355,7 +355,7 @@ TEST_F(hxhash_table_test_f, string_literal_nodes) {
 	table_t table;
 
 	for(unsigned int i = 0; i < hxsize(literals); ++i) {
-		// String literal keys are owned externally; the node stores only the pointer.
+		// String literal keys are owned externally. The node stores only the pointer.
 		hxtest_string_literal* n = hxnew<hxtest_string_literal>(literals[i]);
 		hxtest_string_literal* inserted = table.insert_unique(n);
 		EXPECT_EQ(inserted, n);

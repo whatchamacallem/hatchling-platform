@@ -7,7 +7,7 @@
 /// strategy for any fundamental type that is 32 bits or less. This
 /// implementation does not cause code bloat and is the fastest sorting
 /// algorithm available for scalar keys. Radix sort is best when you need
-/// real-time guarantees and have a massive workload. This is not a toy; IBM
+/// real-time guarantees and have a massive workload. This is not a toy. IBM
 /// actually used it to sort punch cards.
 ///
 /// For example:

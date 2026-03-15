@@ -3,8 +3,7 @@
 // SPDX-License-Identifier: MIT
 // This file is licensed under the MIT license found in the LICENSE.md file.
 
-/// \file hx/hxrbtree.hpp An intrusive red-black tree based on the Linux kernel
-/// rb-tree algorithms. Nodes embed their linkage by inheriting from
+/// \file hx/hxrbtree.hpp Nodes embed their linkage by inheriting from
 /// `hxrbtree_node` and are owned by the tree, which calls the deleter on
 /// destruction. The tree is parameterized on `node_t`, which must derive from
 /// `hxrbtree_node`. All public API returns are downcast to `node_t*`, so
@@ -81,8 +80,9 @@ public:
 private:
 	template<hxrbtree_concept_, bool, typename> friend class hxrbtree;
 
-	friend void hxrbtree_rb_rotate_left_(hxrbtree_node* node_, hxrbtree_node*& root_);
-	friend void hxrbtree_rb_rotate_right_(hxrbtree_node* node_, hxrbtree_node*& root_);
+	friend hxrbtree_node* hxrbtree_rb_red_parent_(const hxrbtree_node* node_);
+	friend void hxrbtree_rb_rotate_set_parents_(
+		hxrbtree_node* old_, hxrbtree_node* new_, hxrbtree_node*& root_, int color_);
 	friend void hxrbtree_rb_insert_color_(hxrbtree_node* node_, hxrbtree_node*& root_);
 	friend void hxrbtree_rb_erase_(hxrbtree_node* node_, hxrbtree_node*& root_);
 	friend hxrbtree_node* hxrbtree_rb_first_(hxrbtree_node* root_);

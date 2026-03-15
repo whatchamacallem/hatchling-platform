@@ -14,15 +14,22 @@
 /// The node color is stored in the low bit of the parent pointer, matching the
 /// Linux kernel `rb_node` layout. `RB_RED` is `0` and `RB_BLACK` is `1`.
 ///
-/// `compare_t` is a strict less-than predicate called as `compare_t()(a, b)`
-/// returning `true` when `a < b`. The default `compare_t` is
-/// `hxkey_less`. Each traversal step calls the predicate twice: once as
-/// `compare_t()(node, key)` to test whether to go right, and once as
-/// `compare_t()(key, node)` to test whether to go left. Equality is the
-/// remaining case. Custom functors are recommended for complex key types.
+/// Any node `T` using key `K` will work as long as it has the following and
+/// `K` supports `hxkey_less`.
+/// ```
+/// class T : public hxrbtree_node {
+///   using key_t = K;              // Tell the tree what key type to use.
+///   const key_t& key() const;     // Returns the key.
+/// };
+/// ```
+/// `hxrbtree_set_node` and `hxrbtree_map_node` are provided and recommended as
+/// replacements for `std::set`, `std::map`. `std::multiset` and
+/// `std::multimap`.
 ///
-/// The generated assembly should be ideal for common use cases. Explicit support
-/// for the spaceship operator `<=>` is easy enough to add.
+/// Each traversal step calls `hxkey_less` twice: once as
+/// `hxkey_less(node.key(), key)` to test whether to go right, and once as
+/// `hxkey_less(key, node.key())` to test whether to go left. Equality is the
+/// remaining case.
 ///
 /// When `multi_t` is `false` (set or map semantics), `insert` returns the
 /// existing node on a key collision without inserting the new node. The caller
@@ -36,28 +43,86 @@
 ///
 /// For example:
 /// ```cpp
-///   struct example_t : public hxrbtree_node {
-///       example_t(int k) : key(k) { }
-///       int key;
-///   };
+///   using example_node_t = hxrbtree_set_node<int>;
+///   hxrbtree<example_node_t> tree;
+///   tree.insert(hxnew<example_node_t>(7));
 ///
-///   struct example_compare_t {
-///       bool operator()(const example_t& a, const example_t& b) const {
-///           return a.key < b.key;
-///       }
-///   };
-///
-///   hxrbtree<example_t, example_t, example_compare_t> tree;
-///   tree.insert(hxnew<example_t>(7));
-///
-///   for(example_t& n : tree) {
-///       ::printf("%d\n", n.key);
+///   for(example_node_t& n : tree) {
+///       ::printf("%d\n", n.key());
 ///   }
 /// ```
 
 #include "hxkey.hpp"
 #include "hxmemory_manager.h"
 #include "hxutility.h"
+
+#if HX_CPLUSPLUS >= 202002L
+/// Concept capturing the interface requirements for `hxrbtree` nodes.
+template<typename node_t_>
+concept hxrbtree_concept_ =
+	requires(const node_t_& const_node_) {
+		sizeof(typename node_t_::key_t);
+		{ const_node_.key() } -> hxconvertible_to<const typename node_t_::key_t&>;
+	};
+#else
+#define hxrbtree_concept_ typename
+#endif
+
+/// `hxrbtree_set_node` - Optional base class for ordered set entries. Caches
+/// the key by value. Copying and modification are disallowed to protect the
+/// integrity of the tree. See `hxrbtree_map_node` if you need a mutable node.
+/// The tree uses duck typing, so only the interface is required.
+template<typename key_t_>
+class hxrbtree_set_node : public hxrbtree_node {
+public:
+	using key_t = key_t_;
+
+	/// Constructs a node from the key.
+	/// - `key` : Key used to order the node.
+	template<typename ref_t_>
+	hxrbtree_set_node(ref_t_&& key_)
+		: m_key_(hxforward<ref_t_>(key_)) { }
+
+	/// The key identifies the node and should not change once inserted.
+	const key_t_& key(void) const { return m_key_; }
+
+private:
+	hxrbtree_set_node(void) = delete;
+	hxrbtree_set_node(const hxrbtree_set_node&) = delete;
+	hxrbtree_set_node(hxrbtree_set_node&&) = delete;
+	void operator=(const hxrbtree_set_node&) = delete;
+
+	key_t_ m_key_;
+};
+
+/// `hxrbtree_map_node` - Base class for ordered map entries.
+template<typename key_t_, typename value_t_>
+class hxrbtree_map_node : public hxrbtree_set_node<key_t_> {
+public:
+	using key_t = key_t_;
+	using value_t = value_t_;
+
+	/// Default-initializes a node. `value_t` must default-construct when
+	/// accessed without a value argument.
+	/// - `key` : Key used to order the node.
+	hxrbtree_map_node(const key_t_& key_)
+		: hxrbtree_set_node<key_t_>(key_) { }
+
+	/// Constructs a node whose value is copy- or move-initialized.
+	/// - `key` : Key used to order the node.
+	/// - `value` : Value forwarded into storage.
+	template<typename ref_t_>
+	hxrbtree_map_node(const key_t_& key_, ref_t_&& value_)
+		: hxrbtree_set_node<key_t_>(key_), m_value_(hxforward<ref_t_>(value_)) { }
+
+	/// Returns the stored value.
+	const value_t_& value(void) const { return m_value_; }
+	/// Returns the stored value, allowing mutation.
+	value_t_& value(void) { return m_value_; }
+
+private:
+	value_t_ m_value_;
+};
 
 /// Intrusive red-black tree node base. Derive from `hxrbtree_node` to make a
 /// type linkable into an `hxrbtree`. Nodes default to unlinked on construction.
@@ -69,7 +134,7 @@ public:
 	hxrbtree_node(void) : m_rb_parent_color_(0u), m_rb_right_(hxnull), m_rb_left_(hxnull) { }
 
 private:
-	template<typename, typename, typename, bool, typename> friend class hxrbtree;
+	template<typename, bool, typename> friend class hxrbtree;
 
 	hxrbtree_node(const hxrbtree_node&) = delete;
 	void operator=(const hxrbtree_node&) = delete;
@@ -98,28 +163,20 @@ static_assert(alignof(hxrbtree_node) >= 2, "hxrbtree_node alignment insufficient
 /// Iteration is in ascending key order. `front()` returns the minimum node and
 /// `back()` returns the maximum node.
 ///
-/// - `node_t` : The node type. Must derive from `hxrbtree_node`.
-/// - `key_t` : The key type used by `find`, `lower_bound`, and `upper_bound`.
-///   Defaults to `node_t`.
-/// - `compare_t` : A strict less-than predicate with signature
-///   `bool(const a&, const b&)`. Defaults to `hxrbtree_less`.
+/// - `node_t` : The node type. Must derive from `hxrbtree_node` and provide
+///   `using key_t = K` and `const K& key() const`.
 /// - `multi_t` : When `false`, duplicate keys are rejected by `insert` and the
 ///   existing node is returned. When `true`, duplicates are allowed. Defaults
 ///   to `false`.
 /// - `deleter_t` : A callable that frees a node pointer. Defaults to
 ///   `hxdefault_delete`.
-template<
-	typename node_t_,
-	typename key_t_       = node_t_,
-	typename compare_t_   = hxkey_less<node_t_, key_t_>,
-	bool     multi_t_     = false,
-	typename deleter_t_   = hxdefault_delete>
+template<hxrbtree_concept_ node_t_,
+	bool multi_t_ = false,
+	typename deleter_t_ = hxdefault_delete>
 class hxrbtree {
 public:
 	using node_t    = node_t_;
-	using key_t     = key_t_;
-	using compare_t = compare_t_;
-	using multi_t   = multi_t_;
+	using key_t     = typename node_t_::key_t;
 	using deleter_t = deleter_t_;
 
 	/// Bidirectional iterator over const nodes in ascending key order.
@@ -240,9 +297,9 @@ public:
 	/// Returns a pointer to the first node whose key compares equal to `key`,
 	/// or null if not found. When `multi_t` is `true` the first equal node in
 	/// ascending order is returned.
-	hxattr_nodiscard node_t_* find(const key_t_& key_);
+	hxattr_nodiscard node_t_* find(const typename node_t_::key_t& key_);
 	/// Returns a const pointer to the first node whose key compares equal to `key`.
-	hxattr_nodiscard const node_t_* find(const key_t_& key_) const;
+	hxattr_nodiscard const node_t_* find(const typename node_t_::key_t& key_) const;
 
 	/// Returns a pointer to the minimum (leftmost) node. The tree must not be empty.
 	hxattr_nodiscard node_t_* front(void);
@@ -257,15 +314,15 @@ public:
 
 	/// Returns an iterator to the first node with key greater than or equal to
 	/// `key`, or `end()` if no such node exists.
-	iterator lower_bound(const key_t_& key_);
+	iterator lower_bound(const typename node_t_::key_t& key_);
 	/// Returns a const iterator to the first node with key greater than or equal to `key`.
-	const_iterator lower_bound(const key_t_& key_) const;
+	const_iterator lower_bound(const typename node_t_::key_t& key_) const;
 
 	/// Returns an iterator to the first node with key strictly greater than
 	/// `key`, or `end()` if no such node exists.
-	iterator upper_bound(const key_t_& key_);
+	iterator upper_bound(const typename node_t_::key_t& key_);
 	/// Returns a const iterator to the first node with key strictly greater than `key`.
-	const_iterator upper_bound(const key_t_& key_) const;
+	const_iterator upper_bound(const typename node_t_::key_t& key_) const;
 
 	/// Removes and returns the maximum node without invoking the deleter, or
 	/// null if the tree is empty.
@@ -332,24 +389,24 @@ inline bool hxrbtree_node::rb_is_black_(void) const {
 
 // const_iterator
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline auto hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::const_iterator::operator++(void)
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline auto hxrbtree<node_t_, multi_t_, deleter_t_>::const_iterator::operator++(void)
 	-> const_iterator& {
 	hxassertmsg(m_current_node_ != hxnull, "invalid_iterator");
 	m_current_node_ = hxrbtree::rb_next_(m_current_node_);
 	return *this;
 }
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline auto hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::const_iterator::operator++(int)
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline auto hxrbtree<node_t_, multi_t_, deleter_t_>::const_iterator::operator++(int)
 	-> const_iterator {
 	const_iterator t_(*this);
 	operator++();
 	return t_;
 }
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline auto hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::const_iterator::operator--(void)
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline auto hxrbtree<node_t_, multi_t_, deleter_t_>::const_iterator::operator--(void)
 	-> const_iterator& {
 	if(m_current_node_ != hxnull) {
 		m_current_node_ = hxrbtree::rb_prev_(m_current_node_);
@@ -360,38 +417,38 @@ inline auto hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::const_i
 	return *this;
 }
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline auto hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::const_iterator::operator--(int)
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline auto hxrbtree<node_t_, multi_t_, deleter_t_>::const_iterator::operator--(int)
 	-> const_iterator {
 	const_iterator t_(*this);
 	operator--();
 	return t_;
 }
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline bool hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::const_iterator::operator==(
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline bool hxrbtree<node_t_, multi_t_, deleter_t_>::const_iterator::operator==(
 	const const_iterator& x_) const {
 	return m_current_node_ == x_.m_current_node_;
 }
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline bool hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::const_iterator::operator!=(
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline bool hxrbtree<node_t_, multi_t_, deleter_t_>::const_iterator::operator!=(
 	const const_iterator& x_) const {
 	return m_current_node_ != x_.m_current_node_;
 }
 
 // iterator
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline auto hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::iterator::operator++(int)
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline auto hxrbtree<node_t_, multi_t_, deleter_t_>::iterator::operator++(int)
 	-> iterator {
 	iterator t_(*this);
 	const_iterator::operator++();
 	return t_;
 }
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline auto hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::iterator::operator--(int)
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline auto hxrbtree<node_t_, multi_t_, deleter_t_>::iterator::operator--(int)
 	-> iterator {
 	iterator t_(*this);
 	const_iterator::operator--();
@@ -400,37 +457,37 @@ inline auto hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::iterato
 
 // hxrbtree
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::hxrbtree(void)
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline hxrbtree<node_t_, multi_t_, deleter_t_>::hxrbtree(void)
 	: m_root_(hxnull), m_size_(0u) { }
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline node_t_* hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::back(void) {
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline node_t_* hxrbtree<node_t_, multi_t_, deleter_t_>::back(void) {
 	hxassertmsg(m_root_ != hxnull, "empty_tree");
 	return static_cast<node_t_*>(rb_last_(m_root_));
 }
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline const node_t_* hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::back(void) const {
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline const node_t_* hxrbtree<node_t_, multi_t_, deleter_t_>::back(void) const {
 	hxassertmsg(m_root_ != hxnull, "empty_tree");
 	return static_cast<const node_t_*>(rb_last_(m_root_));
 }
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline auto hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::begin(void) const
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline auto hxrbtree<node_t_, multi_t_, deleter_t_>::begin(void) const
 	-> const_iterator {
 	return const_iterator(rb_first_(m_root_), this);
 }
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline auto hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::end(void) const
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline auto hxrbtree<node_t_, multi_t_, deleter_t_>::end(void) const
 	-> const_iterator {
 	return const_iterator(hxnull, this);
 }
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
 template<typename deleter_override_t_>
-inline void hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::clear(
+inline void hxrbtree<node_t_, multi_t_, deleter_t_>::clear(
 	const deleter_override_t_& deleter_) {
 	hxrbtree_node* node_ = rb_first_(m_root_);
 	while(node_ != hxnull) {
@@ -443,9 +500,9 @@ inline void hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::clear(
 	release_all();
 }
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
 template<typename deleter_override_t_>
-inline void hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::erase(
+inline void hxrbtree<node_t_, multi_t_, deleter_t_>::erase(
 	node_t_* ptr_, const deleter_override_t_& deleter_) {
 	rb_erase_(ptr_, m_root_);
 	--m_size_;
@@ -454,22 +511,22 @@ inline void hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::erase(
 	}
 }
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline node_t_* hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::extract(node_t_* ptr_) {
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline node_t_* hxrbtree<node_t_, multi_t_, deleter_t_>::extract(node_t_* ptr_) {
 	hxassertmsg(ptr_ != hxnull, "null_node");
 	rb_erase_(ptr_, m_root_);
 	--m_size_;
 	return ptr_;
 }
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline node_t_* hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::find(const key_t_& key_) {
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline node_t_* hxrbtree<node_t_, multi_t_, deleter_t_>::find(const typename node_t_::key_t& key_) {
 	hxrbtree_node* node_ = m_root_;
 	while(node_ != hxnull) {
-		if(compare_t_()(static_cast<node_t_&>(*node_), key_)) {
+		if(hxkey_less(static_cast<node_t_&>(*node_).key(), key_)) {
 			node_ = node_->m_rb_right_;
 		}
-		else if(compare_t_()(key_, static_cast<node_t_&>(*node_))) {
+		else if(hxkey_less(key_, static_cast<node_t_&>(*node_).key())) {
 			node_ = node_->m_rb_left_;
 		}
 		else {
@@ -479,35 +536,35 @@ inline node_t_* hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::fin
 	return hxnull;
 }
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline const node_t_* hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::find(
-	const key_t_& key_) const {
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline const node_t_* hxrbtree<node_t_, multi_t_, deleter_t_>::find(
+	const typename node_t_::key_t& key_) const {
 	return const_cast<hxrbtree*>(this)->find(key_);
 }
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline node_t_* hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::front(void) {
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline node_t_* hxrbtree<node_t_, multi_t_, deleter_t_>::front(void) {
 	hxassertmsg(m_root_ != hxnull, "empty_tree");
 	return static_cast<node_t_*>(rb_first_(m_root_));
 }
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline const node_t_* hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::front(void) const {
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline const node_t_* hxrbtree<node_t_, multi_t_, deleter_t_>::front(void) const {
 	hxassertmsg(m_root_ != hxnull, "empty_tree");
 	return static_cast<const node_t_*>(rb_first_(m_root_));
 }
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline node_t_* hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::insert(node_t_* ptr_) {
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline node_t_* hxrbtree<node_t_, multi_t_, deleter_t_>::insert(node_t_* ptr_) {
 	hxassertmsg(ptr_ != hxnull, "null_node");
 	hxrbtree_node** link_ = &m_root_;
 	hxrbtree_node* parent_ = hxnull;
 	while(*link_ != hxnull) {
 		parent_ = *link_;
-		if(compare_t_()(static_cast<node_t_&>(*parent_), static_cast<key_t_&>(*ptr_))) {
+		if(hxkey_less(static_cast<node_t_&>(*parent_).key(), ptr_->key())) {
 			link_ = &parent_->m_rb_right_;
 		}
-		else if(compare_t_()(static_cast<key_t_&>(*ptr_), static_cast<node_t_&>(*parent_))) {
+		else if(hxkey_less(ptr_->key(), static_cast<node_t_&>(*parent_).key())) {
 			link_ = &parent_->m_rb_left_;
 		}
 		else if(!multi_t_) {
@@ -526,13 +583,13 @@ inline node_t_* hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::ins
 	return ptr_;
 }
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline auto hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::lower_bound(const key_t_& key_)
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline auto hxrbtree<node_t_, multi_t_, deleter_t_>::lower_bound(const typename node_t_::key_t& key_)
 	-> iterator {
 	hxrbtree_node* node_ = m_root_;
 	hxrbtree_node* result_ = hxnull;
 	while(node_ != hxnull) {
-		if(compare_t_()(static_cast<node_t_&>(*node_), key_)) {
+		if(hxkey_less(static_cast<node_t_&>(*node_).key(), key_)) {
 			node_ = node_->m_rb_right_;
 		}
 		else {
@@ -543,19 +600,19 @@ inline auto hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::lower_b
 	return iterator(result_, this);
 }
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline auto hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::lower_bound(const key_t_& key_)
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline auto hxrbtree<node_t_, multi_t_, deleter_t_>::lower_bound(const typename node_t_::key_t& key_)
 	const -> const_iterator {
 	return const_cast<hxrbtree*>(this)->lower_bound(key_);
 }
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline auto hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::upper_bound(const key_t_& key_)
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline auto hxrbtree<node_t_, multi_t_, deleter_t_>::upper_bound(const typename node_t_::key_t& key_)
 	-> iterator {
 	hxrbtree_node* node_ = m_root_;
 	hxrbtree_node* result_ = hxnull;
 	while(node_ != hxnull) {
-		if(compare_t_()(key_, static_cast<node_t_&>(*node_))) {
+		if(hxkey_less(key_, static_cast<node_t_&>(*node_).key())) {
 			result_ = node_;
 			node_ = node_->m_rb_left_;
 		}
@@ -566,14 +623,14 @@ inline auto hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::upper_b
 	return iterator(result_, this);
 }
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline auto hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::upper_bound(const key_t_& key_)
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline auto hxrbtree<node_t_, multi_t_, deleter_t_>::upper_bound(const typename node_t_::key_t& key_)
 	const -> const_iterator {
 	return const_cast<hxrbtree*>(this)->upper_bound(key_);
 }
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline node_t_* hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::pop_back(void) {
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline node_t_* hxrbtree<node_t_, multi_t_, deleter_t_>::pop_back(void) {
 	if(m_root_ == hxnull) {
 		return hxnull;
 	}
@@ -583,8 +640,8 @@ inline node_t_* hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::pop
 	return ptr_;
 }
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline node_t_* hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::pop_front(void) {
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline node_t_* hxrbtree<node_t_, multi_t_, deleter_t_>::pop_front(void) {
 	if(m_root_ == hxnull) {
 		return hxnull;
 	}
@@ -594,16 +651,16 @@ inline node_t_* hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::pop
 	return ptr_;
 }
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline void hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::release_all(void) {
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline void hxrbtree<node_t_, multi_t_, deleter_t_>::release_all(void) {
 	m_root_  = hxnull;
 	m_size_  = 0u;
 }
 
 // rb_first_ / rb_last_ / rb_next_ / rb_prev_
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline hxrbtree_node* hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::rb_first_(
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline hxrbtree_node* hxrbtree<node_t_, multi_t_, deleter_t_>::rb_first_(
 	hxrbtree_node* root_) {
 	if(root_ == hxnull) {
 		return hxnull;
@@ -614,8 +671,8 @@ inline hxrbtree_node* hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_
 	return root_;
 }
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline hxrbtree_node* hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::rb_last_(
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline hxrbtree_node* hxrbtree<node_t_, multi_t_, deleter_t_>::rb_last_(
 	hxrbtree_node* root_) {
 	if(root_ == hxnull) {
 		return hxnull;
@@ -626,8 +683,8 @@ inline hxrbtree_node* hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_
 	return root_;
 }
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline hxrbtree_node* hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::rb_next_(
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline hxrbtree_node* hxrbtree<node_t_, multi_t_, deleter_t_>::rb_next_(
 	hxrbtree_node* node_) {
 	if(node_->m_rb_right_ != hxnull) {
 		return rb_first_(node_->m_rb_right_);
@@ -640,8 +697,8 @@ inline hxrbtree_node* hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_
 	return parent_;
 }
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline hxrbtree_node* hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::rb_prev_(
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline hxrbtree_node* hxrbtree<node_t_, multi_t_, deleter_t_>::rb_prev_(
 	hxrbtree_node* node_) {
 	if(node_->m_rb_left_ != hxnull) {
 		return rb_last_(node_->m_rb_left_);
@@ -656,8 +713,8 @@ inline hxrbtree_node* hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_
 
 // rb_rotate_left_ / rb_rotate_right_
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline void hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::rb_rotate_left_(
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline void hxrbtree<node_t_, multi_t_, deleter_t_>::rb_rotate_left_(
 	hxrbtree_node* node_, hxrbtree_node*& root_) {
 	hxrbtree_node* right_ = node_->m_rb_right_;
 	hxrbtree_node* parent_ = node_->rb_parent_();
@@ -681,8 +738,8 @@ inline void hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::rb_rota
 	node_->rb_set_parent_(right_);
 }
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline void hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::rb_rotate_right_(
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline void hxrbtree<node_t_, multi_t_, deleter_t_>::rb_rotate_right_(
 	hxrbtree_node* node_, hxrbtree_node*& root_) {
 	hxrbtree_node* left_ = node_->m_rb_left_;
 	hxrbtree_node* parent_ = node_->rb_parent_();
@@ -708,8 +765,8 @@ inline void hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::rb_rota
 
 // rb_insert_color_
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline void hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::rb_insert_color_(
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline void hxrbtree<node_t_, multi_t_, deleter_t_>::rb_insert_color_(
 	hxrbtree_node* node_, hxrbtree_node*& root_) {
 	hxrbtree_node* parent_ = node_->rb_parent_();
 	while(parent_ != hxnull && parent_->rb_is_red_()) {
@@ -762,8 +819,8 @@ inline void hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::rb_inse
 
 // rb_erase_
 
-template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, typename deleter_t_>
-inline void hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::rb_erase_(
+template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
+inline void hxrbtree<node_t_, multi_t_, deleter_t_>::rb_erase_(
 	hxrbtree_node* node_, hxrbtree_node*& root_) {
 	hxrbtree_node* child_  = hxnull;
 	hxrbtree_node* parent_ = hxnull;
@@ -896,3 +953,4 @@ rebalance_:
 		child_->rb_set_color_(1);
 	}
 }
+

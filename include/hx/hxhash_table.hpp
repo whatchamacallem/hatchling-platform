@@ -19,7 +19,6 @@
 /// ```
 /// class T {
 ///   using key_t = K;			// Tell the hash table what key to use.
-///   T(key_t);					// Construct from key. e.g., for operator[].
 ///   void*& hash_next();		// Used by hxhash_table for an embedded linked list.
 ///   void* hash_next() const;	// Constant version of hash_next.
 ///   const key_t& key() const;	// Returns key constructed with.
@@ -138,11 +137,10 @@ private:
 
 /// `hxhash_table` - See the top of this file for a description.
 ///
-/// `node_t` must be a subclass of `hxhash_table_node` with the interface
-/// described above. If non-zero, `table_size_bits` configures the hash table
-/// size to `2^table_size_bits`. Otherwise use `set_table_size_bits` to configure
-/// hash bits dynamically. See `hxdo_not_delete` for situations where the table
-/// does not own the nodes.
+/// `node_t` must implement the interface/concept described above. If non-zero,
+/// `table_size_bits` configures the hash table size to `2^table_size_bits`.
+/// Otherwise use `set_table_size_bits` to configure hash bits dynamically. See
+/// `hxdo_not_delete` for situations where the table does not own the nodes.
 template<hxhash_table_concept_ node_t_,
 	hxhash_t table_size_bits_=hxallocator_dynamic_capacity,
 	typename deleter_t_=hxdefault_delete>

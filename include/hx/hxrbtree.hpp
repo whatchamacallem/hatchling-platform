@@ -14,12 +14,15 @@
 /// The node color is stored in the low bit of the parent pointer, matching the
 /// Linux kernel `rb_node` layout. `RB_RED` is `0` and `RB_BLACK` is `1`.
 ///
-/// `compare_t` is called as `compare_t()(node, key)` and must return a negative
-/// value when `node < key`, zero when equal, and a positive value when
-/// `node > key`. The default `hxrbtree_compare` wraps `hxkey_less` to provide
-/// this contract. On C++20 and later, `hxrbtree_compare_three_way` is also
-/// available as an alternative that uses `operator<=>` directly. Custom
-/// functors are recommended for complex key types.
+/// `compare_t` is a strict less-than predicate called as `compare_t()(a, b)`
+/// returning `true` when `a < b`. The default `compare_t` is
+/// `hxkey_less`. Each traversal step calls the predicate twice: once as
+/// `compare_t()(node, key)` to test whether to go right, and once as
+/// `compare_t()(key, node)` to test whether to go left. Equality is the
+/// remaining case. Custom functors are recommended for complex key types.
+///
+/// The generated assembly should be ideal for common use cases. Explicit support
+/// for the spaceship operator `<=>` is easy enough to add.
 ///
 /// When `multi_t` is `false` (set or map semantics), `insert` returns the
 /// existing node on a key collision without inserting the new node. The caller
@@ -39,8 +42,8 @@
 ///   };
 ///
 ///   struct example_compare_t {
-///       int operator()(const example_t& node, const example_t& k) const {
-///           return (node.key > k.key) - (node.key < k.key);
+///       bool operator()(const example_t& a, const example_t& b) const {
+///           return a.key < b.key;
 ///       }
 ///   };
 ///
@@ -55,35 +58,6 @@
 #include "hxkey.hpp"
 #include "hxmemory_manager.h"
 #include "hxutility.h"
-
-/// Default comparator for `hxrbtree`. Wraps `hxkey_less` into the three-way
-/// `int` convention required by `compare_t`. Returns negative when
-/// `node < key`, zero when equal, and positive when `node > key`.
-/// - `node_t_` : Node type passed as the left-hand operand of `hxkey_less`.
-/// - `key_t_` : Key type passed as the right-hand operand of `hxkey_less`.
-template<typename node_t_, typename key_t_>
-struct hxrbtree_compare {
-	int operator()(const node_t_& node_, const key_t_& key_) const {
-		return static_cast<int>(hxkey_less(key_, node_)) - static_cast<int>(hxkey_less(node_, key_));
-	}
-};
-
-#if HX_CPLUSPLUS >= 202002L
-/// C++20 comparator for `hxrbtree` that uses the spaceship operator `<=>`.
-/// Suitable as the `compare_t` template argument when `node_t` and `key_t`
-/// define `operator<=>`. The result of `<=>` is mapped to a negative, zero, or
-/// positive `int` without naming any `std` ordering type, keeping this
-/// comparator free of standard library dependencies.
-/// - `node_t_` : Node type. Must support `operator<=>(const key_t_&)`.
-/// - `key_t_` : Key type.
-template<typename node_t_, typename key_t_>
-struct hxrbtree_compare_three_way {
-	int operator()(const node_t_& node_, const key_t_& key_) const {
-		auto order_ = (node_ <=> key_);
-		return static_cast<int>(order_ > 0) - static_cast<int>(order_ < 0);
-	}
-};
-#endif
 
 /// Intrusive red-black tree node base. Derive from `hxrbtree_node` to make a
 /// type linkable into an `hxrbtree`. Nodes default to unlinked on construction.
@@ -127,8 +101,8 @@ static_assert(alignof(hxrbtree_node) >= 2, "hxrbtree_node alignment insufficient
 /// - `node_t` : The node type. Must derive from `hxrbtree_node`.
 /// - `key_t` : The key type used by `find`, `lower_bound`, and `upper_bound`.
 ///   Defaults to `node_t`.
-/// - `compare_t` : A callable with signature `int(const node_t&, const key_t&)`
-///   returning negative, zero, or positive. Defaults to `hxrbtree_compare`.
+/// - `compare_t` : A strict less-than predicate with signature
+///   `bool(const a&, const b&)`. Defaults to `hxrbtree_less`.
 /// - `multi_t` : When `false`, duplicate keys are rejected by `insert` and the
 ///   existing node is returned. When `true`, duplicates are allowed. Defaults
 ///   to `false`.
@@ -137,13 +111,16 @@ static_assert(alignof(hxrbtree_node) >= 2, "hxrbtree_node alignment insufficient
 template<
 	typename node_t_,
 	typename key_t_       = node_t_,
-	typename compare_t_   = hxrbtree_compare<node_t_, key_t_>,
+	typename compare_t_   = hxkey_less<node_t_, key_t_>,
 	bool     multi_t_     = false,
 	typename deleter_t_   = hxdefault_delete>
 class hxrbtree {
 public:
-	using node_t = node_t_;
-	using key_t  = key_t_;
+	using node_t    = node_t_;
+	using key_t     = key_t_;
+	using compare_t = compare_t_;
+	using multi_t   = multi_t_;
+	using deleter_t = deleter_t_;
 
 	/// Bidirectional iterator over const nodes in ascending key order.
 	/// Incrementing past `end()` or decrementing past `begin()` is undefined.
@@ -489,11 +466,10 @@ template<typename node_t_, typename key_t_, typename compare_t_, bool multi_t_, 
 inline node_t_* hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::find(const key_t_& key_) {
 	hxrbtree_node* node_ = m_root_;
 	while(node_ != hxnull) {
-		int cmp_ = compare_t_()(static_cast<node_t_&>(*node_), key_);
-		if(cmp_ < 0) {
+		if(compare_t_()(static_cast<node_t_&>(*node_), key_)) {
 			node_ = node_->m_rb_right_;
 		}
-		else if(cmp_ > 0) {
+		else if(compare_t_()(key_, static_cast<node_t_&>(*node_))) {
 			node_ = node_->m_rb_left_;
 		}
 		else {
@@ -528,11 +504,10 @@ inline node_t_* hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::ins
 	hxrbtree_node* parent_ = hxnull;
 	while(*link_ != hxnull) {
 		parent_ = *link_;
-		int cmp_ = compare_t_()(static_cast<node_t_&>(*parent_), static_cast<key_t_&>(*ptr_));
-		if(cmp_ < 0) {
+		if(compare_t_()(static_cast<node_t_&>(*parent_), static_cast<key_t_&>(*ptr_))) {
 			link_ = &parent_->m_rb_right_;
 		}
-		else if(cmp_ > 0) {
+		else if(compare_t_()(static_cast<key_t_&>(*ptr_), static_cast<node_t_&>(*parent_))) {
 			link_ = &parent_->m_rb_left_;
 		}
 		else if(!multi_t_) {
@@ -557,8 +532,7 @@ inline auto hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::lower_b
 	hxrbtree_node* node_ = m_root_;
 	hxrbtree_node* result_ = hxnull;
 	while(node_ != hxnull) {
-		int cmp_ = compare_t_()(static_cast<node_t_&>(*node_), key_);
-		if(cmp_ < 0) {
+		if(compare_t_()(static_cast<node_t_&>(*node_), key_)) {
 			node_ = node_->m_rb_right_;
 		}
 		else {
@@ -581,13 +555,12 @@ inline auto hxrbtree<node_t_, key_t_, compare_t_, multi_t_, deleter_t_>::upper_b
 	hxrbtree_node* node_ = m_root_;
 	hxrbtree_node* result_ = hxnull;
 	while(node_ != hxnull) {
-		int cmp_ = compare_t_()(static_cast<node_t_&>(*node_), key_);
-		if(cmp_ <= 0) {
-			node_ = node_->m_rb_right_;
-		}
-		else {
+		if(compare_t_()(key_, static_cast<node_t_&>(*node_))) {
 			result_ = node_;
 			node_ = node_->m_rb_left_;
+		}
+		else {
+			node_ = node_->m_rb_right_;
 		}
 	}
 	return iterator(result_, this);

@@ -18,7 +18,7 @@
 ///   };
 ///
 ///   hxlist<example_t> list;
-///   list.push_back(hxnew<example_t>());
+///   list.push_back(hxnew<example_t>(7));
 ///
 ///   for(example_t& n : list) {
 ///       ::printf("%d\n", n.value);
@@ -57,8 +57,7 @@ private:
 /// heterogeneously. Recover the concrete type with `static_cast`.
 /// - `node_t` : The node type. Must derive from `hxlist_node`.
 /// - `deleter_t` : A callable that frees a node pointer. Defaults to `hxdefault_delete`.
-template<typename node_t_,
-	typename deleter_t_=hxdefault_delete>
+template<typename node_t_, typename deleter_t_=hxdefault_delete>
 class hxlist {
 public:
 	using node_t = node_t_;
@@ -133,70 +132,21 @@ public:
 	/// every remaining node.
 	~hxlist(void) { this->clear(); }
 
+	/// Returns a pointer to the last node. The list must not be empty.
+	hxattr_nodiscard node_t_* back(void);
+	/// Returns a const pointer to the last node. The list must not be empty.
+	hxattr_nodiscard const node_t_* back(void) const;
+
 	/// Returns an iterator to the first node, or `end()` if the list is empty.
 	iterator begin(void) { return iterator(m_head_.list_next_(), sentinel_()); }
 	/// Returns a const iterator to the first node, or `end()` if the list is empty.
 	const_iterator begin(void) const;
-
-	/// Returns an iterator to the sentinel, representing one past the last node.
-	iterator end(void) { return iterator(sentinel_(), sentinel_()); }
-	/// Returns a const iterator to the sentinel, representing one past the last node.
-	const_iterator end(void) const;
 
 	/// Returns a const iterator to the first node, or `cend()` if the list is empty.
 	const_iterator cbegin(void) const { return begin(); }
 
 	/// Returns a const iterator to the sentinel, representing one past the last node.
 	const_iterator cend(void) const { return end(); }
-
-	/// Returns the number of nodes currently in the list.
-	hxattr_nodiscard size_t size(void) const { return m_size_; }
-
-	/// Returns `true` if the list contains no nodes.
-	hxattr_nodiscard bool empty(void) const { return m_head_.list_next_() == sentinel_(); }
-
-	/// Returns a pointer to the first node. The list must not be empty.
-	hxattr_nodiscard node_t_* front(void);
-	/// Returns a const pointer to the first node. The list must not be empty.
-	hxattr_nodiscard const node_t_* front(void) const;
-
-	/// Returns a pointer to the last node. The list must not be empty.
-	hxattr_nodiscard node_t_* back(void);
-	/// Returns a const pointer to the last node. The list must not be empty.
-	hxattr_nodiscard const node_t_* back(void) const;
-
-	/// Inserts `ptr` at the front of the list. `ptr` must not be null.
-	void push_front(node_t_* ptr_);
-
-	/// Inserts `ptr` at the back of the list. `ptr` must not be null.
-	void push_back(node_t_* ptr_);
-
-	/// Removes and returns the first node without invoking the deleter, or null
-	/// if the list is empty.
-	node_t_* pop_front(void);
-
-	/// Removes and returns the last node without invoking the deleter, or null
-	/// if the list is empty.
-	node_t_* pop_back(void);
-
-	/// Inserts `ptr` immediately before `pos`. Both `pos` and `ptr` must not be null.
-	void insert_before(node_t_* pos_, node_t_* ptr_);
-
-	/// Inserts `ptr` immediately after `pos`. Both `pos` and `ptr` must not be null.
-	void insert_after(node_t_* pos_, node_t_* ptr_);
-
-	/// Unlinks `ptr` from the list and returns it without invoking the deleter.
-	/// `ptr` must not be null.
-	node_t_* extract(node_t_* ptr_);
-
-	/// Unlinks `ptr` from the list and invokes `deleter` on it. If `deleter`
-	/// evaluates to false it is not called.
-	/// - `deleter` : Override deleter callable. Called only if it evaluates to true.
-	template<typename deleter_override_t_>
-	void erase(node_t_* ptr_, const deleter_override_t_& deleter_);
-
-	/// Unlinks and deletes `ptr` using the list's default `deleter_t`.
-	void erase(node_t_* ptr_) { this->erase(ptr_, deleter_t_()); }
 
 	/// Removes all nodes, invoking `deleter` on each. If `deleter` evaluates to
 	/// false nodes are unlinked but not freed.
@@ -207,10 +157,59 @@ public:
 	/// Removes all nodes using the list's default `deleter_t`.
 	void clear(void) { this->clear(deleter_t_()); }
 
+	/// Returns `true` if the list contains no nodes.
+	hxattr_nodiscard bool empty(void) const { return m_head_.list_next_() == sentinel_(); }
+
+	/// Returns an iterator to the sentinel, representing one past the last node.
+	iterator end(void) { return iterator(sentinel_(), sentinel_()); }
+	/// Returns a const iterator to the sentinel, representing one past the last node.
+	const_iterator end(void) const;
+
+	/// Unlinks `ptr` from the list and invokes `deleter` on it. If `deleter`
+	/// evaluates to false it is not called.
+	/// - `deleter` : Override deleter callable. Called only if it evaluates to true.
+	template<typename deleter_override_t_>
+	void erase(node_t_* ptr_, const deleter_override_t_& deleter_);
+
+	/// Unlinks and deletes `ptr` using the list's default `deleter_t`.
+	void erase(node_t_* ptr_) { this->erase(ptr_, deleter_t_()); }
+
+	/// Unlinks `ptr` from the list and returns it without invoking the deleter.
+	/// `ptr` must not be null.
+	node_t_* extract(node_t_* ptr_);
+
+	/// Returns a pointer to the first node. The list must not be empty.
+	hxattr_nodiscard node_t_* front(void);
+	/// Returns a const pointer to the first node. The list must not be empty.
+	hxattr_nodiscard const node_t_* front(void) const;
+
+	/// Inserts `ptr` immediately after `pos`. Both `pos` and `ptr` must not be null.
+	void insert_after(node_t_* pos_, node_t_* ptr_);
+
+	/// Inserts `ptr` immediately before `pos`. Both `pos` and `ptr` must not be null.
+	void insert_before(node_t_* pos_, node_t_* ptr_);
+
+	/// Removes and returns the last node without invoking the deleter, or null
+	/// if the list is empty.
+	node_t_* pop_back(void);
+
+	/// Removes and returns the first node without invoking the deleter, or null
+	/// if the list is empty.
+	node_t_* pop_front(void);
+
+	/// Inserts `ptr` at the back of the list. `ptr` must not be null.
+	void push_back(node_t_* ptr_);
+
+	/// Inserts `ptr` at the front of the list. `ptr` must not be null.
+	void push_front(node_t_* ptr_);
+
 	/// Resets the list to empty without invoking the deleter on any node.
 	/// Ownership of all nodes is abandoned; use only when nodes are managed
 	/// elsewhere or have already been freed.
 	void release_all(void);
+
+	/// Returns the number of nodes currently in the list.
+	hxattr_nodiscard size_t size(void) const { return m_size_; }
 
 private:
 	hxlist(const hxlist&) = delete;
@@ -294,28 +293,6 @@ inline hxlist<node_t_, deleter_t_>::hxlist(void) {
 }
 
 template<typename node_t_, typename deleter_t_>
-inline auto hxlist<node_t_, deleter_t_>::begin(void) const -> const_iterator {
-	return const_iterator(m_head_.list_next_(), sentinel_());
-}
-
-template<typename node_t_, typename deleter_t_>
-inline auto hxlist<node_t_, deleter_t_>::end(void) const -> const_iterator {
-	return const_iterator(sentinel_(), sentinel_());
-}
-
-template<typename node_t_, typename deleter_t_>
-inline node_t_* hxlist<node_t_, deleter_t_>::front(void) {
-	hxassertmsg(!empty(), "empty_list");
-	return static_cast<node_t_*>(m_head_.list_next_());
-}
-
-template<typename node_t_, typename deleter_t_>
-inline const node_t_* hxlist<node_t_, deleter_t_>::front(void) const {
-	hxassertmsg(!empty(), "empty_list");
-	return static_cast<const node_t_*>(m_head_.list_next_());
-}
-
-template<typename node_t_, typename deleter_t_>
 inline node_t_* hxlist<node_t_, deleter_t_>::back(void) {
 	hxassertmsg(!empty(), "empty_list");
 	return static_cast<node_t_*>(m_head_.list_prev_());
@@ -328,86 +305,13 @@ inline const node_t_* hxlist<node_t_, deleter_t_>::back(void) const {
 }
 
 template<typename node_t_, typename deleter_t_>
-inline void hxlist<node_t_, deleter_t_>::push_front(node_t_* ptr_) {
-	hxassertmsg(ptr_ != hxnull, "null_node");
-	hxlist_node* old_first_ = m_head_.list_next_();
-	ptr_->list_next_() = old_first_;
-	ptr_->list_prev_() = sentinel_();
-	old_first_->list_prev_() = ptr_;
-	m_head_.list_next_() = ptr_;
-	++m_size_;
+inline auto hxlist<node_t_, deleter_t_>::begin(void) const -> const_iterator {
+	return const_iterator(m_head_.list_next_(), sentinel_());
 }
 
 template<typename node_t_, typename deleter_t_>
-inline void hxlist<node_t_, deleter_t_>::push_back(node_t_* ptr_) {
-	hxassertmsg(ptr_ != hxnull, "null_node");
-	hxlist_node* old_last_ = m_head_.list_prev_();
-	ptr_->list_prev_() = old_last_;
-	ptr_->list_next_() = sentinel_();
-	old_last_->list_next_() = ptr_;
-	m_head_.list_prev_() = ptr_;
-	++m_size_;
-}
-
-template<typename node_t_, typename deleter_t_>
-inline node_t_* hxlist<node_t_, deleter_t_>::pop_front(void) {
-	if(empty()) {
-		return hxnull;
-	}
-	node_t_* ptr_ = static_cast<node_t_*>(m_head_.list_next_());
-	extract_(ptr_);
-	return ptr_;
-}
-
-template<typename node_t_, typename deleter_t_>
-inline node_t_* hxlist<node_t_, deleter_t_>::pop_back(void) {
-	if(empty()) {
-		return hxnull;
-	}
-	node_t_* ptr_ = static_cast<node_t_*>(m_head_.list_prev_());
-	extract_(ptr_);
-	return ptr_;
-}
-
-template<typename node_t_, typename deleter_t_>
-inline void hxlist<node_t_, deleter_t_>::insert_before(
-	node_t_* pos_, node_t_* ptr_) {
-	hxassertmsg(pos_ != hxnull && ptr_ != hxnull, "null_node");
-	hxlist_node* prev_ = pos_->list_prev_();
-	ptr_->list_prev_() = prev_;
-	ptr_->list_next_() = pos_;
-	prev_->list_next_() = ptr_;
-	pos_->list_prev_() = ptr_;
-	++m_size_;
-}
-
-template<typename node_t_, typename deleter_t_>
-inline void hxlist<node_t_, deleter_t_>::insert_after(
-	node_t_* pos_, node_t_* ptr_) {
-	hxassertmsg(pos_ != hxnull && ptr_ != hxnull, "null_node");
-	hxlist_node* next_ = pos_->list_next_();
-	ptr_->list_next_() = next_;
-	ptr_->list_prev_() = pos_;
-	next_->list_prev_() = ptr_;
-	pos_->list_next_() = ptr_;
-	++m_size_;
-}
-
-template<typename node_t_, typename deleter_t_>
-inline node_t_* hxlist<node_t_, deleter_t_>::extract(node_t_* ptr_) {
-	hxassertmsg(ptr_ != hxnull, "null_node");
-	extract_(ptr_);
-	return ptr_;
-}
-
-template<typename node_t_, typename deleter_t_>
-template<typename deleter_override_t_>
-inline void hxlist<node_t_, deleter_t_>::erase(
-	node_t_* ptr_, const deleter_override_t_& deleter_) {
-	extract_(ptr_);
-	if(deleter_) {
-		deleter_(ptr_);
-	}
+inline auto hxlist<node_t_, deleter_t_>::end(void) const -> const_iterator {
+	return const_iterator(sentinel_(), sentinel_());
 }
 
 template<typename node_t_, typename deleter_t_>
@@ -428,6 +332,101 @@ inline void hxlist<node_t_, deleter_t_>::clear(
 			release_all();
 		}
 	}
+}
+
+template<typename node_t_, typename deleter_t_>
+template<typename deleter_override_t_>
+inline void hxlist<node_t_, deleter_t_>::erase(
+	node_t_* ptr_, const deleter_override_t_& deleter_) {
+	extract_(ptr_);
+	if(deleter_) {
+		deleter_(ptr_);
+	}
+}
+
+template<typename node_t_, typename deleter_t_>
+inline node_t_* hxlist<node_t_, deleter_t_>::extract(node_t_* ptr_) {
+	hxassertmsg(ptr_ != hxnull, "null_node");
+	extract_(ptr_);
+	return ptr_;
+}
+
+template<typename node_t_, typename deleter_t_>
+inline node_t_* hxlist<node_t_, deleter_t_>::front(void) {
+	hxassertmsg(!empty(), "empty_list");
+	return static_cast<node_t_*>(m_head_.list_next_());
+}
+
+template<typename node_t_, typename deleter_t_>
+inline const node_t_* hxlist<node_t_, deleter_t_>::front(void) const {
+	hxassertmsg(!empty(), "empty_list");
+	return static_cast<const node_t_*>(m_head_.list_next_());
+}
+
+template<typename node_t_, typename deleter_t_>
+inline void hxlist<node_t_, deleter_t_>::insert_after(
+	node_t_* pos_, node_t_* ptr_) {
+	hxassertmsg(pos_ != hxnull && ptr_ != hxnull, "null_node");
+	hxlist_node* next_ = pos_->list_next_();
+	ptr_->list_next_() = next_;
+	ptr_->list_prev_() = pos_;
+	next_->list_prev_() = ptr_;
+	pos_->list_next_() = ptr_;
+	++m_size_;
+}
+
+template<typename node_t_, typename deleter_t_>
+inline void hxlist<node_t_, deleter_t_>::insert_before(
+	node_t_* pos_, node_t_* ptr_) {
+	hxassertmsg(pos_ != hxnull && ptr_ != hxnull, "null_node");
+	hxlist_node* prev_ = pos_->list_prev_();
+	ptr_->list_prev_() = prev_;
+	ptr_->list_next_() = pos_;
+	prev_->list_next_() = ptr_;
+	pos_->list_prev_() = ptr_;
+	++m_size_;
+}
+
+template<typename node_t_, typename deleter_t_>
+inline node_t_* hxlist<node_t_, deleter_t_>::pop_back(void) {
+	if(empty()) {
+		return hxnull;
+	}
+	node_t_* ptr_ = static_cast<node_t_*>(m_head_.list_prev_());
+	extract_(ptr_);
+	return ptr_;
+}
+
+template<typename node_t_, typename deleter_t_>
+inline node_t_* hxlist<node_t_, deleter_t_>::pop_front(void) {
+	if(empty()) {
+		return hxnull;
+	}
+	node_t_* ptr_ = static_cast<node_t_*>(m_head_.list_next_());
+	extract_(ptr_);
+	return ptr_;
+}
+
+template<typename node_t_, typename deleter_t_>
+inline void hxlist<node_t_, deleter_t_>::push_back(node_t_* ptr_) {
+	hxassertmsg(ptr_ != hxnull, "null_node");
+	hxlist_node* old_last_ = m_head_.list_prev_();
+	ptr_->list_prev_() = old_last_;
+	ptr_->list_next_() = sentinel_();
+	old_last_->list_next_() = ptr_;
+	m_head_.list_prev_() = ptr_;
+	++m_size_;
+}
+
+template<typename node_t_, typename deleter_t_>
+inline void hxlist<node_t_, deleter_t_>::push_front(node_t_* ptr_) {
+	hxassertmsg(ptr_ != hxnull, "null_node");
+	hxlist_node* old_first_ = m_head_.list_next_();
+	ptr_->list_next_() = old_first_;
+	ptr_->list_prev_() = sentinel_();
+	old_first_->list_prev_() = ptr_;
+	m_head_.list_next_() = ptr_;
+	++m_size_;
 }
 
 template<typename node_t_, typename deleter_t_>

@@ -323,14 +323,14 @@ TEST_F(hxhash_table_test_f, strings) {
 		"Red","Orange","Yellow",
 		"Green","Cyan","Blue",
 		"Indigo","Violet" };
-	const int sz = hxsize(colors);
+	const size_t sz = hxsize(colors);
 
 	{
 		using table_t = hxhash_table<hxtest_string, 4>;
 		table_t table;
 
 		// Insert colors in reverse. insert_unique inserts each new key and returns it.
-		for(int i = sz; i-- != 0;) {
+		for(size_t i = sz; i-- != 0;) {
 			hxtest_string* n = hxnew<hxtest_string>(colors[i]);
 			hxtest_string* inserted = table.insert_unique(n);
 			EXPECT_EQ(inserted, n);

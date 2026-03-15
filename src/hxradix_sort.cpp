@@ -9,7 +9,7 @@
 // reasonable choice here.
 using hxhistogram_t = uint32_t;
 
-void hxradix_sort_void(hxradix_sort_key_void* begin, hxradix_sort_key_void* end) {
+hxattr_hot void hxradix_sort_void(hxradix_sort_key_void* begin, hxradix_sort_key_void* end) {
 	// Check for size overflowing hxhistogram_t.
 	hxassertmsg(static_cast<size_t>(end - begin) < ~static_cast<hxhistogram_t>(0), "hxradix_sort_void Too big.");
 
@@ -48,7 +48,7 @@ void hxradix_sort_void(hxradix_sort_key_void* begin, hxradix_sort_key_void* end)
 
 	// Convert histograms to start indices
 	hxhistogram_t sum0 = 0u, sum1 = 0u, sum2 = 0u, sum3 = 0u;
-	for(hxhistogram_t i = 0u; i < 256u; ++i) {
+	for(size_t i = 0u; i < 256u; ++i) { // size_t avoids 32-bit zero-extension on 64-bit per iteration
 		const hxhistogram_t t0 = hist0[i] + sum0; hist0[i] = sum0; sum0 = t0;
 		const hxhistogram_t t1 = hist1[i] + sum1; hist1[i] = sum1; sum1 = t1;
 		const hxhistogram_t t2 = hist2[i] + sum2; hist2[i] = sum2; sum2 = t2;
@@ -75,7 +75,7 @@ void hxradix_sort_void(hxradix_sort_key_void* begin, hxradix_sort_key_void* end)
 	hxfree(buf1);
 }
 
-void hxradix_sort_void11(hxradix_sort_key_void* begin, hxradix_sort_key_void* end) {
+hxattr_hot void hxradix_sort_void11(hxradix_sort_key_void* begin, hxradix_sort_key_void* end) {
 	// Check for size overflowing hxhistogram_t.
 	hxassertmsg(static_cast<size_t>(end - begin) < ~static_cast<hxhistogram_t>(0), "hxradix_sort_void Too big.");
 
@@ -113,12 +113,12 @@ void hxradix_sort_void11(hxradix_sort_key_void* begin, hxradix_sort_key_void* en
 
 	// Convert histograms to start indices
 	hxhistogram_t sum0 = 0u, sum1 = 0u, sum2 = 0u;
-	for(hxhistogram_t i = 0u; i < 1024u; ++i) {
+	for(size_t i = 0u; i < 1024u; ++i) { // size_t avoids 32-bit zero-extension on 64-bit per iteration
 		const hxhistogram_t t0 = hist0[i] + sum0; hist0[i] = sum0; sum0 = t0;
 		const hxhistogram_t t1 = hist1[i] + sum1; hist1[i] = sum1; sum1 = t1;
 		const hxhistogram_t t2 = hist2[i] + sum2; hist2[i] = sum2; sum2 = t2;
 	}
-	for(hxhistogram_t i = 1024u; i < 2048u; ++i) {
+	for(size_t i = 1024u; i < 2048u; ++i) {
 		const hxhistogram_t t0 = hist0[i] + sum0; hist0[i] = sum0; sum0 = t0;
 		const hxhistogram_t t1 = hist1[i] + sum1; hist1[i] = sum1; sum1 = t1;
 	}

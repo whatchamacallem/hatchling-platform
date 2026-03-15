@@ -125,7 +125,8 @@ hxattr_nodiscard constexpr hxhash_t hxkey_hash(T_ x_) {
 hxattr_nodiscard hxattr_hot inline hxhash_t hxkey_hash(const char* s_) {
     hxhash_t x_ = hxhash_t{0x811c9dc5};
     while(*s_ != '\0') {
-        x_ ^= static_cast<hxhash_t>(*s_++);
+        // Enforce zero extension. It may also be a perf issue.
+        x_ ^= static_cast<hxhash_t>(static_cast<unsigned char>(*s_++));
         x_ *= hxhash_t{0x01000193};
     }
     return x_;

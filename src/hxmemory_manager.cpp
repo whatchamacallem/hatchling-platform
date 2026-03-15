@@ -397,7 +397,7 @@ void hxmemory_manager::destruct(void) {
 size_t hxmemory_manager::leak_count(void) {
 	size_t leak_count = 0;
 	HX_MEMORY_MANAGER_LOCK_();
-	for(int32_t i = 0; i != hxsystem_allocator_current; ++i) {
+	for(size_t i = 0; i != hxsystem_allocator_current; ++i) {
 		hxmemory_allocator_base& allocator = *m_memory_allocators[i];
 		const hxsystem_allocator_t allocator_id = static_cast<hxsystem_allocator_t>(i);
 		if(allocator.get_allocation_count(allocator_id) != 0u) {

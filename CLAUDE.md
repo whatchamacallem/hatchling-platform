@@ -91,6 +91,7 @@ otherwise. Do not put `;` or `-` in english sentences unless it is part of a
 code block. Documentation will be explicitly requested when the design is final.
 Usage examples in documentation are not expected to follow the preceding rules
 and are instead examples of code written independently outside of the project.
+Put comments on preceding lines instead of on the same line as code.
 
 ## Project Structure
 

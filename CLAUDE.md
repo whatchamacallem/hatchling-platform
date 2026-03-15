@@ -4,6 +4,59 @@
 
 Always number separate items in any analysis so they are easy referenced.
 
+## Style Guide
+
+This is a bespoke C17/C++20 alternative to the C++ standard library. Never use
+the `std` namespace. Symbols starting with `hx` that have the same name as
+symbols in the standard library are generally functionally equivalent. E.g. use
+`hxforward` instead of `std::forward`. Standard functionality is often
+available. Prefer `size_t` to `unsigned long long`.
+
+Do not use C++ exceptions, RTTI or assume asserts are enabled. Check when adding
+includes whether they are redundant and write them as `<stdio.h>` not `<cstido>`.
+
+All symbols are `snake_case`. Except feature test macros are
+`SCREAMING_SNAKE_CASE`. Do not use abbreviated names except for iterators. Use
+K&R style whitespace. Code shouldn't go past 100 columns.
+
+Classes, structs and functions begin with `hx` and not `hx_`. Functions end with
+`_t`. Template parameters snake_case and end with `_t_`. Use `struct` only in C
+code. Function parameters and private fields do not begin with `hx` and end with
+an underscore. Private fields begin with `m_`. Global variables start with
+`g_hx` and static or anonymous namespace variables start with `s_hx`. Prefix
+calls to the C standard library with `::` to indicate they are in the global
+namespace. Use `src_` and `dst_` for source and destination iterators.
+
+Prefer code that avoids stepping through unnecessary function calls in the
+debugger or requires unnecessary traversal of data structures in the debugger
+watch window. Prefer C-style implementation details that are cache coherent.
+However, use hxarray with a static capacity instead of large C-style arrays. Wrap
+those C-style implementation details in C++ classes with normal operators so
+that C++ object models are used for interfaces. Prefer c++ constructor
+initialization lists. Use references instead of pointers when a pointer would
+never be null. Use template wrappers for type safety while avoiding the
+associated code bloat. Entirely re-write the structure of the existing code if
+needed instead of elaborating it unnecessarily. Separate code onto individual
+lines when it helps steps through expressions individually in the debugger.
+Never implement hypothetical safety guarantees.
+
+`.clang-tidy` is in use and C-style casts are not allowed. The rules are only
+checked by `testcmake.sh` and are not checked by `vscode`.
+
+Do not reorder major sections of code unless asked. This codebase does not put
+translation unit local declarations and definitions close to where they are used
+but instead places them near the top of the file to be immediately visible to
+reviewers. E.g. at most one anonymous namespace at the top of a translation unit
+should normally be needed.
+
+## Optimization
+
+Minimize branches and memory indirection. Avoid division. Prefer iterating with
+pointers marked `hxrestrict` instead of using array indices. Warn when working
+with tight loops that will not be unrolled and suggest `hxattr_hot`. Use
+`size_t` to avoid reliance on cheap 64-bit operations. Count CPU instructions
+required for ARM and RISC-V processors and choose the cheapest implementation.
+
 ## Testing
 
 Use `debugbuild.sh` to test changes by default and not cmake. 🐉🐉🐉 output
@@ -27,54 +80,6 @@ called on an object with the return value of the same function called on a
 reference to the same object.
 
 Ignore spell checker errors instead of generating hex.
-
-## Style Guide
-
-This is a bespoke C17/C++20 alternative to the C++ standard library. Never use
-the `std` namespace. Symbols starting with `hx` that have the same name as
-symbols in the standard library are generally functionally equivalent. E.g. use
-`hxforward` instead of `std::forward`. Standard functionality is often
-available. Prefer `size_t` to `unsigned long long`.
-
-Do not use C++ exceptions, RTTI or assume asserts are enabled. Check when adding
-includes whether they are redundant and write them as `<stdio.h>` not `<cstido>`.
-
-All symbols are `snake_case`. Except feature test macros are
-`SCREAMING_SNAKE_CASE`. Do not use abbreviated names except for iterators. Use
-K&R style whitespace. Code shouldn't go past 100 columns.
-
-Classes, structs and functions begin with `hx` and not `hx_`. Functions end with
-`_t`. Template parameters snake_case and end with `_t_`. Use `struct` only in C
-code. Function parameters and private fields do not begin with `hx` and end with
-an underscore. Private fields begin with `m_`. Global variables start with
-`g_hx` and static or anonymous namespace variables start with `s_hx`. Prefix
-calls to the C standard library with `::` to indicate they are in the global
-namespace.
-
-Prefer code that avoids stepping through unnecessary function calls in the
-debugger or requires unnecessary traversal of data structures in the debugger
-watch window. Prefer C-style implementation details that are cache coherent.
-However, use hxarray with a static capacity instead of large C-style arrays. Wrap
-those C-style implementation details in C++ classes with normal operators so
-that C++ object models are used for interfaces. Prefer c++ constructor
-initialization lists. Use references instead of pointers when a pointer would
-never be null. Use template wrappers for type safety while avoiding the
-associated code bloat. Entirely re-write the structure of the existing code if
-needed instead of elaborating it unnecessarily. Separate code onto individual
-lines when it helps steps through expressions individually in the debugger.
-Never implement hypothetical safety guarantees.
-
-Prefer iterating with pointers marked hxrestrict instead of using array indices.
-Use `src_` and `dst_` for source and destination iterators.
-
-`.clang-tidy` is in use and C-style casts are not allowed. The rules are only
-checked by `testcmake.sh` and are not checked by `vscode`.
-
-Do not reorder major sections of code unless asked. This codebase does not put
-translation unit local declarations and definitions close to where they are used
-but instead places them near the top of the file to be immediately visible to
-reviewers. E.g. at most one anonymous namespace at the top of a translation unit
-should normally be needed.
 
 ## Documentation
 

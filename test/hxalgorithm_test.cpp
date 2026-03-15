@@ -231,8 +231,8 @@ TEST(hxhxalgorithm_test, sort_grinder) {
 		hxsort(generic_sorted.begin(), generic_sorted.end());
 
 		// Compare the three results to confirm they are sorted.
-		ASSERT_EQ(::memcmp(insertion_sorted.data(), heap_sorted.data(), insertion_sorted.size_bytes()), 0);
-		ASSERT_EQ(::memcmp(insertion_sorted.data(), generic_sorted.data(), insertion_sorted.size_bytes()), 0);
+		EXPECT_EQ(::memcmp(insertion_sorted.data(), heap_sorted.data(), insertion_sorted.size_bytes()), 0);
+		EXPECT_EQ(::memcmp(insertion_sorted.data(), generic_sorted.data(), insertion_sorted.size_bytes()), 0);
 
 		insertion_sorted.clear();
 		heap_sorted.clear();

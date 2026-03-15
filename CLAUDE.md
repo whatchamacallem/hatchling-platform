@@ -87,6 +87,9 @@ manner that defeats the intent of the test except by removing it entirely.
 Prompt the user with a list of failing tests when they are unrelated to your
 work or the intent preserving fix is unclear.
 
+Prefer `EXPECT_*` macros to `ASSERT_*` macros unless the failure looks like it
+will cause memory corruption or other failures in subsequent tests.
+
 ## Documentation
 
 Update documentation independently only when making changes that obsolete it. Do

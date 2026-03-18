@@ -22,9 +22,9 @@ public:
 		m_hash_next_(hxnull), m_key_(key_), m_hash_(hxkey_hash(key_)) { }
 
 	/// Returns the next node pointer in the bucket's embedded linked list.
-	void* hash_next(void) const { return m_hash_next_; }
+	hxhash_table_node_integer* hash_next(void) const { return m_hash_next_; }
 	/// Returns a reference to the next node pointer so callers can mutate it.
-	void*& hash_next(void) { return m_hash_next_; }
+	hxhash_table_node_integer*& hash_next(void) { return m_hash_next_; }
 
 	/// The key and hash identify the `node_t` and should not change once added.
 	const key_t_& hash_key(void) const { return m_key_; }
@@ -37,7 +37,7 @@ private:
 	hxhash_table_node_integer(const hxhash_table_node_integer&) = delete;
 	void operator=(const hxhash_table_node_integer&) = delete;
 
-	void* m_hash_next_;
+	hxhash_table_node_integer* m_hash_next_;
 	key_t_ m_key_;
 	hxhash_t m_hash_;
 };
@@ -46,7 +46,8 @@ private:
 /// `hxhash_table_set_node` for static C strings. This code expects the provided
 /// strings to outlive the container because it is intended for use with string
 /// literals.
-class hxhash_table_node_string_literal : public hxhash_table_set_node<const char*> {
+class hxhash_table_node_string_literal
+	: public hxhash_table_set_node<const char*> {
 public:
 	/// Constructor initializes the node with a string key and computes its hash.
 	/// - `k` : Non-null string key used to initialize the node. The string must
@@ -66,7 +67,7 @@ public:
 	/// node.
 	/// - `k` : The string key to allocate, duplicate, and initialize the node with.
 	hxhash_table_node_string(const char* k_)
-		: hxhash_table_set_node(hxstring_duplicate(k_, allocator_)) { }
+		: hxhash_table_set_node<const char*>(hxstring_duplicate(k_, allocator_)) { }
 
 	/// Destructor frees the allocated string key.
 	~hxhash_table_node_string(void) { hxfree(const_cast<char *>(this->hash_key())); }

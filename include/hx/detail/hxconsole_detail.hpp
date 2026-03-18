@@ -298,8 +298,8 @@ public:
 	}
 
 	// Boilerplate required by hxhash_table.
-	void* hash_next(void) const { return m_hash_next_; }
-	void*& hash_next(void) { return m_hash_next_; }
+	hxconsole_hash_table_node_* hash_next(void) const { return m_hash_next_; }
+	hxconsole_hash_table_node_*& hash_next(void) { return m_hash_next_; }
 
 	const hxconsole_hash_table_key_& hash_key(void) const { return m_key_; }
 	hxhash_t hash_value(void) const { return m_hash_; }
@@ -308,7 +308,7 @@ public:
 	void set_command_(hxconsole_command_* x_) { m_command_ = x_; }
 
 private:
-	void* m_hash_next_;
+	hxconsole_hash_table_node_* m_hash_next_;
 	hxconsole_hash_table_key_ m_key_;
 	hxhash_t m_hash_;
 	hxconsole_command_* m_command_;

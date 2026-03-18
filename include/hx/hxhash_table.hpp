@@ -18,11 +18,11 @@
 /// fields and `K` has an `operator==` or an `hxkey_equal` overload.
 /// ```
 /// class T {
-///   using key_t = K;			// Tell the hash table what key to use.
-///   void*& hash_next();		// Used by hxhash_table for an embedded linked list.
-///   void* hash_next() const;	// Constant version of hash_next.
-///   const key_t& hash_key() const;	// Returns key constructed with.
-///   hxhash_t hash_value() const;	// Returns hash of key constructed with.
+///   using key_t = K;                  // Tell the hash table what key to use.
+///   T*& hash_next();                  // Used by hxhash_table for an embedded linked list.
+///   T* hash_next() const;             // Constant version of hash_next.
+///   const key_t& hash_key() const;    // Returns key constructed with.
+///   hxhash_t hash_value() const;      // Returns hash of key constructed with.
 /// };
 /// ```
 /// `hxhash_table_set_node` and `hxhash_table_map_node` are provided and
@@ -53,8 +53,8 @@ concept hxhash_table_concept_ =
 	requires(node_t_& node_, const node_t_& const_node_) {
 		sizeof(node_t_);
 		sizeof(typename node_t_::key_t);
-		{ node_.hash_next() = static_cast<void*>(hxnull) } -> hxconvertible_to<void*&>;
-		{ const_node_.hash_next() } -> hxconvertible_to<void*>;
+		node_.hash_next() = static_cast<node_t_*>(hxnull);
+		{ const_node_.hash_next() } -> hxconvertible_to<const node_t_*>;
 		{ const_node_.hash_key() } -> hxconvertible_to<const typename node_t_::key_t&>;
 		{ const_node_.hash_value() } -> hxconvertible_to<hxhash_t>;
 	};
@@ -83,9 +83,9 @@ public:
 	}
 
 	/// Returns the node pointer used by the table's embedded linked list.
-	void* hash_next(void) const { return m_hash_next_; }
+	hxhash_table_set_node* hash_next(void) const { return m_hash_next_; }
 	/// Returns a reference to the node pointer so callers can mutate it.
-	void*& hash_next(void) { return m_hash_next_; }
+	hxhash_table_set_node*& hash_next(void) { return m_hash_next_; }
 
 	/// The key and hash identify the `node_t` and should not change once added.
 	const key_t_& hash_key(void) const { return m_key_; }
@@ -106,7 +106,7 @@ private:
 	void operator=(const hxhash_table_set_node&) = delete;
 
 	// The hash table uses m_hash_next_ to implement an embedded linked list.
-	void* m_hash_next_;
+	hxhash_table_set_node* m_hash_next_;
 	key_t_ m_key_;
 	hxhash_t m_hash_;
 };
@@ -241,12 +241,6 @@ public:
 	explicit hxhash_table(void) {
 		m_size_ = 0u;
 
-		static_assert(hxis_same<decltype(static_cast<const node_t_*>(hxnull)->hash_next()),
-			void*>::value,
-			"node_t::hash_next must be: void* hash_next() const");
-		static_assert(hxis_same<decltype(static_cast<node_t_*>(hxnull)->hash_next()),
-			void*&>::value,
-			"node_t::hash_next must be: void*& hash_next()");
 		static_assert(hxis_same<decltype(static_cast<const node_t_*>(hxnull)->hash_key()),
 			const typename node_t_::key_t&>::value,
 			"node_t::hash_key must be: const key_t& hash_key() const");
@@ -371,9 +365,6 @@ public:
 
 private:
 	static_assert(table_size_bits_ < hxhash_bits, "Hash bits must be [0..hxhash_bits].");
-	// hash_next() returns void*& so the node interface is type-erased. In
-	// theory this is actually UB but is supported everywhere.
-	static_assert(sizeof(void*) == sizeof(node_t_*), "pointer size mismatch");
 
 	// Not ideal.
 	hxhash_table(const hxhash_table&) = delete;

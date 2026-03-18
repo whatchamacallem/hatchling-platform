@@ -301,7 +301,7 @@ public:
 	void* hash_next(void) const { return m_hash_next_; }
 	void*& hash_next(void) { return m_hash_next_; }
 
-	hxconsole_hash_table_key_ hash_key(void) const { return m_key_; }
+	const hxconsole_hash_table_key_& hash_key(void) const { return m_key_; }
 	hxhash_t hash_value(void) const { return m_hash_; }
 	static hxhash_t hash_value(hxconsole_hash_table_key_ key_) { return hxkey_hash(key_); }
 	hxconsole_command_* command_(void) const { return m_command_; }

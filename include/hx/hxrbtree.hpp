@@ -484,7 +484,15 @@ inline auto hxrbtree<node_t_, multi_t_, deleter_t_>::iterator::operator--(int)
 
 template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
 inline hxrbtree<node_t_, multi_t_, deleter_t_>::hxrbtree(void)
-	: m_root_(hxnull), m_size_(0u) { }
+	: m_root_(hxnull), m_size_(0u) {
+		
+	static_assert(hxis_same<decltype(static_cast<const node_t_*>(hxnull)->rbtree_key()),
+		const typename node_t_::key_t&>::value,
+		"node_t::rbtree_key must be: const key_t& rbtree_key() const");
+	static_assert(hxis_same<decltype(&node_t_::rbtree_less),
+		bool(*)(const typename node_t_::key_t&, const typename node_t_::key_t&)>::value,
+		"node_t::rbtree_less must be: static bool rbtree_less(const key_t&, const key_t&)");
+}
 
 template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
 inline node_t_* hxrbtree<node_t_, multi_t_, deleter_t_>::back(void) {

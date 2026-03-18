@@ -238,7 +238,22 @@ public:
 	};
 
 	/// Constructs an empty hash table with a capacity of `table_size_bits^2`.
-	explicit hxhash_table(void) { m_size_ = 0u; }
+	explicit hxhash_table(void) {
+		m_size_ = 0u;
+
+		static_assert(hxis_same<decltype(static_cast<const node_t_*>(hxnull)->hash_next()),
+			void*>::value,
+			"node_t::hash_next must be: void* hash_next() const");
+		static_assert(hxis_same<decltype(static_cast<node_t_*>(hxnull)->hash_next()),
+			void*&>::value,
+			"node_t::hash_next must be: void*& hash_next()");
+		static_assert(hxis_same<decltype(static_cast<const node_t_*>(hxnull)->hash_key()),
+			const typename node_t_::key_t&>::value,
+			"node_t::hash_key must be: const key_t& hash_key() const");
+		static_assert(hxis_same<decltype(static_cast<const node_t_*>(hxnull)->hash_value()),
+			hxhash_t>::value,
+			"node_t::hash_value must be: hxhash_t hash_value() const");
+	}
 
 	/// Destructs the hash table and deletes all resources.
 	~hxhash_table(void) { this->clear(); }

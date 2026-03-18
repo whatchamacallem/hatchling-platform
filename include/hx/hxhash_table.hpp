@@ -402,7 +402,7 @@ template<hxhash_table_concept_ node_t_, hxhash_t table_size_bits_, typename dele
 inline node_t_* hxhash_table<node_t_, table_size_bits_, deleter_t_>::find(
 	const typename node_t_::key_t& key_, const node_t_* previous_)
 {
-	const hxhash_t hash_ = typename node_t_::hash_value(key_);
+	const hxhash_t hash_ = node_t_::hash_value(key_);
 	if(previous_ == hxnull) {
 		for(node_t_* n_ = *this->get_bucket_head_(hash_); n_; n_ = static_cast<node_t_*>(n_->hash_next())) {
 			if(hxkey_equal(n_->hash_key(), key_)) {
@@ -427,7 +427,7 @@ inline size_t hxhash_table<node_t_, table_size_bits_, deleter_t_>::count(
 	const typename node_t_::key_t& key_) const
 {
 	size_t total_ = 0u;
-	const hxhash_t hash_ = typename node_t_::key_t::hash_value(key_);
+	const hxhash_t hash_ = node_t_::hash_value(key_);
 	for(const node_t_* n_ = *this->get_bucket_head_(hash_); n_; n_ = static_cast<const node_t_*>(n_->hash_next())) {
 		if(hxkey_equal(n_->hash_key(), key_)) {
 			++total_;
@@ -440,7 +440,7 @@ template<hxhash_table_concept_ node_t_, hxhash_t table_size_bits_, typename dele
 inline node_t_* hxhash_table<node_t_, table_size_bits_, deleter_t_>::extract(
 	const typename node_t_::key_t& key_)
 {
-	const hxhash_t hash_ = typename node_t_::key_t::hash_value(key_);
+	const hxhash_t hash_ = node_t_::hash_value(key_);
 	node_t_** current_ = this->get_bucket_head_(hash_);
 	while(node_t_* n_ = *current_) {
 		if(hxkey_equal(n_->hash_key(), key_)) {
@@ -460,7 +460,7 @@ inline size_t hxhash_table<node_t_, table_size_bits_, deleter_t_>::erase(
 	const typename node_t_::key_t& key_, const deleter_override_t_& deleter_)
 {
 	size_t count_ = 0u;
-	const hxhash_t hash_ = typename node_t_::key_t::hash_value(key_);
+	const hxhash_t hash_ = node_t_::hash_value(key_);
 	node_t_** current_ = this->get_bucket_head_(hash_);
 	while(node_t_* n_ = *current_) {
 		if(hxkey_equal(n_->hash_key(), key_)) {

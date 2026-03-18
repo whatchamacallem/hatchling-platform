@@ -30,6 +30,7 @@ public:
 	const key_t_& hash_key(void) const { return m_key_; }
 	/// Returns the cached hash value for the stored key.
 	hxhash_t hash_value(void) const { return m_hash_; };
+	static hxhash_t hash_value(key_t_ key_) { return hxkey_hash(key_); };
 
 private:
 	hxhash_table_node_integer(void) = delete;

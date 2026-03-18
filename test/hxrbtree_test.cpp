@@ -756,17 +756,41 @@ TEST(hxrbtree_test, const_iterator_dereference) {
 	tree.release_all();
 }
 
-// hxrbtree_map_node
+// hxrbtree_set_node and hxrbtree_map_node
+
+// hxrbtree_set_node used directly as node_t_: insert, find, iterate in order.
+TEST(hxrbtree_test, set_node_as_node_type) {
+	hxrbtree_set_node<int> a(1), b(2), c(3);
+	hxrbtree<hxrbtree_set_node<int>, false, hxdo_not_delete> tree;
+	tree.insert(&a);
+	tree.insert(&b);
+	tree.insert(&c);
+	EXPECT_EQ(tree.find(2), &b);
+	EXPECT_EQ(tree.find(4), (hxrbtree_set_node<int>*)hxnull);
+	int expected = 1;
+	for(const hxrbtree_set_node<int>& n : tree) {
+		EXPECT_EQ(n.rbtree_key(), expected++);
+	}
+	tree.release_all();
+}
 
 // map_node stores and retrieves key and value independently.
 TEST(hxrbtree_test, map_node_key_and_value) {
 	using map_node_t = hxrbtree_map_node<int, int>;
+	// key-only constructor: value is default-initialized.
+	map_node_t d(5);
+	EXPECT_EQ(d.rbtree_key(), 5);
+	EXPECT_EQ(d.value(), 0);
+	// key+value constructor.
 	map_node_t n(3, 99);
 	EXPECT_EQ(n.rbtree_key(), 3);
 	EXPECT_EQ(n.value(), 99);
+	// const value() accessor.
+	const map_node_t& cn = n;
+	EXPECT_EQ(cn.value(), 99);
 }
 
-// Map tree preserves insertion order and mutable value access.
+// Map tree preserves insertion order, find, and mutable value access.
 TEST(hxrbtree_test, map_node_mutable_value) {
 	using map_node_t = hxrbtree_map_node<int, int>;
 	map_node_t a(1, 10), b(2, 20), c(3, 30);
@@ -774,6 +798,8 @@ TEST(hxrbtree_test, map_node_mutable_value) {
 	tree.insert(&a);
 	tree.insert(&b);
 	tree.insert(&c);
+	EXPECT_EQ(tree.find(2), &b);
+	EXPECT_EQ(tree.find(4), (map_node_t*)hxnull);
 	int expected_key = 1;
 	int expected_val = 10;
 	for(map_node_t& n : tree) {

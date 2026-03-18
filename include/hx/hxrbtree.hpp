@@ -150,7 +150,7 @@ public:
 	/// accessed without a value argument.
 	/// - `key` : Key used to order the node.
 	hxrbtree_map_node(const key_t_& key_)
-		: hxrbtree_set_node<key_t_>(key_) { }
+		: hxrbtree_set_node<key_t_>(key_), m_value_() { }
 
 	/// Constructs a node whose value is copy- or move-initialized.
 	/// - `key` : Key used to order the node.
@@ -486,7 +486,7 @@ template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
 inline hxrbtree<node_t_, multi_t_, deleter_t_>::hxrbtree(void)
 	: m_root_(hxnull), m_size_(0u) {
 		
-	static_assert(hxis_same<decltype(static_cast<const node_t_*>(hxnull)->rbtree_key()),
+	static_assert(hxis_same<decltype(hxdeclval<const node_t_&>().rbtree_key()),
 		const typename node_t_::key_t&>::value,
 		"node_t::rbtree_key must be: const key_t& rbtree_key() const");
 	static_assert(hxis_same<decltype(&node_t_::rbtree_less),

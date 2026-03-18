@@ -121,6 +121,10 @@ template<typename T_> using hxremove_reference_t = typename hxremove_reference_<
 /// `hxremove_cvref_t<T>` - Returns `T` with const, volatile, and references removed.
 template<typename T_> using hxremove_cvref_t = hxremove_cv_t<hxremove_reference_t<T_>>;
 
+/// Implements `std::declval`. Returns a `T&&` reference for use in unevaluated
+/// contexts such as `decltype`. Must not be called or defined.
+template<typename T_> T_&& hxdeclval(void) noexcept;
+
 // ----------------------------------------------------------------------------
 // C++ Type Traits
 

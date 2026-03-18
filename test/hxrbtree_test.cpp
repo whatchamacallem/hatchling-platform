@@ -758,7 +758,7 @@ TEST(hxrbtree_test, const_iterator_dereference) {
 
 // hxrbtree_set_node and hxrbtree_map_node
 
-// hxrbtree_set_node used directly as node_t_: insert, find, iterate in order.
+// hxrbtree_set_node used directly as node_t: insert, find, iterate in order.
 TEST(hxrbtree_test, set_node_as_node_type) {
 	hxrbtree_set_node<int> a(1), b(2), c(3);
 	hxrbtree<hxrbtree_set_node<int>, false, hxdo_not_delete> tree;

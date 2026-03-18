@@ -245,10 +245,10 @@ public:
 	explicit hxhash_table(void) {
 		m_size_ = 0u;
 
-		static_assert(hxis_same<decltype(static_cast<const node_t_*>(hxnull)->hash_key()),
+		static_assert(hxis_same<decltype(hxdeclval<const node_t_&>().hash_key()),
 			const typename node_t_::key_t&>::value,
 			"node_t::hash_key must be: const key_t& hash_key() const");
-		static_assert(hxis_same<decltype(static_cast<const node_t_*>(hxnull)->hash_value()),
+		static_assert(hxis_same<decltype(hxdeclval<const node_t_&>().hash_value()),
 			hxhash_t>::value,
 			"node_t::hash_value must be: hxhash_t hash_value() const");
 	}

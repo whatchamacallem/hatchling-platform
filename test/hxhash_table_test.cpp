@@ -69,7 +69,7 @@ public:
 
 TEST_F(hxhash_table_test_f, null) {
 	{
-		using table_t = hxhash_table<hxtest_integer, 4>;
+		using table_t = hxhash_table<hxtest_integer, 4, false>;
 		table_t table;
 		EXPECT_EQ(table.size(), 0u);
 		const table_t& const_table = table;
@@ -96,12 +96,12 @@ const hxsystem_allocator_scope temporary_stack_scope(hxsystem_allocator_temporar
 
 	static const int k = 77;
 	{
-		using table_t = hxhash_table<hxtest_integer, 4>;
+		using table_t = hxhash_table<hxtest_integer, 4, false>;
 		table_t table;
 		const table_t& const_table = table;
 		hxtest_integer* node = hxnew<hxtest_integer>(k);
-		// "Inserts a node_t into the hash table, allowing duplicate keys." Seed table with manual node.
-		table.insert_node(node);
+		// insert_node returns the node when inserted.
+		EXPECT_EQ(table.insert_node(node), node);
 
 		// Iterator + count checks confirm single-entry semantics.
 		EXPECT_NE(table.begin(), table.end());
@@ -111,9 +111,9 @@ const hxsystem_allocator_scope temporary_stack_scope(hxsystem_allocator_temporar
 		EXPECT_EQ(table.size(), 1u);
 		EXPECT_EQ(table.count(k), 1u);
 
-		// insert_unique with a duplicate key returns the existing node. Caller discards the rejected ptr.
+		// insert_node with a duplicate key returns the existing node. Caller discards the rejected ptr.
 		hxtest_integer* dup = hxnew<hxtest_integer>(k);
-		EXPECT_EQ(table.insert_unique(dup), node);
+		EXPECT_EQ(table.insert_node(dup), node);
 		hxdelete(dup);
 
 		// find() hit and miss, both mutable and const.
@@ -133,9 +133,9 @@ const hxsystem_allocator_scope temporary_stack_scope(hxsystem_allocator_temporar
 		EXPECT_EQ(table.size(), 0u);
 		EXPECT_EQ(table.count(k), 0u);
 
-		// insert_unique on an empty table inserts and returns the node.
+		// insert_node on an empty table inserts and returns the node.
 		hxtest_integer* new_node = hxnew<hxtest_integer>(k);
-		EXPECT_EQ(table.insert_unique(new_node), new_node);
+		EXPECT_EQ(table.insert_node(new_node), new_node);
 		EXPECT_NE(new_node->value.id, node->value.id);
 		EXPECT_EQ(table.size(), 1u);
 
@@ -150,13 +150,13 @@ TEST_F(hxhash_table_test_f, map_node_usage) {
 	const hxsystem_allocator_scope temporary_stack_scope(hxsystem_allocator_temporary_stack);
 
 	using map_node_t = hxhash_table_map_node<int32_t, hxtest_object>;
-	using table_t = hxhash_table<map_node_t, 4>;
+	using table_t = hxhash_table<map_node_t, 4, false>;
 	{
 		table_t table;
 
-		// insert_unique inserts a new node and returns it when key is absent.
+		// insert_node inserts a new node and returns it when key is absent.
 		map_node_t* n10 = hxnew<map_node_t>(10);
-		map_node_t* via_insert = table.insert_unique(n10);
+		map_node_t* via_insert = table.insert_node(n10);
 		EXPECT_EQ(via_insert, n10);
 		EXPECT_EQ(via_insert->hash_key(), 10);
 		via_insert->value().id = 123;
@@ -205,7 +205,7 @@ TEST_F(hxhash_table_test_f, multiple) {
 		// Insert keys { 0..size-1 } with value.id mirroring the key.
 		for(int i = 0; i < size_i; ++i) {
 			hxtest_integer* n = hxnew<hxtest_integer>(i);
-			hxtest_integer* inserted = table.insert_unique(n);
+			hxtest_integer* inserted = table.insert_node(n);
 			EXPECT_EQ(inserted, n);
 			EXPECT_EQ(inserted->value.id, i);
 			EXPECT_EQ(inserted->hash_key(), i);
@@ -326,13 +326,13 @@ TEST_F(hxhash_table_test_f, strings) {
 	const size_t sz = hxsize(colors);
 
 	{
-		using table_t = hxhash_table<hxtest_string, 4>;
+		using table_t = hxhash_table<hxtest_string, 4, false>;
 		table_t table;
 
-		// Insert colors in reverse. insert_unique inserts each new key and returns it.
+		// Insert colors in reverse. insert_node inserts each new key and returns it.
 		for(size_t i = sz; i-- != 0;) {
 			hxtest_string* n = hxnew<hxtest_string>(colors[i]);
-			hxtest_string* inserted = table.insert_unique(n);
+			hxtest_string* inserted = table.insert_node(n);
 			EXPECT_EQ(inserted, n);
 			EXPECT_STREQ(inserted->hash_key(), colors[i]);
 		}
@@ -351,13 +351,13 @@ TEST_F(hxhash_table_test_f, string_literal_nodes) {
 		"Crimson", "Teal", "Magenta", "Gold"
 	};
 
-	using table_t = hxhash_table<hxtest_string_literal, 4>;
+	using table_t = hxhash_table<hxtest_string_literal, 4, false>;
 	table_t table;
 
 	for(unsigned int i = 0; i < hxsize(literals); ++i) {
 		// String literal keys are owned externally. The node stores only the pointer.
 		hxtest_string_literal* n = hxnew<hxtest_string_literal>(literals[i]);
-		hxtest_string_literal* inserted = table.insert_unique(n);
+		hxtest_string_literal* inserted = table.insert_node(n);
 		EXPECT_EQ(inserted, n);
 		EXPECT_EQ(inserted->hash_key(), literals[i]);
 		EXPECT_EQ(inserted->hash_value(), hxkey_hash(literals[i]));

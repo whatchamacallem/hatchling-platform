@@ -73,7 +73,7 @@ public:
 };
 
 class hxconsole_command_table_
-	: public hxhash_table<hxconsole_hash_table_node_, 2, hxdo_not_delete> {
+	: public hxhash_table<hxconsole_hash_table_node_, 2, false, hxdo_not_delete> {
 };
 
 // Wrapped to enforce a construction-order dependency. Modification of the table

@@ -21,8 +21,8 @@
 ///   using key_t = K;			// Tell the hash table what key to use.
 ///   void*& hash_next();		// Used by hxhash_table for an embedded linked list.
 ///   void* hash_next() const;	// Constant version of hash_next.
-///   const key_t& key() const;	// Returns key constructed with.
-///   hxhash_t hash() const;	// Returns hash of key constructed with.
+///   const key_t& hash_key() const;	// Returns key constructed with.
+///   hxhash_t hash_value() const;	// Returns hash of key constructed with.
 /// };
 /// ```
 /// `hxhash_table_set_node` and `hxhash_table_map_node` are provided and
@@ -55,8 +55,8 @@ concept hxhash_table_concept_ =
 		sizeof(typename node_t_::key_t);
 		{ node_.hash_next() = static_cast<void*>(hxnull) } -> hxconvertible_to<void*&>;
 		{ const_node_.hash_next() } -> hxconvertible_to<void*>;
-		{ const_node_.key() } -> hxconvertible_to<const typename node_t_::key_t&>;
-		{ const_node_.hash() } -> hxconvertible_to<hxhash_t>;
+		{ const_node_.hash_key() } -> hxconvertible_to<const typename node_t_::key_t&>;
+		{ const_node_.hash_value() } -> hxconvertible_to<hxhash_t>;
 	};
 #else
 #define hxhash_table_concept_ typename
@@ -88,11 +88,15 @@ public:
 	void*& hash_next(void) { return m_hash_next_; }
 
 	/// The key and hash identify the `node_t` and should not change once added.
-	const key_t_& key(void) const { return m_key_; }
+	const key_t_& hash_key(void) const { return m_key_; }
 
 	/// Returns the cached hash value for the stored key. Hash values are not
 	/// required to be unique.
-	hxhash_t hash(void) const { return m_hash_; };
+	hxhash_t hash_value(void) const { return m_hash_; };
+
+	/// Returns the cached hash value for the stored key. Hash values are not
+	/// required to be unique.
+	static hxhash_t hash_value(key_t_ key_) { return hxkey_hash(key_); };
 
 private:
 	hxhash_table_set_node(void) = delete;
@@ -371,9 +375,9 @@ private:
 template<hxhash_table_concept_ node_t_, hxhash_t table_size_bits_, typename deleter_t_>
 inline node_t_* hxhash_table<node_t_, table_size_bits_, deleter_t_>::insert_unique(node_t_* ptr_)
 {
-	node_t_** pos_ = this->get_bucket_head_(ptr_->hash());
+	node_t_** pos_ = this->get_bucket_head_(ptr_->hash_value());
 	for(node_t_* n_ = *pos_; n_; n_ = static_cast<node_t_*>(n_->hash_next())) {
-		if(hxkey_equal(n_->key(), ptr_->key())) {
+		if(hxkey_equal(n_->hash_key(), ptr_->hash_key())) {
 			return n_;
 		}
 	}
@@ -386,8 +390,8 @@ inline node_t_* hxhash_table<node_t_, table_size_bits_, deleter_t_>::insert_uniq
 template<hxhash_table_concept_ node_t_, hxhash_t table_size_bits_, typename deleter_t_>
 inline void hxhash_table<node_t_, table_size_bits_, deleter_t_>::insert_node(node_t_* ptr_)
 {
-	hxassertmsg(this->find(ptr_->key()) != ptr_, "container_reinsert");
-	const hxhash_t hash_ = ptr_->hash();
+	hxassertmsg(this->find(ptr_->hash_key()) != ptr_, "container_reinsert");
+	const hxhash_t hash_ = ptr_->hash_value();
 	node_t_** pos_ = this->get_bucket_head_(hash_);
 	ptr_->hash_next() = *pos_;
 	*pos_ = ptr_;
@@ -398,19 +402,19 @@ template<hxhash_table_concept_ node_t_, hxhash_t table_size_bits_, typename dele
 inline node_t_* hxhash_table<node_t_, table_size_bits_, deleter_t_>::find(
 	const typename node_t_::key_t& key_, const node_t_* previous_)
 {
-	const hxhash_t hash_ = hxkey_hash(key_);
+	const hxhash_t hash_ = typename node_t_::hash_value(key_);
 	if(previous_ == hxnull) {
 		for(node_t_* n_ = *this->get_bucket_head_(hash_); n_; n_ = static_cast<node_t_*>(n_->hash_next())) {
-			if(hxkey_equal(n_->key(), key_)) {
+			if(hxkey_equal(n_->hash_key(), key_)) {
 				return n_;
 			}
 		}
 	}
 	else {
-		hxassertmsg(hxkey_equal(key_, previous_->key()), "previous_mismatch");
-		hxassertmsg(hash_ == previous_->hash(), "previous_mismatch");
+		hxassertmsg(hxkey_equal(key_, previous_->hash_key()), "previous_mismatch");
+		hxassertmsg(hash_ == previous_->hash_value(), "previous_mismatch");
 		for(node_t_* n_ = static_cast<node_t_*>(previous_->hash_next()); n_; n_ = static_cast<node_t_*>(n_->hash_next())) {
-			if(hxkey_equal(n_->key(), key_)) {
+			if(hxkey_equal(n_->hash_key(), key_)) {
 				return n_;
 			}
 		}
@@ -423,9 +427,9 @@ inline size_t hxhash_table<node_t_, table_size_bits_, deleter_t_>::count(
 	const typename node_t_::key_t& key_) const
 {
 	size_t total_ = 0u;
-	const hxhash_t hash_ = hxkey_hash(key_);
+	const hxhash_t hash_ = typename node_t_::key_t::hash_value(key_);
 	for(const node_t_* n_ = *this->get_bucket_head_(hash_); n_; n_ = static_cast<const node_t_*>(n_->hash_next())) {
-		if(hxkey_equal(n_->key(), key_)) {
+		if(hxkey_equal(n_->hash_key(), key_)) {
 			++total_;
 		}
 	}
@@ -436,10 +440,10 @@ template<hxhash_table_concept_ node_t_, hxhash_t table_size_bits_, typename dele
 inline node_t_* hxhash_table<node_t_, table_size_bits_, deleter_t_>::extract(
 	const typename node_t_::key_t& key_)
 {
-	const hxhash_t hash_ = hxkey_hash(key_);
+	const hxhash_t hash_ = typename node_t_::key_t::hash_value(key_);
 	node_t_** current_ = this->get_bucket_head_(hash_);
 	while(node_t_* n_ = *current_) {
-		if(hxkey_equal(n_->key(), key_)) {
+		if(hxkey_equal(n_->hash_key(), key_)) {
 			*current_ = static_cast<node_t_*>(n_->hash_next());
 			--m_size_;
 			return n_;
@@ -456,10 +460,10 @@ inline size_t hxhash_table<node_t_, table_size_bits_, deleter_t_>::erase(
 	const typename node_t_::key_t& key_, const deleter_override_t_& deleter_)
 {
 	size_t count_ = 0u;
-	const hxhash_t hash_ = hxkey_hash(key_);
+	const hxhash_t hash_ = typename node_t_::key_t::hash_value(key_);
 	node_t_** current_ = this->get_bucket_head_(hash_);
 	while(node_t_* n_ = *current_) {
-		if(hxkey_equal(n_->key(), key_)) {
+		if(hxkey_equal(n_->hash_key(), key_)) {
 			*current_ = static_cast<node_t_*>(n_->hash_next());
 			if(deleter_) {
 				deleter_(n_);

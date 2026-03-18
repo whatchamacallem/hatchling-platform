@@ -27,9 +27,9 @@ public:
 	void*& hash_next(void) { return m_hash_next_; }
 
 	/// The key and hash identify the `node_t` and should not change once added.
-	const key_t_& key(void) const { return m_key_; }
+	const key_t_& hash_key(void) const { return m_key_; }
 	/// Returns the cached hash value for the stored key.
-	hxhash_t hash(void) const { return m_hash_; };
+	hxhash_t hash_value(void) const { return m_hash_; };
 
 private:
 	hxhash_table_node_integer(void) = delete;
@@ -68,5 +68,5 @@ public:
 		: hxhash_table_set_node(hxstring_duplicate(k_, allocator_)) { }
 
 	/// Destructor frees the allocated string key.
-	~hxhash_table_node_string(void) { hxfree(const_cast<char *>(this->key())); }
+	~hxhash_table_node_string(void) { hxfree(const_cast<char *>(this->hash_key())); }
 };

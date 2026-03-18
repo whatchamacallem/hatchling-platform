@@ -158,7 +158,7 @@ TEST_F(hxhash_table_test_f, map_node_usage) {
 		map_node_t* n10 = hxnew<map_node_t>(10);
 		map_node_t* via_insert = table.insert_unique(n10);
 		EXPECT_EQ(via_insert, n10);
-		EXPECT_EQ(via_insert->key(), 10);
+		EXPECT_EQ(via_insert->hash_key(), 10);
 		via_insert->value().id = 123;
 
 		map_node_t* manual = hxnew<map_node_t>(20);
@@ -208,7 +208,7 @@ TEST_F(hxhash_table_test_f, multiple) {
 			hxtest_integer* inserted = table.insert_unique(n);
 			EXPECT_EQ(inserted, n);
 			EXPECT_EQ(inserted->value.id, i);
-			EXPECT_EQ(inserted->key(), i);
+			EXPECT_EQ(inserted->hash_key(), i);
 		}
 
 		// Check properties of size unique keys.
@@ -252,24 +252,24 @@ TEST_F(hxhash_table_test_f, multiple) {
 		cit = table.begin();
 		for(int i = 0; i < size_i; ++i) {
 			hxtest_integer* ti = table.find(i);
-			EXPECT_EQ(ti->key(), i);
+			EXPECT_EQ(ti->hash_key(), i);
 			const hxtest_integer* ti2 = const_table.find(i, ti); // test const version
-			EXPECT_EQ(ti2->key(), i);
+			EXPECT_EQ(ti2->hash_key(), i);
 			EXPECT_EQ(table.find(i, ti2), hxnullptr);
 
 			EXPECT_EQ(table.count(i), 2u);
 
-			EXPECT_LT(static_cast<unsigned int>(it->key()), size_u);
-			key_histogram[it->key()]++;
+			EXPECT_LT(static_cast<unsigned int>(it->hash_key()), size_u);
+			key_histogram[it->hash_key()]++;
 			++it;
-			EXPECT_LT(static_cast<unsigned int>(it->key()), size_u);
-			key_histogram[it->key()]++;
+			EXPECT_LT(static_cast<unsigned int>(it->hash_key()), size_u);
+			key_histogram[it->hash_key()]++;
 			it++;
-			EXPECT_LT(static_cast<unsigned int>(cit->key()), size_u);
-			key_histogram[cit->key()]++;
+			EXPECT_LT(static_cast<unsigned int>(cit->hash_key()), size_u);
+			key_histogram[cit->hash_key()]++;
 			++cit;
-			EXPECT_LT(static_cast<unsigned int>(cit->key()), size_u);
-			key_histogram[cit->key()]++;
+			EXPECT_LT(static_cast<unsigned int>(cit->hash_key()), size_u);
+			key_histogram[cit->hash_key()]++;
 			cit++;
 		}
 		EXPECT_EQ(table.end(), it);
@@ -287,7 +287,7 @@ TEST_F(hxhash_table_test_f, multiple) {
 		}
 		for(int i = (size_i/2); i < size_i; ++i) {
 			hxtest_integer* ti = table.extract(i);
-			EXPECT_EQ(ti->key(), i);
+			EXPECT_EQ(ti->hash_key(), i);
 			hxdelete(ti);
 		}
 
@@ -298,7 +298,7 @@ TEST_F(hxhash_table_test_f, multiple) {
 		}
 		for(int i = (size_i/2); i < size_i; ++i) {
 			hxtest_integer* ti = table.find(i);
-			EXPECT_EQ(ti->key(), i);
+			EXPECT_EQ(ti->hash_key(), i);
 			EXPECT_EQ(table.find(i, ti), hxnullptr);
 			EXPECT_EQ(table.count(i), 1u);
 		}
@@ -334,7 +334,7 @@ TEST_F(hxhash_table_test_f, strings) {
 			hxtest_string* n = hxnew<hxtest_string>(colors[i]);
 			hxtest_string* inserted = table.insert_unique(n);
 			EXPECT_EQ(inserted, n);
-			EXPECT_STREQ(inserted->key(), colors[i]);
+			EXPECT_STREQ(inserted->hash_key(), colors[i]);
 		}
 		EXPECT_NE(table.find("Cyan"), hxnullptr);
 		EXPECT_EQ(table.find("Pink"), hxnullptr);
@@ -359,8 +359,8 @@ TEST_F(hxhash_table_test_f, string_literal_nodes) {
 		hxtest_string_literal* n = hxnew<hxtest_string_literal>(literals[i]);
 		hxtest_string_literal* inserted = table.insert_unique(n);
 		EXPECT_EQ(inserted, n);
-		EXPECT_EQ(inserted->key(), literals[i]);
-		EXPECT_EQ(inserted->hash(), hxkey_hash(literals[i]));
+		EXPECT_EQ(inserted->hash_key(), literals[i]);
+		EXPECT_EQ(inserted->hash_value(), hxkey_hash(literals[i]));
 	}
 
 	EXPECT_EQ(table.size(), (size_t)hxsize(literals));

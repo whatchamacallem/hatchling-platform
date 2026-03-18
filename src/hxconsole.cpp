@@ -68,7 +68,7 @@ class hxconsole_less_ {
 public:
 	bool operator()(const hxconsole_hash_table_node_* a,
 			const hxconsole_hash_table_node_* b) const {
-		return hxkey_less(a->key().str_, b->key().str_);
+		return hxkey_less(a->hash_key().str_, b->hash_key().str_);
 	}
 };
 
@@ -90,8 +90,8 @@ hxconsole_command_table_& hxconsole_commands_(void) {
 
 // hxconsole_register_ is internal only.
 void hxdetail_::hxconsole_register_(hxconsole_hash_table_node_* node) {
-	hxassertmsg(node->key().str_ && node->command_(), "invalid_parameter");
-	hxassertmsg(!hxconsole_commands_().find(node->key()), "command_reregistered %s", node->key().str_);
+	hxassertmsg(node->hash_key().str_ && node->command_(), "invalid_parameter");
+	hxassertmsg(!hxconsole_commands_().find(node->hash_key()), "command_reregistered %s", node->hash_key().str_);
 
 	hxconsole_commands_().insert_node(node);
 }
@@ -173,8 +173,8 @@ bool hxconsole_help(void) {
 		cmds.reserve(hxconsole_commands_().size());
 		for(hxconsole_command_table_::const_iterator it = hxconsole_commands_().cbegin();
 				it != hxconsole_commands_().cend(); ++it) {
-			if(::strncmp(it->key().str_, "hxconsole_test", 13) == 0 ||
-					::strncmp(it->key().str_, "s_hxconsole_test", 15) == 0) {
+			if(::strncmp(it->hash_key().str_, "hxconsole_test", 13) == 0 ||
+					::strncmp(it->hash_key().str_, "s_hxconsole_test", 15) == 0) {
 				continue;
 			}
 			cmds.push_back(&*it);
@@ -184,7 +184,7 @@ bool hxconsole_help(void) {
 
 		for(hxarray<const hxconsole_hash_table_node_*>::iterator it = cmds.begin();
 				it != cmds.end(); ++it) {
-			(*it)->command_()->usage_((*it)->key().str_);
+			(*it)->command_()->usage_((*it)->hash_key().str_);
 		}
 	}
 	return true;

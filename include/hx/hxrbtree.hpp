@@ -21,7 +21,7 @@
 /// ```
 /// class T : public hxrbtree_node {
 ///   using key_t = K;              // Tell the tree what key type to use.
-///   const key_t& key() const;     // Returns the key.
+///   const key_t& rbtree_key() const;     // Returns the key.
 /// };
 /// ```
 /// `hxrbtree_set_node` and `hxrbtree_map_node` are provided and recommended as
@@ -29,8 +29,8 @@
 /// `std::multimap`.
 ///
 /// Each traversal step calls `hxkey_less` twice: once as
-/// `hxkey_less(node.key(), key)` to test whether to go right, and once as
-/// `hxkey_less(key, node.key())` to test whether to go left. Equality is the
+/// `hxkey_less(node.rbtree_key(), key)` to test whether to go right, and once as
+/// `hxkey_less(key, node.rbtree_key())` to test whether to go left. Equality is the
 /// remaining case.
 ///
 /// When `multi_t` is `false` (set or map semantics), `insert` returns the
@@ -50,7 +50,7 @@
 ///   tree.insert(hxnew<example_node_t>(7));
 ///
 ///   for(example_node_t& n : tree) {
-///       ::printf("%d\n", n.key());
+///       ::printf("%d\n", n.rbtree_key());
 ///   }
 /// ```
 
@@ -65,7 +65,7 @@ template<typename node_t_>
 concept hxrbtree_concept_ =
 	requires(const node_t_& const_node_) {
 		sizeof(typename node_t_::key_t);
-		{ const_node_.key() } -> hxconvertible_to<const typename node_t_::key_t&>;
+		{ const_node_.rbtree_key() } -> hxconvertible_to<const typename node_t_::key_t&>;
 	};
 #else
 #define hxrbtree_concept_ typename
@@ -124,7 +124,10 @@ public:
 		: m_key_(hxforward<ref_t_>(key_)) { }
 
 	/// The key identifies the node and should not change once inserted.
-	const key_t_& key(void) const { return m_key_; }
+	const key_t_& rbtree_key(void) const { return m_key_; }
+
+	/// Compares two keys for `a < b`.
+	static bool rbtree_less(key_t_& a_, key_t_& b_) { return hxkey_less(a_, b_); }
 
 private:
 	hxrbtree_set_node(void) = delete;
@@ -132,7 +135,7 @@ private:
 	hxrbtree_set_node(hxrbtree_set_node&&) = delete;
 	void operator=(const hxrbtree_set_node&) = delete;
 
-	key_t_ m_key_;
+	const key_t_ m_key_;
 };
 
 /// `hxrbtree_map_node` - Optional base class for ordered map entries.
@@ -177,7 +180,7 @@ static_assert(alignof(hxrbtree_node) >= 2,
 /// `back()` returns the maximum node.
 ///
 /// - `node_t` : The node type. Must derive from `hxrbtree_node` and provide
-///   `using key_t = K` and `const K& key() const`.
+///   `using key_t = K` and `const K& rbtree_key() const`.
 /// - `multi_t` : When `false`, duplicate keys are rejected by `insert` and the
 ///   existing node is returned. When `true`, duplicates are allowed. Defaults
 ///   to `false`.
@@ -554,10 +557,10 @@ template<hxrbtree_concept_ node_t_, bool multi_t_, typename deleter_t_>
 inline node_t_* hxrbtree<node_t_, multi_t_, deleter_t_>::find(const typename node_t_::key_t& key_) {
 	hxrbtree_node* node_ = m_root_;
 	while(node_ != hxnull) {
-		if(hxkey_less(static_cast<node_t_&>(*node_).key(), key_)) {
+		if(hxkey_less(static_cast<node_t_&>(*node_).rbtree_key(), key_)) {
 			node_ = node_->m_right_;
 		}
-		else if(hxkey_less(key_, static_cast<node_t_&>(*node_).key())) {
+		else if(hxkey_less(key_, static_cast<node_t_&>(*node_).rbtree_key())) {
 			node_ = node_->m_left_;
 		}
 		else {
@@ -592,10 +595,10 @@ inline node_t_* hxrbtree<node_t_, multi_t_, deleter_t_>::insert(node_t_* ptr_) {
 	hxrbtree_node* parent_ = hxnull;
 	while(*link_ != hxnull) {
 		parent_ = *link_;
-		if(hxkey_less(ptr_->key(), static_cast<node_t_&>(*parent_).key())) {
+		if(hxkey_less(ptr_->rbtree_key(), static_cast<node_t_&>(*parent_).rbtree_key())) {
 			link_ = &parent_->m_left_;
 		}
-		else if(!hxkey_less(static_cast<node_t_&>(*parent_).key(), ptr_->key()) && !multi_t_) {
+		else if(!hxkey_less(static_cast<node_t_&>(*parent_).rbtree_key(), ptr_->rbtree_key()) && !multi_t_) {
 			return static_cast<node_t_*>(parent_);
 		}
 		else {
@@ -617,7 +620,7 @@ inline auto hxrbtree<node_t_, multi_t_, deleter_t_>::lower_bound(const typename 
 	hxrbtree_node* node_ = m_root_;
 	hxrbtree_node* result_ = hxnull;
 	while(node_ != hxnull) {
-		if(hxkey_less(static_cast<node_t_&>(*node_).key(), key_)) {
+		if(hxkey_less(static_cast<node_t_&>(*node_).rbtree_key(), key_)) {
 			node_ = node_->m_right_;
 		}
 		else {
@@ -640,7 +643,7 @@ inline auto hxrbtree<node_t_, multi_t_, deleter_t_>::upper_bound(const typename 
 	hxrbtree_node* node_ = m_root_;
 	hxrbtree_node* result_ = hxnull;
 	while(node_ != hxnull) {
-		if(hxkey_less(key_, static_cast<node_t_&>(*node_).key())) {
+		if(hxkey_less(key_, static_cast<node_t_&>(*node_).rbtree_key())) {
 			result_ = node_;
 			node_ = node_->m_left_;
 		}

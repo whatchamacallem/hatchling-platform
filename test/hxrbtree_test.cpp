@@ -61,8 +61,8 @@ static void hxtest_check_order(
 	size_t count = 0u;
 	int prev = -2147483647 - 1;
 	for(const hxtest_rbtree_node_t& n : tree) {
-		EXPECT_LT(prev, n.key());
-		prev = n.key();
+		EXPECT_LT(prev, n.rbtree_key());
+		prev = n.rbtree_key();
 		++count;
 	}
 	EXPECT_EQ(count, expected_size);
@@ -168,7 +168,7 @@ TEST(hxrbtree_test, insert_multi_three_equal_keys) {
 	EXPECT_EQ(tree.size(), (size_t)3);
 	size_t count = 0u;
 	for(const hxtest_rbtree_node_t& n : tree) {
-		EXPECT_EQ(n.key(), 3);
+		EXPECT_EQ(n.rbtree_key(), 3);
 		++count;
 	}
 	EXPECT_EQ(count, (size_t)3);
@@ -256,8 +256,8 @@ TEST(hxrbtree_test, front_back_multi_node) {
 	tree.insert(&a);
 	tree.insert(&b);
 	tree.insert(&c);
-	EXPECT_EQ(tree.front()->key(), 1);
-	EXPECT_EQ(tree.back()->key(), 5);
+	EXPECT_EQ(tree.front()->rbtree_key(), 1);
+	EXPECT_EQ(tree.back()->rbtree_key(), 5);
 	tree.release_all();
 }
 
@@ -268,8 +268,8 @@ TEST(hxrbtree_test, front_back_const) {
 	tree.insert(&a);
 	tree.insert(&b);
 	const hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>& ct = tree;
-	EXPECT_EQ(ct.front()->key(), 2);
-	EXPECT_EQ(ct.back()->key(), 8);
+	EXPECT_EQ(ct.front()->rbtree_key(), 2);
+	EXPECT_EQ(ct.back()->rbtree_key(), 8);
 	tree.release_all();
 }
 
@@ -297,7 +297,7 @@ TEST(hxrbtree_test, pop_front_removes_minimum) {
 	hxtest_rbtree_node_t* popped = tree.pop_front();
 	EXPECT_EQ(popped, &a);
 	EXPECT_EQ(tree.size(), (size_t)2);
-	EXPECT_EQ(tree.front()->key(), 2);
+	EXPECT_EQ(tree.front()->rbtree_key(), 2);
 	tree.release_all();
 }
 
@@ -311,7 +311,7 @@ TEST(hxrbtree_test, pop_back_removes_maximum) {
 	hxtest_rbtree_node_t* popped = tree.pop_back();
 	EXPECT_EQ(popped, &c);
 	EXPECT_EQ(tree.size(), (size_t)2);
-	EXPECT_EQ(tree.back()->key(), 2);
+	EXPECT_EQ(tree.back()->rbtree_key(), 2);
 	tree.release_all();
 }
 
@@ -382,7 +382,7 @@ TEST(hxrbtree_test, erase_calls_destructor) {
 	tree.erase(front);
 	EXPECT_EQ(s_hxtest_destructor_count, 1);
 	EXPECT_EQ(tree.size(), (size_t)2);
-	EXPECT_EQ(tree.front()->key(), 2);
+	EXPECT_EQ(tree.front()->rbtree_key(), 2);
 }
 
 // erase with hxdo_not_delete override does not call destructor.
@@ -496,7 +496,7 @@ TEST(hxrbtree_test, reuse_after_release_all) {
 	tree.release_all();
 	tree.insert(&c);
 	EXPECT_EQ(tree.size(), (size_t)1);
-	EXPECT_EQ(tree.front()->key(), 3);
+	EXPECT_EQ(tree.front()->rbtree_key(), 3);
 	tree.release_all();
 }
 
@@ -530,7 +530,7 @@ TEST(hxrbtree_test, lower_bound_one_below_existing) {
 	tree.insert(&c);
 	const hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>::iterator it =
 		tree.lower_bound(3);
-	EXPECT_EQ(it->key(), 4);
+	EXPECT_EQ(it->rbtree_key(), 4);
 	tree.release_all();
 }
 
@@ -550,7 +550,7 @@ TEST(hxrbtree_test, lower_bound_below_minimum_returns_front) {
 	hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete> tree;
 	tree.insert(&a);
 	tree.insert(&b);
-	EXPECT_EQ(tree.lower_bound(1)->key(), 2);
+	EXPECT_EQ(tree.lower_bound(1)->rbtree_key(), 2);
 	tree.release_all();
 }
 
@@ -561,7 +561,7 @@ TEST(hxrbtree_test, lower_bound_const) {
 	tree.insert(&a);
 	tree.insert(&b);
 	const hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>& ct = tree;
-	EXPECT_EQ(ct.lower_bound(4)->key(), 7);
+	EXPECT_EQ(ct.lower_bound(4)->rbtree_key(), 7);
 	EXPECT_EQ(ct.lower_bound(8), ct.end());
 	tree.release_all();
 }
@@ -583,7 +583,7 @@ TEST(hxrbtree_test, upper_bound_equal_key) {
 	tree.insert(&c);
 	const hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>::iterator it =
 		tree.upper_bound(4);
-	EXPECT_EQ(it->key(), 6);
+	EXPECT_EQ(it->rbtree_key(), 6);
 	tree.release_all();
 }
 
@@ -604,7 +604,7 @@ TEST(hxrbtree_test, upper_bound_below_minimum_returns_front) {
 	hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete> tree;
 	tree.insert(&a);
 	tree.insert(&b);
-	EXPECT_EQ(tree.upper_bound(1)->key(), 2);
+	EXPECT_EQ(tree.upper_bound(1)->rbtree_key(), 2);
 	tree.release_all();
 }
 
@@ -625,7 +625,7 @@ TEST(hxrbtree_test, upper_bound_const) {
 	tree.insert(&a);
 	tree.insert(&b);
 	const hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>& ct = tree;
-	EXPECT_EQ(ct.upper_bound(3)->key(), 7);
+	EXPECT_EQ(ct.upper_bound(3)->rbtree_key(), 7);
 	EXPECT_EQ(ct.upper_bound(7), ct.end());
 	tree.release_all();
 }
@@ -641,11 +641,11 @@ TEST(hxrbtree_test, iterator_pre_increment) {
 	tree.insert(&c);
 	hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>::iterator it =
 		tree.begin();
-	EXPECT_EQ(it->key(), 1);
+	EXPECT_EQ(it->rbtree_key(), 1);
 	++it;
-	EXPECT_EQ(it->key(), 2);
+	EXPECT_EQ(it->rbtree_key(), 2);
 	++it;
-	EXPECT_EQ(it->key(), 3);
+	EXPECT_EQ(it->rbtree_key(), 3);
 	++it;
 	EXPECT_EQ(it, tree.end());
 	tree.release_all();
@@ -660,8 +660,8 @@ TEST(hxrbtree_test, iterator_post_increment) {
 	hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>::iterator it =
 		tree.begin();
 	const hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>::iterator old = it++;
-	EXPECT_EQ(old->key(), 1);
-	EXPECT_EQ(it->key(), 2);
+	EXPECT_EQ(old->rbtree_key(), 1);
+	EXPECT_EQ(it->rbtree_key(), 2);
 	tree.release_all();
 }
 
@@ -675,11 +675,11 @@ TEST(hxrbtree_test, iterator_pre_decrement_from_end) {
 	hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>::iterator it =
 		tree.end();
 	--it;
-	EXPECT_EQ(it->key(), 3);
+	EXPECT_EQ(it->rbtree_key(), 3);
 	--it;
-	EXPECT_EQ(it->key(), 2);
+	EXPECT_EQ(it->rbtree_key(), 2);
 	--it;
-	EXPECT_EQ(it->key(), 1);
+	EXPECT_EQ(it->rbtree_key(), 1);
 	EXPECT_EQ(it, tree.begin());
 	tree.release_all();
 }
@@ -694,7 +694,7 @@ TEST(hxrbtree_test, iterator_post_decrement) {
 		tree.end();
 	const hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>::iterator old = it--;
 	EXPECT_EQ(old, tree.end());
-	EXPECT_EQ(it->key(), 2);
+	EXPECT_EQ(it->rbtree_key(), 2);
 	tree.release_all();
 }
 
@@ -723,7 +723,7 @@ TEST(hxrbtree_test, iterator_arrow_operator) {
 	tree.insert(&a);
 	const hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>::iterator it =
 		tree.begin();
-	EXPECT_EQ(it->key(), 1);
+	EXPECT_EQ(it->rbtree_key(), 1);
 	tree.release_all();
 }
 
@@ -736,11 +736,11 @@ TEST(hxrbtree_test, const_iterator_post_increment_and_decrement) {
 	hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>::const_iterator it =
 		tree.cbegin();
 	hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>::const_iterator old = it++;
-	EXPECT_EQ(old->key(), 1);
-	EXPECT_EQ(it->key(), 2);
+	EXPECT_EQ(old->rbtree_key(), 1);
+	EXPECT_EQ(it->rbtree_key(), 2);
 	old = it--;
-	EXPECT_EQ(old->key(), 2);
-	EXPECT_EQ(it->key(), 1);
+	EXPECT_EQ(old->rbtree_key(), 2);
+	EXPECT_EQ(it->rbtree_key(), 1);
 	tree.release_all();
 }
 
@@ -752,7 +752,7 @@ TEST(hxrbtree_test, const_iterator_dereference) {
 	const hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>& ct = tree;
 	const hxrbtree<hxtest_rbtree_node_t, false, hxdo_not_delete>::const_iterator it =
 		ct.begin();
-	EXPECT_EQ((*it).key(), 5);
+	EXPECT_EQ((*it).rbtree_key(), 5);
 	tree.release_all();
 }
 
@@ -762,7 +762,7 @@ TEST(hxrbtree_test, const_iterator_dereference) {
 TEST(hxrbtree_test, map_node_key_and_value) {
 	using map_node_t = hxrbtree_map_node<int, int>;
 	map_node_t n(3, 99);
-	EXPECT_EQ(n.key(), 3);
+	EXPECT_EQ(n.rbtree_key(), 3);
 	EXPECT_EQ(n.value(), 99);
 }
 
@@ -777,7 +777,7 @@ TEST(hxrbtree_test, map_node_mutable_value) {
 	int expected_key = 1;
 	int expected_val = 10;
 	for(map_node_t& n : tree) {
-		EXPECT_EQ(n.key(), expected_key++);
+		EXPECT_EQ(n.rbtree_key(), expected_key++);
 		n.value() = expected_val + 1;
 		expected_val += 10;
 	}
@@ -800,8 +800,8 @@ TEST(hxrbtree_test, insert_15_ascending_check_order) {
 		tree.insert(&nodes[i]);
 	}
 	hxtest_check_order(tree, 15u);
-	EXPECT_EQ(tree.front()->key(), 1);
-	EXPECT_EQ(tree.back()->key(), 15);
+	EXPECT_EQ(tree.front()->rbtree_key(), 1);
+	EXPECT_EQ(tree.back()->rbtree_key(), 15);
 	tree.release_all();
 }
 
@@ -816,8 +816,8 @@ TEST(hxrbtree_test, insert_15_descending_check_order) {
 		tree.insert(&nodes[i]);
 	}
 	hxtest_check_order(tree, 15u);
-	EXPECT_EQ(tree.front()->key(), 1);
-	EXPECT_EQ(tree.back()->key(), 15);
+	EXPECT_EQ(tree.front()->rbtree_key(), 1);
+	EXPECT_EQ(tree.back()->rbtree_key(), 15);
 	tree.release_all();
 }
 

@@ -276,19 +276,38 @@ public:
 	/// Destructs the hash table and deletes all resources.
 	~hxhash_table(void) { this->clear(); }
 
-	/// Sets the number of hash bits and allocate memory for the table. (only
-	/// for dynamic capacity).
-	/// - `bits` : The number of hash bits to set for the hash table.
-	void set_table_size_bits(hxhash_t bits_) { m_table_.set_table_size_bits(bits_); };
-
 	/// Returns a const iterator pointing to the beginning of the hash table.
 	const_iterator begin(void) const { return const_iterator(this); }
 
 	/// Returns an iterator pointing to the beginning of the hash table.
 	iterator begin(void) { return iterator(this); }
 
+	/// Returns the number of buckets in the hash table.
+	hxattr_nodiscard size_t bucket_count(void) const { return m_table_.capacity(); };
+
 	/// Returns a const iterator pointing to the beginning of the hash table.
 	const_iterator cbegin(void) const { return const_iterator(this); }
+
+	/// Returns a const iterator pointing to the end of the hash table.
+	const_iterator cend(void) const { return const_iterator(); }
+
+	/// Removes all nodes and calls `deleter()` on every node. Deleter can be
+	/// function pointers with signature `void deleter(node_t*)` or functors
+	/// supporting `operator()(node_t*)` and `operator (bool)`. deleter could be
+	/// a free list or a null function pointer.
+	/// - `deleter` : A function or functor to call on each removed `node_t`.
+	template<typename deleter_override_t_>
+	void clear(const deleter_override_t_& deleter_);
+
+	/// Removes all nodes and calls `deleter_t::operator()` on every node.
+	void clear(void) { this->clear(deleter_t_()); }
+
+	/// Counts the number of Nodes with the given key.
+	/// - `key` : The key to count occurrences of in the hash table.
+	hxattr_nodiscard size_t count(const typename node_t_::key_t& key_) const;
+
+	/// Checks if the hash table is empty.
+	hxattr_nodiscard bool empty(void) const { return m_size_ == 0u; }
 
 	/// Returns a const iterator pointing to the end of the hash table.
 	const_iterator end(void) const { return const_iterator(); }
@@ -296,22 +315,24 @@ public:
 	/// Returns an iterator pointing to the end of the hash table.
 	iterator end(void) { return iterator(); }
 
-	/// Returns a const iterator pointing to the end of the hash table.
-	const_iterator cend(void) const { return const_iterator(); }
+	/// Releases all Nodes matching key and calls `deleter` on every node. Returns
+	/// the number of nodes released. Deleter can be functions with signature `void
+	/// deleter(node_t*)` and functors supporting `operator()(node_t*)` and with an
+	/// `operator bool`. e.g., a free list or a null pointer.
+	/// - `key` : The key to search for and remove from the hash table.
+	/// - `deleter` : A function or functor to call on each removed `node_t`.
+	template<typename deleter_override_t_>
+	size_t erase(const typename node_t_::key_t& key_, const deleter_override_t_& deleter_);
 
-	/// Returns the number of elements in the hash table.
-	hxattr_nodiscard size_t size(void) const { return m_size_; }
+	/// Removes and calls `deleter_t::operator()` on nodes with an equivalent key.
+	/// - `key` : The key to search for and remove from the hash table.
+	size_t erase(const typename node_t_::key_t& key_) {
+		return this->erase(key_, deleter_t_());
+	}
 
-	/// Checks if the hash table is empty.
-	hxattr_nodiscard bool empty(void) const { return m_size_ == 0u; }
-
-	/// Inserts `ptr` into the hash table and returns it. When `multi_t` is `false`
-	/// and a node with an equal key already exists, the existing node is returned
-	/// and `ptr` is not inserted. The caller detects a collision by comparing the
-	/// return value to the argument. When `multi_t` is `true`, duplicate keys are
-	/// always inserted.
-	/// - `ptr` : The `node_t` to insert into the hash table.
-	node_t_* insert_node(node_t_* ptr_);
+	/// Removes and returns the first `node_t` with the given key.
+	/// - `key` : The key to search for and remove from the hash table.
+	node_t_* extract(const typename node_t_::key_t& key_);
 
 	/// Returns a `node_t` matching key if any. If previous is non-null it must be
 	/// a node previously returned from `find()` with the same key and that has not
@@ -329,52 +350,13 @@ public:
 		return const_cast<hxhash_table*>(this)->find(key_, previous_);
 	}
 
-	/// Counts the number of Nodes with the given key.
-	/// - `key` : The key to count occurrences of in the hash table.
-	hxattr_nodiscard size_t count(const typename node_t_::key_t& key_) const;
-
-	/// Removes and returns the first `node_t` with the given key.
-	/// - `key` : The key to search for and remove from the hash table.
-	node_t_* extract(const typename node_t_::key_t& key_);
-
-	/// Releases all Nodes matching key and calls `deleter` on every node. Returns
-	/// the number of nodes released. Deleter can be functions with signature `void
-	/// deleter(node_t*)` and functors supporting `operator()(node_t*)` and with an
-	/// `operator bool`. e.g., a free list or a null pointer.
-	/// - `key` : The key to search for and remove from the hash table.
-	/// - `deleter` : A function or functor to call on each removed `node_t`.
-	template<typename deleter_override_t_>
-	size_t erase(const typename node_t_::key_t& key_, const deleter_override_t_& deleter_);
-
-	/// Removes and calls `deleter_t::operator()` on nodes with an equivalent key.
-	/// - `key` : The key to search for and remove from the hash table.
-	size_t erase(const typename node_t_::key_t& key_) {
-		return this->erase(key_, deleter_t_());
-	}
-
-	/// Removes all Nodes matching the given key without deleting them.
-	/// - `key` : The key to search for and release from the hash table.
-	size_t release_key(const typename node_t_::key_t& key_) {
-		// Pass a null pointer for the deleter. Just to show off.
-		return this->erase(key_, static_cast<void(*)(node_t_*)>(hxnull));
-	}
-
-	/// Removes all nodes and calls `deleter()` on every node. Deleter can be
-	/// function pointers with signature `void deleter(node_t*)` or functors
-	/// supporting `operator()(node_t*)` and `operator (bool)`. deleter could be
-	/// a free list or a null function pointer.
-	/// - `deleter` : A function or functor to call on each removed `node_t`.
-	template<typename deleter_override_t_>
-	void clear(const deleter_override_t_& deleter_);
-
-	/// Removes all nodes and calls `deleter_t::operator()` on every node.
-	void clear(void) { this->clear(deleter_t_()); }
-
-	/// Clears the hash table without deleting any Nodes.
-	void release_all(void);
-
-	/// Returns the number of buckets in the hash table.
-	hxattr_nodiscard size_t bucket_count(void) const { return m_table_.capacity(); };
+	/// Inserts `ptr` into the hash table and returns it. When `multi_t` is `false`
+	/// and a node with an equal key already exists, the existing node is returned
+	/// and `ptr` is not inserted. The caller detects a collision by comparing the
+	/// return value to the argument. When `multi_t` is `true`, duplicate keys are
+	/// always inserted.
+	/// - `ptr` : The `node_t` to insert into the hash table.
+	node_t_* insert_node(node_t_* ptr_);
 
 	/// Returns the average number of Nodes per bucket.
 	hxattr_nodiscard float load_factor(void) const {
@@ -385,6 +367,24 @@ public:
 
 	/// Returns the size of the largest bucket.
 	hxattr_nodiscard size_t load_max(void) const;
+
+	/// Clears the hash table without deleting any Nodes.
+	void release_all(void);
+
+	/// Removes all Nodes matching the given key without deleting them.
+	/// - `key` : The key to search for and release from the hash table.
+	size_t release_key(const typename node_t_::key_t& key_) {
+		// Pass a null pointer for the deleter. Just to show off.
+		return this->erase(key_, static_cast<void(*)(node_t_*)>(hxnull));
+	}
+
+	/// Sets the number of hash bits and allocate memory for the table. (only
+	/// for dynamic capacity).
+	/// - `bits` : The number of hash bits to set for the hash table.
+	void set_table_size_bits(hxhash_t bits_) { m_table_.set_table_size_bits(bits_); };
+
+	/// Returns the number of elements in the hash table.
+	hxattr_nodiscard size_t size(void) const { return m_size_; }
 
 private:
 	static_assert(table_size_bits_ < hxhash_bits, "Hash bits must be [0..hxhash_bits].");
@@ -400,106 +400,6 @@ private:
 	size_t m_size_;
 	hxhash_table_internal_allocator_<node_t_, table_size_bits_> m_table_;
 };
-
-template<hxhash_table_concept_ node_t_, hxhash_t table_size_bits_, bool multi_t_, typename deleter_t_>
-inline node_t_* hxhash_table<node_t_, table_size_bits_, multi_t_, deleter_t_>::insert_node(node_t_* ptr_)
-{
-	node_t_** pos_ = this->get_bucket_head_(ptr_->hash_value());
-	if(!multi_t_) {
-		for(node_t_* n_ = *pos_; n_; n_ = static_cast<node_t_*>(n_->hash_next())) {
-			if(hxkey_equal(n_->hash_key(), ptr_->hash_key())) {
-				return n_;
-			}
-		}
-	}
-	else {
-		hxassertmsg(this->find(ptr_->hash_key()) != ptr_, "container_reinsert");
-	}
-	ptr_->hash_next() = *pos_;
-	*pos_ = ptr_;
-	++m_size_;
-	return ptr_;
-}
-
-template<hxhash_table_concept_ node_t_, hxhash_t table_size_bits_, bool multi_t_, typename deleter_t_>
-inline node_t_* hxhash_table<node_t_, table_size_bits_, multi_t_, deleter_t_>::find(
-	const typename node_t_::key_t& key_, const node_t_* previous_)
-{
-	const hxhash_t hash_ = node_t_::hash_value(key_);
-	if(previous_ == hxnull) {
-		for(node_t_* n_ = *this->get_bucket_head_(hash_); n_; n_ = static_cast<node_t_*>(n_->hash_next())) {
-			if(hxkey_equal(n_->hash_key(), key_)) {
-				return n_;
-			}
-		}
-	}
-	else {
-		hxassertmsg(hxkey_equal(key_, previous_->hash_key()), "previous_mismatch");
-		hxassertmsg(hash_ == previous_->hash_value(), "previous_mismatch");
-		for(node_t_* n_ = static_cast<node_t_*>(previous_->hash_next()); n_; n_ = static_cast<node_t_*>(n_->hash_next())) {
-			if(hxkey_equal(n_->hash_key(), key_)) {
-				return n_;
-			}
-		}
-	}
-	return hxnull;
-}
-
-template<hxhash_table_concept_ node_t_, hxhash_t table_size_bits_, bool multi_t_, typename deleter_t_>
-inline size_t hxhash_table<node_t_, table_size_bits_, multi_t_, deleter_t_>::count(
-	const typename node_t_::key_t& key_) const
-{
-	size_t total_ = 0u;
-	const hxhash_t hash_ = node_t_::hash_value(key_);
-	for(const node_t_* n_ = *this->get_bucket_head_(hash_); n_; n_ = static_cast<const node_t_*>(n_->hash_next())) {
-		if(hxkey_equal(n_->hash_key(), key_)) {
-			++total_;
-		}
-	}
-	return total_;
-}
-
-template<hxhash_table_concept_ node_t_, hxhash_t table_size_bits_, bool multi_t_, typename deleter_t_>
-inline node_t_* hxhash_table<node_t_, table_size_bits_, multi_t_, deleter_t_>::extract(
-	const typename node_t_::key_t& key_)
-{
-	const hxhash_t hash_ = node_t_::hash_value(key_);
-	node_t_** current_ = this->get_bucket_head_(hash_);
-	while(node_t_* n_ = *current_) {
-		if(hxkey_equal(n_->hash_key(), key_)) {
-			*current_ = static_cast<node_t_*>(n_->hash_next());
-			--m_size_;
-			return n_;
-		}
-		// This avoids special case code for the head pointer.
-		current_ = reinterpret_cast<node_t_**>(&n_->hash_next());
-	}
-	return hxnull;
-}
-
-template<hxhash_table_concept_ node_t_, hxhash_t table_size_bits_, bool multi_t_, typename deleter_t_>
-template<typename deleter_override_t_>
-inline size_t hxhash_table<node_t_, table_size_bits_, multi_t_, deleter_t_>::erase(
-	const typename node_t_::key_t& key_, const deleter_override_t_& deleter_)
-{
-	size_t count_ = 0u;
-	const hxhash_t hash_ = node_t_::hash_value(key_);
-	node_t_** current_ = this->get_bucket_head_(hash_);
-	while(node_t_* n_ = *current_) {
-		if(hxkey_equal(n_->hash_key(), key_)) {
-			*current_ = static_cast<node_t_*>(n_->hash_next());
-			if(deleter_) {
-				deleter_(n_);
-			}
-			++count_;
-		}
-		else {
-			current_ = reinterpret_cast<node_t_**>(&n_->hash_next());
-		}
-	}
-	m_size_ -= count_;
-	return count_;
-}
 
 template<hxhash_table_concept_ node_t_, hxhash_t table_size_bits_, bool multi_t_, typename deleter_t_>
 template<typename deleter_override_t_>
@@ -528,12 +428,103 @@ inline void hxhash_table<node_t_, table_size_bits_, multi_t_, deleter_t_>::clear
 }
 
 template<hxhash_table_concept_ node_t_, hxhash_t table_size_bits_, bool multi_t_, typename deleter_t_>
-inline void hxhash_table<node_t_, table_size_bits_, multi_t_, deleter_t_>::release_all(void)
+inline size_t hxhash_table<node_t_, table_size_bits_, multi_t_, deleter_t_>::count(
+	const typename node_t_::key_t& key_) const
 {
-	if(m_size_ != 0u) {
-		::memset(m_table_.data(), 0x00, sizeof(node_t_*) * m_table_.capacity());
-		m_size_ = 0u;
+	size_t total_ = 0u;
+	const hxhash_t hash_ = node_t_::hash_value(key_);
+	for(const node_t_* n_ = *this->get_bucket_head_(hash_); n_; n_ = static_cast<const node_t_*>(n_->hash_next())) {
+		if(hxkey_equal(n_->hash_key(), key_)) {
+			++total_;
+		}
 	}
+	return total_;
+}
+
+template<hxhash_table_concept_ node_t_, hxhash_t table_size_bits_, bool multi_t_, typename deleter_t_>
+template<typename deleter_override_t_>
+inline size_t hxhash_table<node_t_, table_size_bits_, multi_t_, deleter_t_>::erase(
+	const typename node_t_::key_t& key_, const deleter_override_t_& deleter_)
+{
+	size_t count_ = 0u;
+	const hxhash_t hash_ = node_t_::hash_value(key_);
+	node_t_** current_ = this->get_bucket_head_(hash_);
+	while(node_t_* n_ = *current_) {
+		if(hxkey_equal(n_->hash_key(), key_)) {
+			*current_ = static_cast<node_t_*>(n_->hash_next());
+			if(deleter_) {
+				deleter_(n_);
+			}
+			++count_;
+		}
+		else {
+			current_ = reinterpret_cast<node_t_**>(&n_->hash_next());
+		}
+	}
+	m_size_ -= count_;
+	return count_;
+}
+
+template<hxhash_table_concept_ node_t_, hxhash_t table_size_bits_, bool multi_t_, typename deleter_t_>
+inline node_t_* hxhash_table<node_t_, table_size_bits_, multi_t_, deleter_t_>::extract(
+	const typename node_t_::key_t& key_)
+{
+	const hxhash_t hash_ = node_t_::hash_value(key_);
+	node_t_** current_ = this->get_bucket_head_(hash_);
+	while(node_t_* n_ = *current_) {
+		if(hxkey_equal(n_->hash_key(), key_)) {
+			*current_ = static_cast<node_t_*>(n_->hash_next());
+			--m_size_;
+			return n_;
+		}
+		// This avoids special case code for the head pointer.
+		current_ = reinterpret_cast<node_t_**>(&n_->hash_next());
+	}
+	return hxnull;
+}
+
+template<hxhash_table_concept_ node_t_, hxhash_t table_size_bits_, bool multi_t_, typename deleter_t_>
+inline node_t_* hxhash_table<node_t_, table_size_bits_, multi_t_, deleter_t_>::find(
+	const typename node_t_::key_t& key_, const node_t_* previous_)
+{
+	const hxhash_t hash_ = node_t_::hash_value(key_);
+	if(previous_ == hxnull) {
+		for(node_t_* n_ = *this->get_bucket_head_(hash_); n_; n_ = static_cast<node_t_*>(n_->hash_next())) {
+			if(hxkey_equal(n_->hash_key(), key_)) {
+				return n_;
+			}
+		}
+	}
+	else {
+		hxassertmsg(hxkey_equal(key_, previous_->hash_key()), "previous_mismatch");
+		hxassertmsg(hash_ == previous_->hash_value(), "previous_mismatch");
+		for(node_t_* n_ = static_cast<node_t_*>(previous_->hash_next()); n_; n_ = static_cast<node_t_*>(n_->hash_next())) {
+			if(hxkey_equal(n_->hash_key(), key_)) {
+				return n_;
+			}
+		}
+	}
+	return hxnull;
+}
+
+template<hxhash_table_concept_ node_t_, hxhash_t table_size_bits_, bool multi_t_, typename deleter_t_>
+inline node_t_* hxhash_table<node_t_, table_size_bits_, multi_t_, deleter_t_>::insert_node(node_t_* ptr_)
+{
+	node_t_** pos_ = this->get_bucket_head_(ptr_->hash_value());
+	if(!multi_t_) {
+		for(node_t_* n_ = *pos_; n_; n_ = static_cast<node_t_*>(n_->hash_next())) {
+			if(hxkey_equal(n_->hash_key(), ptr_->hash_key())) {
+				return n_;
+			}
+		}
+	}
+	else {
+		hxassertmsg(this->find(ptr_->hash_key()) != ptr_, "container_reinsert");
+	}
+	ptr_->hash_next() = *pos_;
+	*pos_ = ptr_;
+	++m_size_;
+	return ptr_;
 }
 
 template<hxhash_table_concept_ node_t_, hxhash_t table_size_bits_, bool multi_t_, typename deleter_t_>
@@ -549,6 +540,15 @@ inline size_t hxhash_table<node_t_, table_size_bits_, multi_t_, deleter_t_>::loa
 		maximum_ = hxmax(maximum_, count_);
 	}
 	return maximum_;
+}
+
+template<hxhash_table_concept_ node_t_, hxhash_t table_size_bits_, bool multi_t_, typename deleter_t_>
+inline void hxhash_table<node_t_, table_size_bits_, multi_t_, deleter_t_>::release_all(void)
+{
+	if(m_size_ != 0u) {
+		::memset(m_table_.data(), 0x00, sizeof(node_t_*) * m_table_.capacity());
+		m_size_ = 0u;
+	}
 }
 
 template<hxhash_table_concept_ node_t_, hxhash_t table_size_bits_, bool multi_t_, typename deleter_t_>

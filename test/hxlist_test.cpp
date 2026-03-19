@@ -436,7 +436,7 @@ TEST(hxlist_test, const_iterator_post_increment_and_decrement) {
 // Copy/move construction produces a fresh unlinked node; copy/move assignment
 // leaves the destination's linkage unchanged. All four require an unlinked source.
 TEST(hxlist_node_test, copy_move_construct_and_assign) {
-	hxtest_list_node_t a(1), b(2), c(3), d(4);
+	const hxtest_list_node_t a(1), b(2), c(3), d(4);
 	hxlist<hxtest_list_node_t, hxdo_not_delete> list;
 	// copy-construct: b is unlinked, gets a fresh node linkable into a list.
 	hxtest_list_node_t e(a);

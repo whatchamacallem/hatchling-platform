@@ -31,29 +31,26 @@
 /// Intrusive doubly linked list node base. Derive from `hxlist_node` to make a
 /// type linkable into an `hxlist`. Nodes default to unlinked on construction.
 /// Copy and move construction and assignment produce or leave a fresh unlinked
-/// node so that subclasses may implement the standard operators naturally. All
-/// four assert that the source node is not currently linked.
+/// node so that subclasses may implement the standard operators naturally.
 class hxlist_node {
 public:
 	/// Constructs an unlinked node with both pointers set to null.
 	hxlist_node(void) : m_list_prev_(hxnull), m_list_next_(hxnull) { }
 
-	/// Constructs an unlinked node. Asserts the source is not linked.
-	hxlist_node(const hxlist_node& src_) : hxlist_node() { }
+	/// Constructs an unlinked node.
+	hxlist_node(const hxlist_node&) : hxlist_node() { }
 
-	/// Constructs an unlinked node. Asserts the source is not linked.
+	/// Constructs an unlinked node.
 	hxlist_node(hxlist_node&& src_) : hxlist_node() {
-		hxassertmsg(src_.m_list_prev_ == hxnull, "move of linked node");
+		hxassertmsg(src_.m_list_prev_ == hxnull, "move of linked node"); (void)src_;
 	}
 
-	/// Assigns nothing. List linkage of either node is not affected. Asserts
-	/// the source is not linked.
-	hxlist_node& operator=(const hxlist_node& src_) { }
+	/// Assigns nothing. List linkage of either node is not affected.
+	hxlist_node& operator=(const hxlist_node&) { return *this; } // NOLINT
 
-	/// Assigns nothing. List linkage of either node is not affected. Asserts
-	/// the source is not linked.
+	/// Assigns nothing. List linkage of either node is not affected.
 	hxlist_node& operator=(hxlist_node&& src_) {
-		hxassertmsg(src_.m_list_prev_ == hxnull, "move of linked node");
+		hxassertmsg(src_.m_list_prev_ == hxnull, "move of linked node"); (void)src_;
 		return *this;
 	}
 
@@ -91,8 +88,7 @@ public:
 		/// Constructs a singular iterator that must not be incremented or dereferenced.
 		const_iterator(void) : m_current_node_(hxnull), m_sentinel_(hxnull) { }
 
-		/// Advances to the next node and returns this iterator. Asserts the
-		/// iterator is not at `end()`.
+		/// Advances to the next node and returns this iterator.
 		const_iterator& operator++(void);
 		/// Post-increment: advances to the next node and returns the prior position.
 		const_iterator operator++(int);
@@ -128,8 +124,7 @@ public:
 		/// Constructs a singular iterator that must not be incremented or dereferenced.
 		iterator(void) { }
 
-		/// Advances to the next node and returns this iterator. Asserts the
-		/// iterator is not at `end()`.
+		/// Advances to the next node and returns this iterator.
 		iterator& operator++(void) { const_iterator::operator++(); return *this; }
 		/// Post-increment: advances to the next node and returns the prior position.
 		iterator operator++(int);

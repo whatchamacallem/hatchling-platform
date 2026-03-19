@@ -110,7 +110,8 @@ and are instead examples of code written independently outside of the project.
 Put comments on preceding lines instead of on the same line as code.
 
 Describe only the expectation enforced by asserts in documentation instead of
-explicitly describing the asserts themselves.
+explicitly describing the asserts themselves. If the assert just enforces a
+routine invariant than do not document it at all.
 
 Wrap all documentation except parameter documentation at 80 columns. Begin
 function documentation by describing the return value if not `void`. Use the

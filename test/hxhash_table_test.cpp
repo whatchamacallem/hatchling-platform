@@ -367,3 +367,67 @@ TEST_F(hxhash_table_test_f, string_literal_nodes) {
 	EXPECT_NE(table.find("Crimson"), hxnullptr);
 	EXPECT_EQ(table.find("Cerulean"), hxnullptr);
 }
+
+// A plain hxhash_table_set_node subclass used to test copy/move operators.
+struct hxtest_set_node_t : hxhash_table_set_node<int32_t> {
+	explicit hxtest_set_node_t(int32_t k) : hxhash_table_set_node<int32_t>(k) { }
+};
+
+// copy/move construct produce insertable unlinked nodes with the same key and
+// hash; copy/move assign leave table linkage of the destination unchanged.
+TEST(hxhash_table_set_node_test, copy_move_construct_and_assign) {
+	const hxtest_set_node_t a(1), b(2), c(3), d(4);
+	using table_t = hxhash_table<hxtest_set_node_t, 4, false>;
+	table_t table;
+	// copy-construct: e is unlinked, key and hash match a.
+	hxtest_set_node_t e(a);
+	EXPECT_EQ(e.hash_key(), 1);
+	EXPECT_EQ(e.hash_value(), a.hash_value());
+	table.insert_node(&e);
+	// move-construct: f is unlinked, key and hash match b.
+	hxtest_set_node_t f(hxmove(b));
+	EXPECT_EQ(f.hash_key(), 2);
+	EXPECT_EQ(f.hash_value(), b.hash_value());
+	table.insert_node(&f);
+	EXPECT_EQ(table.size(), (size_t)2);
+	// copy-assign: e stays linked in the table.
+	e = c;
+	EXPECT_NE(table.find(1), hxnullptr);
+	// move-assign: f stays linked in the table.
+	f = hxmove(d);
+	EXPECT_NE(table.find(2), hxnullptr);
+	EXPECT_EQ(table.size(), (size_t)2);
+	table.release_all();
+}
+
+// A plain hxhash_table_node_integer subclass used to test copy/move operators.
+struct hxtest_integer_node_t : hxhash_table_node_integer<int32_t> {
+	explicit hxtest_integer_node_t(int32_t k) : hxhash_table_node_integer<int32_t>(k) { }
+};
+
+// copy/move construct produce insertable unlinked nodes with the same key and
+// hash; copy/move assign leave table linkage of the destination unchanged.
+TEST(hxhash_table_node_integer_test, copy_move_construct_and_assign) {
+	const hxtest_integer_node_t a(10), b(20), c(30), d(40);
+	using table_t = hxhash_table<hxtest_integer_node_t, 4, false>;
+	table_t table;
+	// copy-construct: e is unlinked, key and hash match a.
+	hxtest_integer_node_t e(a);
+	EXPECT_EQ(e.hash_key(), 10);
+	EXPECT_EQ(e.hash_value(), a.hash_value());
+	table.insert_node(&e);
+	// move-construct: f is unlinked, key and hash match b.
+	hxtest_integer_node_t f(hxmove(b));
+	EXPECT_EQ(f.hash_key(), 20);
+	EXPECT_EQ(f.hash_value(), b.hash_value());
+	table.insert_node(&f);
+	EXPECT_EQ(table.size(), (size_t)2);
+	// copy-assign: e stays linked in the table.
+	e = c;
+	EXPECT_NE(table.find(10), hxnullptr);
+	// move-assign: f stays linked in the table.
+	f = hxmove(d);
+	EXPECT_NE(table.find(20), hxnullptr);
+	EXPECT_EQ(table.size(), (size_t)2);
+	table.release_all();
+}

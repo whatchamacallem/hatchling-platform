@@ -63,10 +63,10 @@ concept hxhash_table_concept_ =
 #endif
 
 /// `hxhash_table_set_node` - Optional base class for unordered set entries.
-/// Caches the hash value. Copying and modification are disallowed to protect
-/// the integrity of the hash table. See `hxhash_table_map_node` if you need a
-/// mutable node. The hash table uses duck typing, so only the interface is
-/// required.
+/// Caches the hash value. See `hxhash_table_map_node` if you need a map node.
+/// Copy and move construction produce an unlinked node with the same key and
+/// hash. Copy and move assignment leave the linkage of either node unchanged.
+/// The hash table uses duck typing, so only the interface is required.
 template<typename key_t_>
 class hxhash_table_set_node {
 public:
@@ -80,6 +80,25 @@ public:
 	{
 		// You need to implement hxkey_hash for your key_t_ type.
 		m_hash_ = hxkey_hash(m_key_);
+	}
+
+	/// Constructs an unlinked node with the same key.
+	hxhash_table_set_node(const hxhash_table_set_node& src_)
+		: m_hash_next_(hxnull), m_key_(src_.m_key_), m_hash_(src_.m_hash_) { }
+
+	/// Constructs an unlinked node with the same key.
+	hxhash_table_set_node(hxhash_table_set_node&& src_)
+		: m_hash_next_(hxnull), m_key_(hxmove(src_.m_key_)), m_hash_(src_.m_hash_) {
+		hxassertmsg(src_.m_hash_next_ == hxnull, "move of linked node"); (void)src_;
+	}
+
+	/// Assigns nothing. Hash table linkage of either node is not affected.
+	hxhash_table_set_node& operator=(const hxhash_table_set_node&) { return *this; } // NOLINT
+
+	/// Assigns nothing. Hash table linkage of either node is not affected.
+	hxhash_table_set_node& operator=(hxhash_table_set_node&& src_) {
+		hxassertmsg(src_.m_hash_next_ == hxnull, "move of linked node"); (void)src_;
+		return *this;
 	}
 
 	/// Returns the node pointer used by the table's embedded linked list.
@@ -100,10 +119,6 @@ public:
 
 private:
 	hxhash_table_set_node(void) = delete;
-	// m_hash_next_ should not be copied.
-	hxhash_table_set_node(const hxhash_table_set_node&) = delete;
-	hxhash_table_set_node(hxhash_table_set_node&&) = delete;
-	void operator=(const hxhash_table_set_node&) = delete;
 
 	// The hash table uses m_hash_next_ to implement an embedded linked list.
 	hxhash_table_set_node* m_hash_next_;
@@ -135,6 +150,7 @@ public:
 	const value_t_& value(void) const { return m_value_; }
 	/// Returns the stored value, allowing mutation.
 	value_t_& value(void) { return m_value_; }
+
 private:
 	value_t_ m_value_;
 };

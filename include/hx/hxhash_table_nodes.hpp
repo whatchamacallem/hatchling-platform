@@ -10,6 +10,8 @@
 
 /// `hxhash_table_node_integer` - `node_t` for use with `hxhash_table` for integer
 /// types. See the documentation of `hxhash_table` for the required interface.
+/// Copy and move construction produce an unlinked node with the same key and
+/// hash. Copy and move assignment leave the linkage of either node unchanged.
 /// This serves as an example of a `node_t` that does not use a base class.
 template<typename key_t_>
 class hxhash_table_node_integer {
@@ -20,6 +22,25 @@ public:
 	/// - `key` : Key value represented by the node.
 	hxhash_table_node_integer(const key_t_& key_) :
 		m_hash_next_(hxnull), m_key_(key_), m_hash_(hxkey_hash(key_)) { }
+
+	/// Constructs an unlinked node with the same key.
+	hxhash_table_node_integer(const hxhash_table_node_integer& src_) :
+		m_hash_next_(hxnull), m_key_(src_.m_key_), m_hash_(src_.m_hash_) { }
+
+	/// Constructs an unlinked node with the same key.
+	hxhash_table_node_integer(hxhash_table_node_integer&& src_) :
+		m_hash_next_(hxnull), m_key_(src_.m_key_), m_hash_(src_.m_hash_) {
+		hxassertmsg(src_.m_hash_next_ == hxnull, "move of linked node"); (void)src_;
+	}
+
+	/// Assigns nothing. Hash table linkage of either node is not affected.
+	hxhash_table_node_integer& operator=(const hxhash_table_node_integer&) { return *this; } // NOLINT
+
+	/// Assigns nothing. Hash table linkage of either node is not affected.
+	hxhash_table_node_integer& operator=(hxhash_table_node_integer&& src_) {
+		hxassertmsg(src_.m_hash_next_ == hxnull, "move of linked node"); (void)src_;
+		return *this;
+	}
 
 	/// Returns the next node pointer in the bucket's embedded linked list.
 	hxhash_table_node_integer* hash_next(void) const { return m_hash_next_; }
@@ -34,8 +55,6 @@ public:
 
 private:
 	hxhash_table_node_integer(void) = delete;
-	hxhash_table_node_integer(const hxhash_table_node_integer&) = delete;
-	void operator=(const hxhash_table_node_integer&) = delete;
 
 	hxhash_table_node_integer* m_hash_next_;
 	key_t_ m_key_;
@@ -71,4 +90,10 @@ public:
 
 	/// Destructor frees the allocated string key.
 	~hxhash_table_node_string(void) { hxfree(const_cast<char *>(this->hash_key())); }
+
+private:
+	// Copying is disallowed as it would involve a string copy.
+	hxhash_table_node_string(void) = delete;
+	hxhash_table_node_string(const hxhash_table_node_string&) = delete;
+	void operator=(const hxhash_table_node_string&) = delete;
 };

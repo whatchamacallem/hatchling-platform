@@ -30,16 +30,35 @@
 
 /// Intrusive doubly linked list node base. Derive from `hxlist_node` to make a
 /// type linkable into an `hxlist`. Nodes default to unlinked on construction.
+/// Copy and move construction and assignment produce or leave a fresh unlinked
+/// node so that subclasses may implement the standard operators naturally. All
+/// four assert that the source node is not currently linked.
 class hxlist_node {
 public:
 	/// Constructs an unlinked node with both pointers set to null.
 	hxlist_node(void) : m_list_prev_(hxnull), m_list_next_(hxnull) { }
 
+	/// Constructs an unlinked node. Asserts the source is not linked.
+	hxlist_node(const hxlist_node& src_) : hxlist_node() { }
+
+	/// Constructs an unlinked node. Asserts the source is not linked.
+	hxlist_node(hxlist_node&& src_) : hxlist_node() {
+		hxassertmsg(src_.m_list_prev_ == hxnull, "move of linked node");
+	}
+
+	/// Assigns nothing. List linkage of either node is not affected. Asserts
+	/// the source is not linked.
+	hxlist_node& operator=(const hxlist_node& src_) { }
+
+	/// Assigns nothing. List linkage of either node is not affected. Asserts
+	/// the source is not linked.
+	hxlist_node& operator=(hxlist_node&& src_) {
+		hxassertmsg(src_.m_list_prev_ == hxnull, "move of linked node");
+		return *this;
+	}
+
 private:
 	template<typename, typename> friend class hxlist;
-
-	hxlist_node(const hxlist_node&) = delete;
-	void operator=(const hxlist_node&) = delete;
 
 	hxlist_node* list_prev_(void) const { return m_list_prev_; }
 	hxlist_node*& list_prev_(void) { return m_list_prev_; }
@@ -366,7 +385,8 @@ inline const node_t_* hxlist<node_t_, deleter_t_>::front(void) const {
 template<typename node_t_, typename deleter_t_>
 inline void hxlist<node_t_, deleter_t_>::insert_after(
 	node_t_* pos_, node_t_* ptr_) {
-	hxassertmsg(pos_ != hxnull && ptr_ != hxnull, "null_node");
+	hxassertmsg(pos_ != hxnull && ptr_ != hxnull, "insert_after null node");
+	hxassertmsg(ptr_->m_list_prev_ == hxnull, "insert_after already linked");
 	hxlist_node* next_ = pos_->list_next_();
 	ptr_->list_next_() = next_;
 	ptr_->list_prev_() = pos_;
@@ -378,7 +398,8 @@ inline void hxlist<node_t_, deleter_t_>::insert_after(
 template<typename node_t_, typename deleter_t_>
 inline void hxlist<node_t_, deleter_t_>::insert_before(
 	node_t_* pos_, node_t_* ptr_) {
-	hxassertmsg(pos_ != hxnull && ptr_ != hxnull, "null_node");
+	hxassertmsg(pos_ != hxnull && ptr_ != hxnull, "insert_before null node");
+	hxassertmsg(ptr_->m_list_prev_ == hxnull, "insert_before already linked");
 	hxlist_node* prev_ = pos_->list_prev_();
 	ptr_->list_prev_() = prev_;
 	ptr_->list_next_() = pos_;
@@ -409,7 +430,8 @@ inline node_t_* hxlist<node_t_, deleter_t_>::pop_front(void) {
 
 template<typename node_t_, typename deleter_t_>
 inline void hxlist<node_t_, deleter_t_>::push_back(node_t_* ptr_) {
-	hxassertmsg(ptr_ != hxnull, "null_node");
+	hxassertmsg(ptr_ != hxnull, "push_back null node");
+	hxassertmsg(ptr_->m_list_prev_ == hxnull, "push_back already linked");
 	hxlist_node* old_last_ = m_head_.list_prev_();
 	ptr_->list_prev_() = old_last_;
 	ptr_->list_next_() = sentinel_();
@@ -420,7 +442,8 @@ inline void hxlist<node_t_, deleter_t_>::push_back(node_t_* ptr_) {
 
 template<typename node_t_, typename deleter_t_>
 inline void hxlist<node_t_, deleter_t_>::push_front(node_t_* ptr_) {
-	hxassertmsg(ptr_ != hxnull, "null_node");
+	hxassertmsg(ptr_ != hxnull, "push_front null node");
+	hxassertmsg(ptr_->m_list_prev_ == hxnull, "push_front already linked");
 	hxlist_node* old_first_ = m_head_.list_next_();
 	ptr_->list_next_() = old_first_;
 	ptr_->list_prev_() = sentinel_();

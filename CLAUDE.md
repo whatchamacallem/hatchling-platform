@@ -1,8 +1,14 @@
 # Hatchling Platform
 
-## Responses
+## Interaction
 
 Always number separate items in any analysis so they are easy referenced.
+
+Do not assume existing code is "intentionally so" and instead consider rewriting
+and redesign as preferred to maintaining existing design whenever that aligns
+with requests. Existing code may have been recently written by an agent in an
+exploratory mode, and therefore preserving it may actually hinder iterative
+design.
 
 ## Style Guide
 
@@ -13,22 +19,25 @@ symbols in the standard library are generally functionally equivalent. E.g. use
 available. Prefer `size_t` for sizes and array indexing.
 
 Do not use C++ exceptions, RTTI or assume asserts are enabled. Check when adding
-includes whether they are redundant and write them as `<stdio.h>` not `<cstido>`.
+includes whether they are redundant and write them as `<stdio.h>` not
+`<cstido>`. Generously use `hxassertmsg` for debug asserts and `hxassertrelease`
+for release asserts.
 
 `.clang-tidy` is in use and C-style casts are not allowed. The rules are only
 checked by `testcmake.sh` and are not checked by `vscode`.
 
-Prefer code that avoids stepping through unnecessary function calls in the
-debugger or requires unnecessary traversal of data structures in the debugger
-watch window. However, use hxarray with a static capacity instead of large
-C-style arrays. Wrap those C-style implementation details in C++ classes with
-normal operators so that C++ object models are used for interfaces. Prefer C++
-constructor initialization lists. Use references instead of pointers when a
-pointer would never be null. Use template wrappers for type safety while
-avoiding the associated code bloat. Entirely re-write existing code if required
-instead of preserving existing design. Separate code onto individual lines when
-it helps steps through expressions individually in the debugger. Never implement
-hypothetical safety guarantees.
+Prefer code that avoids unnecessary function calls or requires unnecessary
+traversal of data structures in the debugger watch window. In particular avoid
+writing simple one line helper functions. Except prefer delegating constructors
+to repeating member initializers.
+
+However, use hxarray with a static capacity instead of large C-style arrays.
+Wrap C-style implementation details in C++ classes with normal operators so that
+C++ object models are used for interfaces. Use references instead of pointers
+when a pointer would never be null. Use template wrappers for type safety while
+avoiding the associated code bloat. Separate code onto individual lines when it
+helps step through expressions individually in the debugger. Never implement
+hypothetical safety guarantees
 
 ## Naming
 
@@ -90,11 +99,20 @@ Update documentation independently only when making changes that obsolete it. Do
 not add documentation describing reasons for making changes, e.g. instructions
 given, issues resolved or bugs fixed. Remove trailing `_` from symbols in
 doxygen comments and leave them in regular comments and follow existing style
-otherwise. Do not put `;` or `-` in english sentences unless it is part of a
+otherwise. Do not use `;` or `-` in documentation unless it is part of a
 code block. Documentation will be explicitly requested when the design is final.
 Usage examples in documentation are not expected to follow the preceding rules
 and are instead examples of code written independently outside of the project.
 Put comments on preceding lines instead of on the same line as code.
+
+Wrap all documentation except parameter documentation at 80 columns. Begin
+function documentation by describing the return value if not `void`. Use the
+following Doxygen style:
+
+```c++
+/// `hxabs` - Returns the absolute value of `x` using a `<` comparison.
+/// - `x` : The value to compute the absolute value of.
+```
 
 ## Document Structure
 

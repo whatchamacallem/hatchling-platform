@@ -75,7 +75,7 @@ public:
 	/// Constructs a node from the key and caches its hash for reuse.
 	/// - `key` : Key used to identify the node.
 	template<typename ref_t_>
-	hxhash_table_set_node(ref_t_&& key_)
+	hxhash_table_set_node(ref_t_&& key_) // NOLINT
 		: m_hash_next_(hxnull), m_key_(hxforward<ref_t_>(key_))
 	{
 		// You need to implement hxkey_hash for your key_t_ type.

@@ -898,7 +898,7 @@ TEST(hxrbtree_test, erase_all_nodes_reverse_order) {
 // copy/move construct produce insertable unlinked nodes; copy/move assign leave
 // tree linkage of the destination unchanged.
 TEST(hxrbtree_node_test, copy_move_construct_and_assign) {
-	hxtest_rbtree_base_node_t a(1), b(2), c(3), d(4);
+	const hxtest_rbtree_base_node_t a(1), b(2), c(3), d(4);
 	hxrbtree<hxtest_rbtree_base_node_t, false, hxdo_not_delete> tree;
 	hxtest_rbtree_base_node_t e(a);
 	tree.insert(&e);

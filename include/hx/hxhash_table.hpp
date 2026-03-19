@@ -180,6 +180,7 @@ public:
 	{
 	public:
 		/// Constructs an iterator pointing to the beginning of the hash table.
+		/// - `table` : The hash table to iterate over.
 		const_iterator(const hxhash_table* table_)
 			: m_hash_table_(const_cast<hxhash_table*>(table_)), m_next_index_(0u), m_current_node_(hxnull) { next_bucket(); }
 
@@ -200,9 +201,11 @@ public:
 		const_iterator operator++(int) { const_iterator t_(*this); operator++(); return t_; }
 
 		/// Compares two iterators for equality.
+		/// - `x` : The iterator to compare against.
 		bool operator==(const const_iterator& x_) const { return m_current_node_ == x_.m_current_node_; }
 
 		/// Compares two iterators for inequality.
+		/// - `x` : The iterator to compare against.
 		bool operator!=(const const_iterator& x_) const { return m_current_node_ != x_.m_current_node_; }
 
 		/// Dereferences the iterator to access the current `node_t`.
@@ -239,6 +242,7 @@ public:
 	{
 	public:
 		/// Constructs an iterator pointing to the beginning of the hash table.
+		/// - `tbl` : The hash table to iterate over.
 		iterator(hxhash_table* tbl_) : const_iterator(tbl_) { }
 
 		/// Constructs an iterator pointing to the end of the hash table.
@@ -306,7 +310,7 @@ public:
 	/// and `ptr` is not inserted. The caller detects a collision by comparing the
 	/// return value to the argument. When `multi_t` is `true`, duplicate keys are
 	/// always inserted.
-	/// - `node` : The `node_t` to insert into the hash table.
+	/// - `ptr` : The `node_t` to insert into the hash table.
 	node_t_* insert_node(node_t_* ptr_);
 
 	/// Returns a `node_t` matching key if any. If previous is non-null it must be
@@ -317,7 +321,9 @@ public:
 	/// - `previous` : A previously found `node_t` with the same key, or hxnull.
 	hxattr_nodiscard node_t_* find(const typename node_t_::key_t& key_, const node_t_* previous_=hxnull);
 
-	/// `const` version.
+	/// `const` version of `find`.
+	/// - `key` : The key to search for in the hash table.
+	/// - `previous` : A previously found `node_t` with the same key, or hxnull.
 	hxattr_nodiscard const node_t_* find(const typename node_t_::key_t& key_, const node_t_* previous_=hxnull) const {
 		// This code calls the non-const version for brevity.
 		return const_cast<hxhash_table*>(this)->find(key_, previous_);
@@ -341,11 +347,13 @@ public:
 	size_t erase(const typename node_t_::key_t& key_, const deleter_override_t_& deleter_);
 
 	/// Removes and calls `deleter_t::operator()` on nodes with an equivalent key.
+	/// - `key` : The key to search for and remove from the hash table.
 	size_t erase(const typename node_t_::key_t& key_) {
 		return this->erase(key_, deleter_t_());
 	}
 
 	/// Removes all Nodes matching the given key without deleting them.
+	/// - `key` : The key to search for and release from the hash table.
 	size_t release_key(const typename node_t_::key_t& key_) {
 		// Pass a null pointer for the deleter. Just to show off.
 		return this->erase(key_, static_cast<void(*)(node_t_*)>(hxnull));

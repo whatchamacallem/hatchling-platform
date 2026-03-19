@@ -98,8 +98,10 @@ public:
 		const_iterator operator--(int);
 
 		/// Returns `true` if both iterators point to the same node.
+		/// - `x` : The iterator to compare against.
 		bool operator==(const const_iterator& x_) const;
 		/// Returns `true` if the iterators point to different nodes.
+		/// - `x` : The iterator to compare against.
 		bool operator!=(const const_iterator& x_) const;
 
 		/// Returns a const reference to the current node.
@@ -181,15 +183,18 @@ public:
 
 	/// Unlinks `ptr` from the list and invokes `deleter` on it. If `deleter`
 	/// evaluates to false it is not called.
+	/// - `ptr` : The node to unlink and erase.
 	/// - `deleter` : Override deleter callable. Called only if it evaluates to true.
 	template<typename deleter_override_t_>
 	void erase(node_t_* ptr_, const deleter_override_t_& deleter_);
 
 	/// Unlinks and deletes `ptr` using the list's default `deleter_t`.
+	/// - `ptr` : The node to unlink and delete.
 	void erase(node_t_* ptr_) { this->erase(ptr_, deleter_t_()); }
 
 	/// Unlinks `ptr` from the list and returns it without invoking the deleter.
 	/// `ptr` must not be null.
+	/// - `ptr` : The node to unlink and return.
 	node_t_* extract(node_t_* ptr_);
 
 	/// Returns a pointer to the first node. The list must not be empty.
@@ -198,9 +203,13 @@ public:
 	hxattr_nodiscard const node_t_* front(void) const;
 
 	/// Inserts `ptr` immediately after `pos`. Both `pos` and `ptr` must not be null.
+	/// - `pos` : The node after which `ptr` is inserted.
+	/// - `ptr` : The node to insert.
 	void insert_after(node_t_* pos_, node_t_* ptr_);
 
 	/// Inserts `ptr` immediately before `pos`. Both `pos` and `ptr` must not be null.
+	/// - `pos` : The node before which `ptr` is inserted.
+	/// - `ptr` : The node to insert.
 	void insert_before(node_t_* pos_, node_t_* ptr_);
 
 	/// Removes and returns the last node without invoking the deleter, or null
@@ -212,9 +221,11 @@ public:
 	node_t_* pop_front(void);
 
 	/// Inserts `ptr` at the back of the list. `ptr` must not be null.
+	/// - `ptr` : The node to append.
 	void push_back(node_t_* ptr_);
 
 	/// Inserts `ptr` at the front of the list. `ptr` must not be null.
+	/// - `ptr` : The node to prepend.
 	void push_front(node_t_* ptr_);
 
 	/// Resets the list to empty without invoking the deleter on any node.

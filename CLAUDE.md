@@ -115,8 +115,8 @@ explicitly describing the asserts themselves. If the assert just enforces a
 routine invariant than do not document it at all.
 
 Wrap all documentation except parameter documentation at 80 columns. Begin
-function documentation by describing the return value if not `void`. Use the
-following Doxygen style:
+function documentation by describing the return value if not `void`. All
+parameters require parameter documentation. Use the following Doxygen style:
 
 ```c++
 /// `hxabs` - Returns the absolute value of `x` using a `<` comparison.

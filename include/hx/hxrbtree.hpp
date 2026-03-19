@@ -236,8 +236,10 @@ public:
 		const_iterator  operator--(int);
 
 		/// Returns `true` if both iterators point to the same node.
+		/// - `x` : The iterator to compare against.
 		bool operator==(const const_iterator& x_) const;
 		/// Returns `true` if the iterators point to different nodes.
+		/// - `x` : The iterator to compare against.
 		bool operator!=(const const_iterator& x_) const;
 
 		/// Returns a const reference to the current node.
@@ -327,23 +329,28 @@ public:
 
 	/// Unlinks `ptr` from the tree and invokes `deleter` on it. If `deleter`
 	/// evaluates to false it is not called.
+	/// - `ptr` : The node to unlink and erase.
 	/// - `deleter` : Override deleter callable. Called only if it evaluates to true.
 	template<typename deleter_override_t_>
 	void erase(node_t_* ptr_, const deleter_override_t_& deleter_);
 
 	/// Unlinks and deletes `ptr` using the tree's default `deleter_t`.
+	/// - `ptr` : The node to unlink and delete.
 	void erase(node_t_* ptr_) { this->erase(ptr_, deleter_t_()); }
 
 	/// Unlinks `ptr` from the tree and returns it without invoking the deleter.
 	/// `ptr` must not be null.
+	/// - `ptr` : The node to unlink and return.
 	node_t_* extract(node_t_* ptr_);
 
 	/// Returns a pointer to the first node whose key compares equal to `key`,
 	/// or null if not found. When `multi_t` is `true` the first equal node in
 	/// ascending order is returned.
+	/// - `key` : The key to search for.
 	hxattr_nodiscard node_t_* find(const typename node_t_::key_t& key_);
 	/// Returns a const pointer to the first node whose key compares equal to
 	/// `key`.
+	/// - `key` : The key to search for.
 	hxattr_nodiscard const node_t_* find(const typename node_t_::key_t& key_) const;
 
 	/// Returns a pointer to the minimum (leftmost) node. The tree must not be
@@ -357,20 +364,25 @@ public:
 	/// and a node with an equal key already exists, the existing node is
 	/// returned and `ptr` is not inserted. The caller detects a collision by
 	/// comparing the return value to the argument. `ptr` must not be null.
+	/// - `ptr` : The node to insert.
 	node_t_* insert(node_t_* ptr_);
 
 	/// Returns an iterator to the first node with key greater than or equal to
 	/// `key`, or `end()` if no such node exists.
+	/// - `key` : The key to search for.
 	iterator lower_bound(const typename node_t_::key_t& key_);
 	/// Returns a const iterator to the first node with key greater than or
 	/// equal to `key`.
+	/// - `key` : The key to search for.
 	const_iterator lower_bound(const typename node_t_::key_t& key_) const;
 
 	/// Returns an iterator to the first node with key strictly greater than
 	/// `key`, or `end()` if no such node exists.
+	/// - `key` : The key to search for.
 	iterator upper_bound(const typename node_t_::key_t& key_);
 	/// Returns a const iterator to the first node with key strictly greater
 	/// than `key`.
+	/// - `key` : The key to search for.
 	const_iterator upper_bound(const typename node_t_::key_t& key_) const;
 
 	/// Removes and returns the maximum node without invoking the deleter, or

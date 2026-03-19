@@ -19,9 +19,9 @@
 /// Any node `T` using key `K` will work as long as it has the following.
 /// ```
 /// class T : public hxrbtree_node {
-///   using key_t = K;                                        // Tell the tree what key type to use.
-///   const key_t& rbtree_key() const;                        // Returns the key.
-///   static bool rbtree_less(const K& a, const K& b);        // Returns a < b.
+///   using key_t = K;                                 // The key type to use.
+///   const key_t& rbtree_key() const;                 // Returns the key.
+///   static bool rbtree_less(const K& a, const K& b); // Returns a < b.
 /// };
 /// ```
 /// `hxrbtree_set_node` and `hxrbtree_map_node` are provided and recommended as
@@ -74,12 +74,31 @@ concept hxrbtree_concept_ =
 
 /// Intrusive red-black tree node base. Derive from `hxrbtree_node` to make a
 /// type linkable into an `hxrbtree`. Nodes default to unlinked on construction.
-/// The node color is stored in the low bit of `m_parent_color_`, requiring at
-/// least two-byte alignment, which is verified by a `static_assert`.
+/// Copying or moving constructs a new unlinked node. Moving an already-linked
+/// node asserts. Assignment has no effect on tree linkage of either node. The
+/// node color is stored in the low bit of `m_parent_color_`, requiring at least
+/// two-byte alignment, which is verified by a `static_assert`.
 class hxrbtree_node {
 public:
 	/// Constructs an unlinked node with all pointers and color set to zero.
 	hxrbtree_node(void) : m_parent_color_(0u), m_right_(hxnull), m_left_(hxnull) { }
+
+	/// Constructs an unlinked node.
+	hxrbtree_node(const hxrbtree_node&) : hxrbtree_node() { }
+
+	/// Constructs an unlinked node.
+	hxrbtree_node(hxrbtree_node&& src_) : hxrbtree_node() {
+		hxassertmsg(src_.m_parent_color_ == 0u, "move of linked node"); (void)src_;
+	}
+
+	/// Assigns nothing. Tree linkage of either node is not affected.
+	hxrbtree_node& operator=(const hxrbtree_node&) { return *this; } // NOLINT
+
+	/// Assigns nothing. Tree linkage of either node is not affected.
+	hxrbtree_node& operator=(hxrbtree_node&& src_) {
+		hxassertmsg(src_.m_parent_color_ == 0u, "move of linked node"); (void)src_;
+		return *this;
+	}
 
 private:
 	template<hxrbtree_concept_, bool, typename> friend class hxrbtree;
@@ -93,9 +112,6 @@ private:
 	friend hxrbtree_node* hxrbtree_last_(hxrbtree_node* root_);
 	friend hxrbtree_node* hxrbtree_next_(hxrbtree_node* node_);
 	friend hxrbtree_node* hxrbtree_prev_(hxrbtree_node* node_);
-
-	hxrbtree_node(const hxrbtree_node&) = delete;
-	void operator=(const hxrbtree_node&) = delete;
 
 	hxrbtree_node* parent_(void) const;
 	void set_parent_(hxrbtree_node* parent_);
@@ -208,7 +224,6 @@ public:
 		const_iterator(void) : m_current_node_(hxnull), m_tree_(hxnull) { }
 
 		/// Advances to the in-order successor and returns this iterator.
-		/// Asserts the iterator is not at `end()`.
 		const_iterator& operator++(void);
 		/// Post-increment: advances to the in-order successor and returns the
 		/// prior position.

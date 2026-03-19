@@ -19,6 +19,15 @@ struct hxtest_rbtree_node_t : hxrbtree_set_node<int> {
 	~hxtest_rbtree_node_t(void) { ++s_hxtest_destructor_count; }
 };
 
+// Plain node exposing copy/move for hxrbtree_node operator tests.
+struct hxtest_rbtree_base_node_t : hxrbtree_node {
+	using key_t = int;
+	explicit hxtest_rbtree_base_node_t(int k) : m_key(k) { }
+	const int& rbtree_key(void) const { return m_key; }
+	static bool rbtree_less(const int& a_, const int& b_) { return a_ < b_; }
+	int m_key;
+};
+
 // Aligned storage for N hxtest_rbtree_node_t objects constructed in-place from
 // an array of int keys. C++11-compatible: avoids copy or move construction.
 template<size_t n_t>
@@ -884,4 +893,24 @@ TEST(hxrbtree_test, erase_all_nodes_reverse_order) {
 		hxtest_check_order(tree, static_cast<size_t>(6 - static_cast<int>(i)));
 	}
 	EXPECT_TRUE(tree.empty());
+}
+
+// copy/move construct produce insertable unlinked nodes; copy/move assign leave
+// tree linkage of the destination unchanged.
+TEST(hxrbtree_node_test, copy_move_construct_and_assign) {
+	hxtest_rbtree_base_node_t a(1), b(2), c(3), d(4);
+	hxrbtree<hxtest_rbtree_base_node_t, false, hxdo_not_delete> tree;
+	hxtest_rbtree_base_node_t e(a);
+	tree.insert(&e);
+	hxtest_rbtree_base_node_t f(hxmove(b));
+	tree.insert(&f);
+	EXPECT_EQ(tree.size(), (size_t)2);
+	// copy-assign: e stays linked, source c is unchanged.
+	e = c;
+	EXPECT_EQ(tree.front(), &e);
+	// move-assign: f stays linked.
+	f = hxmove(d);
+	EXPECT_EQ(tree.back(), &f);
+	EXPECT_EQ(tree.size(), (size_t)2);
+	tree.release_all();
 }

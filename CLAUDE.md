@@ -25,7 +25,8 @@ available. Prefer `size_t` for sizes and array indexing.
 Do not use C++ exceptions, RTTI or assume asserts are enabled. Check when adding
 includes whether they are redundant and write them as `<stdio.h>` not
 `<cstido>`. Generously use `hxassertmsg` for debug asserts and `hxassertrelease`
-for release asserts.
+for release asserts. Declare and define functions with no args as `void x(void)`
+instead of `void x()`.
 
 `.clang-tidy` is in use and C-style casts are not allowed. The rules are only
 checked by `testcmake.sh` and are not checked by `vscode`.

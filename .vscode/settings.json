@@ -66,6 +66,7 @@
         "Heapify",
         "I../include",
         "Iinclude",
+        "insertable",
         "LDFLAGS",
         "libc",
         "libclang",

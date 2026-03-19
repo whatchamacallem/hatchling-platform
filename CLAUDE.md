@@ -1,14 +1,18 @@
 # Hatchling Platform
 
-## Interaction
+## Agent Interaction
 
 Always number separate items in any analysis so they are easy referenced.
 
-Do not assume existing code is "intentionally so" and instead consider rewriting
-and redesign as preferred to maintaining existing design whenever that aligns
-with requests. Existing code may have been recently written by an agent in an
-exploratory mode, and therefore preserving it may actually hinder iterative
-design.
+Do not assume existing code or documentation is "intentionally so" and instead
+consider rewrites, redesign and updating documentation as preferred to
+maintaining existing design whenever that aligns with requests. Existing code
+and documentation may have been recently written by an agent in an exploratory
+mode, and therefore preserving it may actually hinder iterative design. Assume
+existing code is correct instead of documentation or tests when asked to update
+documentation and tests. If bugs or compiler errors are found outside of tests
+when asked to update documentation and tests then fix them first before
+proceeding.
 
 ## Style Guide
 
@@ -104,6 +108,9 @@ code block. Documentation will be explicitly requested when the design is final.
 Usage examples in documentation are not expected to follow the preceding rules
 and are instead examples of code written independently outside of the project.
 Put comments on preceding lines instead of on the same line as code.
+
+Describe only the expectation enforced by asserts in documentation instead of
+explicitly describing the asserts themselves.
 
 Wrap all documentation except parameter documentation at 80 columns. Begin
 function documentation by describing the return value if not `void`. Use the

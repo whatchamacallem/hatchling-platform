@@ -433,6 +433,28 @@ TEST(hxlist_test, const_iterator_post_increment_and_decrement) {
 	list.release_all();
 }
 
+// Copy/move construction produces a fresh unlinked node; copy/move assignment
+// leaves the destination's linkage unchanged. All four require an unlinked source.
+TEST(hxlist_node_test, copy_move_construct_and_assign) {
+	hxtest_list_node_t a(1), b(2), c(3), d(4);
+	hxlist<hxtest_list_node_t, hxdo_not_delete> list;
+	// copy-construct: b is unlinked, gets a fresh node linkable into a list.
+	hxtest_list_node_t e(a);
+	list.push_back(&e);
+	// move-construct: produces a fresh unlinked node.
+	hxtest_list_node_t f(hxmove(b));
+	list.push_back(&f);
+	EXPECT_EQ(list.size(), (size_t)2);
+	// copy-assign: destination e stays linked, source c is unchanged.
+	e = c;
+	EXPECT_EQ(list.front(), &e);
+	// move-assign: destination f stays linked.
+	f = hxmove(d);
+	EXPECT_EQ(list.back(), &f);
+	EXPECT_EQ(list.size(), (size_t)2);
+	list.release_all();
+}
+
 // Interleaved push_front and push_back produce correct order.
 TEST(hxlist_test, mixed_push_front_and_push_back) {
 	hxtest_list_node_t a(1), b(4), c(2), d(3);
